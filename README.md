@@ -1,8 +1,12 @@
-# Diabeto - Application Mobile de Gestion du Diabète
+# DiaSmart - Diabétologie Intelligente
 
 ## 📱 Description
 
-Diabeto est une application Android moderne et complète pour la gestion du diabète. Elle permet aux professionnels de santé et aux patients de suivre efficacement la glycémie, les médicaments et les rendez-vous.
+DiaSmart est une application Android moderne et complète pour la gestion du diabète. Elle permet aux professionnels de santé et aux patients de suivre efficacement la glycémie, les médicaments, les rendez-vous et bien plus.
+
+**Développeur** : NGOS THEODORE
+**Contact** : ngostheo30@gmail.com
+**Site web** : https://project-d-r1997t.web.app
 
 ## 🏗️ Architecture
 
@@ -96,7 +100,7 @@ com.diabeto/
 
 1. Cloner le projet :
 ```bash
-git clone https://github.com/votre-repo/diabeto.git
+git clone https://github.com/theongos/diasmart-mobile.git
 ```
 
 2. Ouvrir dans Android Studio
@@ -129,14 +133,15 @@ git clone https://github.com/votre-repo/diabeto.git
 
 ## 📝 Licence
 
-Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
+Ce projet est sous licence propriétaire. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
+## 🔒 Politique de Confidentialité
+
+Voir [PRIVACY_POLICY.md](PRIVACY_POLICY.md) ou https://project-d-r1997t.web.app/privacy.html
 
 ## 👨‍💻 Auteur
 
+**NGOS THEODORE**
+ngostheo30@gmail.com
+
 Développé avec ❤️ pour améliorer la gestion du diabète.
-
-## 🙏 Remerciements
-
-- Material Design Team
-- Android Jetpack Team
-- Communauté Kotlin

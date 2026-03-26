@@ -1,6 +1,10 @@
 <resources>
     <string name="app_name">DiaSmart</string>
     <string name="app_description">Gestion du diabète</string>
+    <string name="app_developer">NGOS THEODORE</string>
+    <string name="app_contact_email">ngostheo30@gmail.com</string>
+    <string name="app_website">https://project-d-r1997t.web.app</string>
+    <string name="app_privacy_policy">https://project-d-r1997t.web.app/privacy.html</string>
     
     <!-- Navigation -->
     <string name="nav_dashboard">Tableau de bord</string>

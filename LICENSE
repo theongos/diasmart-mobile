@@ -1,0 +1,203 @@
+LICENCE LOGICIELLE PROPRIÉTAIRE
+DiaSmart
+
+Copyright (c) 2024-2026 NGOS THEODORE (ngostheo30@gmail.com)
+Tous droits réservés.
+
+================================================================================
+CONTRAT DE LICENCE LOGICIELLE PROPRIÉTAIRE
+================================================================================
+
+AVIS IMPORTANT : VEUILLEZ LIRE ATTENTIVEMENT CE CONTRAT DE LICENCE AVANT
+D'UTILISER CE LOGICIEL. EN UTILISANT CE LOGICIEL, VOUS ACCEPTEZ D'ÊTRE LIÉ
+PAR LES TERMES ET CONDITIONS DE CETTE LICENCE.
+
+--------------------------------------------------------------------------------
+ARTICLE 1 - PROPRIÉTÉ INTELLECTUELLE
+--------------------------------------------------------------------------------
+
+Le logiciel DiaSmart, y compris, sans s'y limiter, le code source, le code
+objet, la documentation, les interfaces, le contenu, les graphiques, les
+algorithmes, les bases de données, et tout autre élément constitutif du
+logiciel (ci-après dénommé « le Logiciel »), est la propriété exclusive de
+NGOS THEODORE (ngostheo30@gmail.com) (ci-après dénommé « l'Auteur »).
+
+Le Logiciel est protégé par les lois nationales et internationales relatives
+au droit d'auteur, aux brevets, aux marques déposées et aux secrets
+commerciaux, ainsi que par tout autre droit de propriété intellectuelle
+applicable.
+
+--------------------------------------------------------------------------------
+ARTICLE 2 - CARACTÈRE CONFIDENTIEL ET PROPRIÉTAIRE
+--------------------------------------------------------------------------------
+
+Le Logiciel est confidentiel et propriétaire. Il constitue un secret
+commercial de l'Auteur. Toute personne ayant accès au Logiciel s'engage à
+maintenir sa confidentialité et à ne pas le divulguer à des tiers sans
+l'autorisation préalable et écrite de l'Auteur.
+
+L'utilisateur reconnaît que le Logiciel contient des informations
+commercialement précieuses et propriétaires, et s'engage à prendre toutes les
+mesures raisonnables pour protéger leur caractère confidentiel.
+
+--------------------------------------------------------------------------------
+ARTICLE 3 - DROITS CONCÉDÉS ET RESTRICTIONS D'UTILISATION
+--------------------------------------------------------------------------------
+
+3.1 Droits concédés
+
+Sous réserve des termes et conditions de la présente licence, l'Auteur peut
+accorder à l'utilisateur un droit d'utilisation personnel, non exclusif, non
+transférable et révocable du Logiciel, uniquement aux fins expressément
+autorisées par l'Auteur par écrit.
+
+3.2 Restrictions
+
+Sont strictement interdits, sans l'autorisation préalable et écrite de
+l'Auteur, les actes suivants :
+
+a) REDISTRIBUTION : Toute reproduction, distribution, diffusion, publication,
+   transmission ou mise à disposition du Logiciel, en tout ou en partie, sous
+   quelque forme que ce soit et par quelque moyen que ce soit, à titre gratuit
+   ou onéreux, est formellement interdite.
+
+b) MODIFICATION : Toute modification, adaptation, traduction, création
+   d'oeuvres dérivées, assemblage, désassemblage, décompilation ou altération
+   du Logiciel, en tout ou en partie, est formellement interdite.
+
+c) RÉTRO-INGÉNIERIE : Toute tentative de rétro-ingénierie (reverse
+   engineering), de décompilation, de désassemblage, de déchiffrement ou de
+   toute autre tentative visant à obtenir le code source du Logiciel à partir
+   de sa version compilée est formellement interdite.
+
+d) SOUS-LICENCE ET CESSION : La sous-licence, la vente, la location, le
+   prêt, le transfert ou la cession du Logiciel ou de tout droit y afférent
+   à des tiers est formellement interdite.
+
+e) SUPPRESSION DES MENTIONS LÉGALES : La suppression, la modification ou
+   l'occultation de tout avis de droit d'auteur, de marque déposée ou de
+   toute autre mention de propriété présente dans le Logiciel est formellement
+   interdite.
+
+f) USAGE COMMERCIAL NON AUTORISÉ : Toute exploitation commerciale du Logiciel
+   sans autorisation écrite préalable de l'Auteur est formellement interdite.
+
+--------------------------------------------------------------------------------
+ARTICLE 4 - ABSENCE DE GARANTIE
+--------------------------------------------------------------------------------
+
+LE LOGICIEL EST FOURNI « EN L'ÉTAT » (AS IS), SANS GARANTIE D'AUCUNE SORTE,
+EXPRESSE OU IMPLICITE. L'AUTEUR DÉCLINE EXPRESSÉMENT TOUTE GARANTIE,
+NOTAMMENT, SANS S'Y LIMITER :
+
+- LA GARANTIE DE QUALITÉ MARCHANDE ;
+- LA GARANTIE D'ADÉQUATION À UN USAGE PARTICULIER ;
+- LA GARANTIE D'ABSENCE DE CONTREFAÇON ;
+- LA GARANTIE QUE LE LOGICIEL FONCTIONNERA DE MANIÈRE ININTERROMPUE,
+  SANS ERREUR OU SANS DÉFAUT ;
+- LA GARANTIE QUE LES RÉSULTATS OBTENUS PAR L'UTILISATION DU LOGICIEL
+  SERONT EXACTS OU FIABLES.
+
+L'UTILISATEUR ASSUME SEUL L'ENTIÈRE RESPONSABILITÉ QUANT À LA QUALITÉ ET
+AUX PERFORMANCES DU LOGICIEL.
+
+--------------------------------------------------------------------------------
+ARTICLE 5 - LIMITATION DE RESPONSABILITÉ
+--------------------------------------------------------------------------------
+
+EN AUCUN CAS L'AUTEUR NE SAURAIT ÊTRE TENU RESPONSABLE DE DOMMAGES DIRECTS,
+INDIRECTS, ACCESSOIRES, SPÉCIAUX, EXEMPLAIRES OU CONSÉCUTIFS, Y COMPRIS,
+SANS S'Y LIMITER, LA PERTE DE PROFITS, DE DONNÉES, D'EXPLOITATION OU DE
+CLIENTÈLE, RÉSULTANT DE :
+
+a) L'utilisation ou de l'impossibilité d'utiliser le Logiciel ;
+b) Tout accès non autorisé à vos données ou leur altération ;
+c) Toute décision prise ou action entreprise en se fondant sur le Logiciel ;
+d) Tout autre préjudice lié au Logiciel,
+
+MÊME SI L'AUTEUR A ÉTÉ INFORMÉ DE LA POSSIBILITÉ DE TELS DOMMAGES.
+
+AVERTISSEMENT MÉDICAL : DiaSmart est un outil d'aide à la gestion du diabète
+et ne se substitue en aucun cas à l'avis, au diagnostic ou au traitement d'un
+professionnel de santé qualifié. L'Auteur décline toute responsabilité pour
+toute décision médicale prise sur la base des informations fournies par le
+Logiciel.
+
+--------------------------------------------------------------------------------
+ARTICLE 6 - RÉSILIATION
+--------------------------------------------------------------------------------
+
+La présente licence est effective jusqu'à sa résiliation. Elle sera
+automatiquement résiliée, sans notification préalable, si l'utilisateur ne
+respecte pas l'un quelconque des termes et conditions énoncés dans le présent
+contrat.
+
+En cas de résiliation, l'utilisateur devra immédiatement :
+a) Cesser toute utilisation du Logiciel ;
+b) Détruire toutes les copies du Logiciel en sa possession, qu'elles soient
+   complètes ou partielles, sous quelque forme que ce soit.
+
+La résiliation de la présente licence ne portera pas atteinte aux droits que
+l'Auteur pourrait faire valoir en réparation du préjudice subi.
+
+--------------------------------------------------------------------------------
+ARTICLE 7 - DROIT APPLICABLE ET JURIDICTION COMPÉTENTE
+--------------------------------------------------------------------------------
+
+La présente licence est régie et interprétée conformément au droit en vigueur
+dans le pays de résidence de l'Auteur, sans égard à ses dispositions sur les
+conflits de lois.
+
+Tout litige relatif à la présente licence ou à l'utilisation du Logiciel sera
+soumis à la compétence exclusive des tribunaux compétents du lieu de résidence
+de l'Auteur. L'utilisateur consent par la présente à se soumettre à la
+juridiction personnelle de ces tribunaux.
+
+--------------------------------------------------------------------------------
+ARTICLE 8 - DISPOSITIONS GÉNÉRALES
+--------------------------------------------------------------------------------
+
+8.1 Intégralité de l'accord
+La présente licence constitue l'intégralité de l'accord entre l'Auteur et
+l'utilisateur concernant le Logiciel et remplace tout accord, communication ou
+représentation antérieure, orale ou écrite, relative au Logiciel.
+
+8.2 Divisibilité
+Si une disposition de la présente licence est jugée invalide, illégale ou
+inapplicable, les autres dispositions resteront en vigueur et de plein effet.
+
+8.3 Non-renonciation
+Le fait pour l'Auteur de ne pas exercer ou de retarder l'exercice d'un droit
+prévu par la présente licence ne saurait constituer une renonciation à ce
+droit.
+
+8.4 Modifications
+L'Auteur se réserve le droit de modifier les termes de la présente licence à
+tout moment. Toute modification sera portée à la connaissance de l'utilisateur
+par tout moyen approprié.
+
+8.5 Autorisation écrite
+Toute autorisation accordée en vertu de la présente licence doit être faite
+par écrit et signée par l'Auteur pour être valide. Les demandes d'autorisation
+peuvent être adressées à : ngostheo30@gmail.com
+
+--------------------------------------------------------------------------------
+ARTICLE 9 - CONTACT
+--------------------------------------------------------------------------------
+
+Pour toute question relative à cette licence, pour signaler une violation, ou
+pour demander une autorisation concernant les utilisations non couvertes par
+cette licence, veuillez contacter :
+
+    NGOS THEODORE
+    Courriel : ngostheo30@gmail.com
+
+--------------------------------------------------------------------------------
+
+Copyright (c) 2024-2026 NGOS THEODORE. Tous droits réservés.
+
+Aucune partie de ce Logiciel ne peut être reproduite, distribuée, modifiée ou
+utilisée de quelque manière que ce soit sans l'autorisation expresse et écrite
+préalable de NGOS THEODORE.
+
+================================================================================

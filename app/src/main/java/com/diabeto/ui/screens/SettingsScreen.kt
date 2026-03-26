@@ -161,13 +161,25 @@ fun SettingsScreen(
                     SettingsInfoItem(
                         icon = Icons.Default.Info,
                         title = "Version",
-                        subtitle = "1.0.0"
+                        subtitle = "1.7.0"
                     )
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                     SettingsInfoItem(
                         icon = Icons.Default.LocalHospital,
                         title = "DiaSmart",
-                        subtitle = "Gestion du diabète intelligente"
+                        subtitle = "Diabétologie Intelligente"
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                    SettingsInfoItem(
+                        icon = Icons.Default.Person,
+                        title = "Développeur",
+                        subtitle = "NGOS THEODORE"
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                    SettingsInfoItem(
+                        icon = Icons.Default.Email,
+                        title = "Contact",
+                        subtitle = "ngostheo30@gmail.com"
                     )
                 }
             }

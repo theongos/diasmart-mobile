@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Politique de Confidentialité — DiaSmart</title>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:       #0d7cb5;
+      --primary-dark:  #095e8a;
+      --primary-light: #e6f4fb;
+      --accent:        #14b8a6;
+      --accent-light:  #e6faf8;
+      --text:          #1e293b;
+      --text-muted:    #64748b;
+      --border:        #cbd5e1;
+      --bg:            #f8fafc;
+      --white:         #ffffff;
+      --danger:        #e53e3e;
+      --section-alt:   #f0f9ff;
+      --radius:        10px;
+      --shadow:        0 2px 12px rgba(13,124,181,0.10);
+      --shadow-lg:     0 8px 32px rgba(13,124,181,0.13);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 1rem;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 55%, var(--accent) 100%);
+      color: var(--white);
+      padding: 3rem 1.5rem 2.5rem;
+      text-align: center;
+    }
+
+    .header-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .header-logo svg {
+      width: 44px;
+      height: 44px;
+      fill: var(--white);
+      opacity: 0.92;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 0.35rem;
+    }
+
+    header p.subtitle {
+      font-size: 1.05rem;
+      opacity: 0.88;
+      font-weight: 400;
+    }
+
+    header p.date-badge {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.3rem 1rem;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 20px;
+      font-size: 0.85rem;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 4rem;
+    }
+
+    /* ── Table of Contents ── */
+    .toc {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--primary);
+      border-radius: var(--radius);
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 2.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .toc h2 {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--primary);
+      margin-bottom: 0.9rem;
+    }
+
+    .toc ol {
+      padding-left: 1.4rem;
+      columns: 2;
+      column-gap: 2rem;
+    }
+
+    .toc li { margin-bottom: 0.3rem; }
+
+    .toc a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.92rem;
+      transition: color 0.2s;
+    }
+
+    .toc a:hover { color: var(--primary); text-decoration: underline; }
+
+    @media (max-width: 580px) {
+      .toc ol { columns: 1; }
+    }
+
+    /* ── Sections ── */
+    section {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 2rem 2rem 1.75rem;
+      margin-bottom: 1.75rem;
+      box-shadow: var(--shadow);
+      scroll-margin-top: 1.5rem;
+    }
+
+    section:nth-child(even) {
+      background: var(--section-alt);
+    }
+
+    section h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-bottom: 1.1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px solid var(--primary-light);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    section h2 .num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 30px;
+      height: 30px;
+      background: var(--primary);
+      color: var(--white);
+      border-radius: 50%;
+      font-size: 0.85rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    section h3 {
+      font-size: 1.02rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin: 1.25rem 0 0.55rem;
+    }
+
+    section p { margin-bottom: 0.85rem; }
+    section p:last-child { margin-bottom: 0; }
+
+    section ul, section ol {
+      padding-left: 1.4rem;
+      margin-bottom: 0.85rem;
+    }
+
+    section li { margin-bottom: 0.4rem; }
+
+    strong { color: var(--primary-dark); }
+
+    a { color: var(--primary); }
+    a:hover { color: var(--primary-dark); }
+
+    /* ── Tables ── */
+    .table-wrap { overflow-x: auto; margin: 1rem 0; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.93rem;
+    }
+
+    thead {
+      background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+      color: var(--white);
+    }
+
+    thead th {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+    }
+
+    tbody tr:nth-child(odd)  { background: var(--white); }
+    tbody tr:nth-child(even) { background: var(--primary-light); }
+
+    tbody td {
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Callout boxes ── */
+    .callout {
+      display: flex;
+      gap: 0.85rem;
+      align-items: flex-start;
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+      font-size: 0.95rem;
+    }
+
+    .callout-info {
+      background: var(--primary-light);
+      border-left: 4px solid var(--primary);
+      color: var(--primary-dark);
+    }
+
+    .callout-accent {
+      background: var(--accent-light);
+      border-left: 4px solid var(--accent);
+      color: #0f766e;
+    }
+
+    .callout-warn {
+      background: #fff7ed;
+      border-left: 4px solid #f59e0b;
+      color: #92400e;
+    }
+
+    .callout-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 0.05rem; }
+
+    /* ── Rights grid ── */
+    .rights-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .right-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--accent);
+      border-radius: 8px;
+      padding: 1rem 1.1rem;
+    }
+
+    .right-card h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-bottom: 0.4rem;
+    }
+
+    .right-card p { font-size: 0.88rem; color: var(--text-muted); margin: 0; }
+
+    /* ── Security badges ── */
+    .security-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .security-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.7rem;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .security-list li:last-child { border-bottom: none; }
+
+    .security-list .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: white;
+      font-size: 0.8rem;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+
+    /* ── Contact box ── */
+    .contact-box {
+      background: linear-gradient(135deg, var(--primary-light), var(--accent-light));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem 1.75rem;
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    .contact-box p { margin-bottom: 0.4rem; }
+
+    .contact-box a.email-link {
+      display: inline-block;
+      margin-top: 0.6rem;
+      padding: 0.55rem 1.4rem;
+      background: var(--primary);
+      color: white;
+      border-radius: 25px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    .contact-box a.email-link:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--primary-dark);
+      color: rgba(255,255,255,0.75);
+      text-align: center;
+      padding: 2rem 1.5rem;
+      font-size: 0.88rem;
+    }
+
+    footer strong { color: var(--white); }
+
+    footer .footer-links { margin-top: 0.6rem; }
+
+    footer .footer-links a {
+      color: rgba(255,255,255,0.65);
+      text-decoration: none;
+      margin: 0 0.75rem;
+      font-size: 0.85rem;
+      transition: color 0.2s;
+    }
+
+    footer .footer-links a:hover { color: var(--white); }
+
+    /* ── Back to top ── */
+    .back-top {
+      display: block;
+      text-align: center;
+      margin: 2rem auto 0;
+      color: var(--primary);
+      font-size: 0.9rem;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .back-top:hover { color: var(--primary-dark); }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      header h1 { font-size: 1.5rem; }
+      section { padding: 1.4rem 1.2rem; }
+      .container { padding: 1.5rem 1rem 3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ HEADER ═══════════════════════════════════════ -->
+<header>
+  <div class="header-logo">
+    <!-- Medical / drop icon -->
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/>
+    </svg>
+    <span style="font-size:1.5rem;font-weight:800;letter-spacing:-0.5px;">DiaSmart</span>
+  </div>
+  <h1>Politique de Confidentialité</h1>
+  <p class="subtitle">Votre vie privée et la sécurité de vos données de santé sont notre priorité absolue.</p>
+  <p class="date-badge">Dernière mise à jour : Mars 2026</p>
+</header>
+
+<!-- ═══════════════════════════════════════ MAIN ════════════════════════════════════════ -->
+<main class="container">
+
+  <!-- Table of Contents -->
+  <nav class="toc" aria-label="Table des matières">
+    <h2>Sommaire</h2>
+    <ol>
+      <li><a href="#s1">Introduction</a></li>
+      <li><a href="#s2">Données collectées</a></li>
+      <li><a href="#s3">Finalités du traitement</a></li>
+      <li><a href="#s4">Stockage des données</a></li>
+      <li><a href="#s5">Services tiers</a></li>
+      <li><a href="#s6">Partage des données</a></li>
+      <li><a href="#s7">Vos droits (RGPD)</a></li>
+      <li><a href="#s8">Conservation des données</a></li>
+      <li><a href="#s9">Sécurité</a></li>
+      <li><a href="#s10">Cookies</a></li>
+      <li><a href="#s11">Protection des mineurs</a></li>
+      <li><a href="#s12">Transferts internationaux</a></li>
+      <li><a href="#s13">Modifications</a></li>
+      <li><a href="#s14">Contact</a></li>
+      <li><a href="#s15">Droit applicable</a></li>
+    </ol>
+  </nav>
+
+  <!-- ── Section 1 ── -->
+  <section id="s1">
+    <h2><span class="num">1</span> Introduction</h2>
+    <p>Bienvenue sur <strong>DiaSmart</strong>, une application mobile de gestion du diabète développée par <strong>NGOS THEODORE</strong>. Nous prenons la protection de vos données personnelles très au sérieux, en particulier compte tenu de la nature sensible des informations de santé que vous nous confiez.</p>
+    <p>La présente Politique de Confidentialité vous informe de manière claire et transparente sur la façon dont DiaSmart collecte, utilise, stocke, partage et protège vos données personnelles, conformément au <strong>Règlement Général sur la Protection des Données (RGPD)</strong> de l'Union Européenne.</p>
+    <p>En utilisant l'application DiaSmart, vous reconnaissez avoir lu et accepté les termes de la présente politique.</p>
+    <div class="callout callout-info">
+      <span class="callout-icon">ℹ️</span>
+      <div>
+        <strong>Responsable du traitement :</strong><br/>
+        NGOS THEODORE — <a href="mailto:ngostheo30@gmail.com">ngostheo30@gmail.com</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Section 2 ── -->
+  <section id="s2">
+    <h2><span class="num">2</span> Données Collectées</h2>
+
+    <h3>2.1 Données de Santé (données sensibles)</h3>
+    <ul>
+      <li>Mesures de glycémie (taux de glucose sanguin)</li>
+      <li>Taux d'HbA1c</li>
+      <li>Traitements médicamenteux (médicaments, posologies, horaires)</li>
+      <li>Rendez-vous médicaux et consultations</li>
+      <li>Entrées du journal de santé personnel</li>
+      <li>Objectifs glycémiques personnalisés et historique des tendances</li>
+    </ul>
+
+    <h3>2.2 Données Personnelles d'Identification</h3>
+    <ul>
+      <li>Nom et prénom</li>
+      <li>Adresse e-mail</li>
+      <li>Date de naissance</li>
+      <li>Type de diabète (Type 1, Type 2, gestationnel, etc.)</li>
+      <li>Informations de profil médical</li>
+    </ul>
+
+    <h3>2.3 Données d'Utilisation</h3>
+    <ul>
+      <li>Données de navigation et d'interaction dans l'application</li>
+      <li>Identifiants de session et jetons d'authentification</li>
+      <li>Journaux d'erreurs et données de diagnostic techniques</li>
+      <li>Préférences et paramètres de l'application</li>
+      <li>Informations sur l'appareil (modèle, OS, version de l'application)</li>
+      <li>Adresse IP (collectée par Firebase lors des connexions)</li>
+    </ul>
+  </section>
+
+  <!-- ── Section 3 ── -->
+  <section id="s3">
+    <h2><span class="num">3</span> Finalités du Traitement</h2>
+    <p>Vos données sont collectées et traitées pour les finalités suivantes :</p>
+    <ul>
+      <li><strong>Fourniture du service :</strong> permettre le suivi et la gestion personnalisée de votre diabète</li>
+      <li><strong>Communication patient-médecin :</strong> faciliter le partage sécurisé de données de santé avec votre professionnel de santé désigné</li>
+      <li><strong>Assistance intelligente :</strong> alimenter le chatbot (Google Gemini AI) pour vous fournir des informations générales sur le diabète</li>
+      <li><strong>Téléconsultation :</strong> permettre les appels vidéo sécurisés avec votre médecin via Jitsi/WebRTC</li>
+      <li><strong>Notifications et rappels :</strong> vous envoyer des rappels de médicaments et de rendez-vous via FCM</li>
+      <li><strong>Sauvegarde et restauration :</strong> assurer la continuité de vos données en cas de changement d'appareil</li>
+      <li><strong>Amélioration du service :</strong> analyser les données d'utilisation anonymisées</li>
+      <li><strong>Sécurité :</strong> prévenir les fraudes et les accès non autorisés</li>
+    </ul>
+    <div class="callout callout-accent">
+      <span class="callout-icon">✅</span>
+      <div>La base légale du traitement de vos données de santé est votre <strong>consentement explicite</strong>, accordé lors de l'inscription et révocable à tout moment.</div>
+    </div>
+  </section>
+
+  <!-- ── Section 4 ── -->
+  <section id="s4">
+    <h2><span class="num">4</span> Stockage des Données</h2>
+
+    <h3>4.1 Base de données locale (Room Database)</h3>
+    <p>Certaines données sont stockées localement sur votre appareil dans une base Room (SQLite) chiffrée, assurant un accès hors connexion et une disponibilité immédiate.</p>
+
+    <h3>4.2 Cloud Firebase (Google Cloud)</h3>
+    <p>Vos données sont synchronisées et sauvegardées sur les serveurs Firebase de Google. Les services utilisés sont :</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Service Firebase</th>
+            <th>Utilisation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Firebase Authentication</strong></td>
+            <td>Gestion de la connexion et de l'authentification sécurisée</td>
+          </tr>
+          <tr>
+            <td><strong>Cloud Firestore</strong></td>
+            <td>Stockage et synchronisation en temps réel des données de santé</td>
+          </tr>
+          <tr>
+            <td><strong>Firebase Cloud Messaging (FCM)</strong></td>
+            <td>Envoi de notifications push (rappels, alertes)</td>
+          </tr>
+          <tr>
+            <td><strong>Firebase Hosting</strong></td>
+            <td>Hébergement du site web et de la documentation</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>4.3 Sauvegarde Cloud</h3>
+    <p>La sauvegarde cloud est disponible avec votre consentement pour permettre la restauration de vos données en cas de perte ou de changement d'appareil.</p>
+
+    <p>Pour plus d'informations sur la localisation des données Google : <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">firebase.google.com/support/privacy</a></p>
+  </section>
+
+  <!-- ── Section 5 ── -->
+  <section id="s5">
+    <h2><span class="num">5</span> Services Tiers</h2>
+
+    <h3>5.1 Google Gemini AI</h3>
+    <p>Le chatbot intégré utilise l'API Google Gemini pour répondre à vos questions générales sur le diabète. Les requêtes peuvent être traitées par les serveurs de Google. Nous vous déconseillons de partager des informations d'identification personnelle directement dans le chatbot.</p>
+    <p><a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Politique de confidentialité Google →</a></p>
+
+    <h3>5.2 Jitsi / WebRTC</h3>
+    <p>Les fonctionnalités de téléconsultation par appel vidéo utilisent Jitsi, une solution open source basée sur WebRTC. Les communications vidéo sont chiffrées de bout en bout.</p>
+    <p><a href="https://jitsi.org/security/" target="_blank" rel="noopener">Sécurité Jitsi →</a></p>
+
+    <div class="callout callout-warn">
+      <span class="callout-icon">⚠️</span>
+      <div>Ces services tiers disposent de leurs propres politiques de confidentialité. DiaSmart n'est pas responsable des pratiques de confidentialité de ces services.</div>
+    </div>
+  </section>
+
+  <!-- ── Section 6 ── -->
+  <section id="s6">
+    <h2><span class="num">6</span> Partage des Données</h2>
+    <p>Vos données personnelles et de santé ne sont <strong>jamais vendues</strong> à des tiers. Le partage est strictement limité :</p>
+
+    <h3>6.1 Partage Patient-Médecin</h3>
+    <p>Le seul partage de données de santé prévu par DiaSmart est celui que vous initiez entre vous (le patient) et votre médecin désigné. Ce partage :</p>
+    <ul>
+      <li>Requiert votre <strong>consentement explicite et préalable</strong></li>
+      <li>Est limité au professionnel de santé que vous avez vous-même sélectionné</li>
+      <li>Peut être révoqué à tout moment depuis les paramètres de l'application</li>
+    </ul>
+
+    <h3>6.2 Sous-traitants techniques</h3>
+    <p>Vos données peuvent être traitées par nos sous-traitants techniques (Google Firebase, Google Gemini, Jitsi) dans le strict cadre de la fourniture des services décrits, sous couvert de contrats garantissant la protection de vos données.</p>
+
+    <h3>6.3 Obligations légales</h3>
+    <p>Nous pouvons divulguer vos données si la loi l'exige ou en réponse à une demande légale valide d'une autorité compétente.</p>
+  </section>
+
+  <!-- ── Section 7 ── -->
+  <section id="s7">
+    <h2><span class="num">7</span> Vos Droits (RGPD)</h2>
+    <p>Conformément au RGPD, vous disposez des droits suivants :</p>
+
+    <div class="rights-grid">
+      <div class="right-card">
+        <h4>Droit d'accès</h4>
+        <p>Obtenir une copie de toutes les données personnelles que nous détenons vous concernant.</p>
+      </div>
+      <div class="right-card">
+        <h4>Droit de rectification</h4>
+        <p>Demander la correction de données inexactes ou incomplètes.</p>
+      </div>
+      <div class="right-card">
+        <h4>Droit à l'effacement</h4>
+        <p>Demander la suppression définitive de vos données personnelles (« droit à l'oubli »).</p>
+      </div>
+      <div class="right-card">
+        <h4>Portabilité des données</h4>
+        <p>Exporter vos données dans un format structuré et lisible (CSV ou JSON).</p>
+      </div>
+      <div class="right-card">
+        <h4>Droit d'opposition</h4>
+        <p>Vous opposer au traitement de vos données ou en demander la limitation.</p>
+      </div>
+      <div class="right-card">
+        <h4>Retrait du consentement</h4>
+        <p>Retirer votre consentement à tout moment, sans effet rétroactif.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-info" style="margin-top:1.25rem;">
+      <span class="callout-icon">📩</span>
+      <div>Pour exercer l'un de ces droits, contactez-nous à <a href="mailto:ngostheo30@gmail.com"><strong>ngostheo30@gmail.com</strong></a>. Nous répondrons dans un délai maximum de <strong>30 jours</strong>.</div>
+    </div>
+  </section>
+
+  <!-- ── Section 8 ── -->
+  <section id="s8">
+    <h2><span class="num">8</span> Conservation des Données</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Type de données</th>
+            <th>Durée de conservation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Données de compte (profil, e-mail)</td>
+            <td>Jusqu'à la suppression du compte</td>
+          </tr>
+          <tr>
+            <td>Données de santé (glycémie, HbA1c, etc.)</td>
+            <td>Jusqu'à la suppression du compte ou demande d'effacement</td>
+          </tr>
+          <tr>
+            <td>Journaux d'activité et données techniques</td>
+            <td>12 mois maximum</td>
+          </tr>
+          <tr>
+            <td>Données de sauvegarde</td>
+            <td>30 jours après la suppression du compte</td>
+          </tr>
+          <tr>
+            <td>Données de consentement</td>
+            <td>5 ans à compter du retrait du consentement</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>À l'expiration de ces délais, vos données sont supprimées de façon permanente et sécurisée.</p>
+  </section>
+
+  <!-- ── Section 9 ── -->
+  <section id="s9">
+    <h2><span class="num">9</span> Sécurité des Données</h2>
+    <p>Nous mettons en œuvre les mesures suivantes pour protéger vos données :</p>
+
+    <ul class="security-list">
+      <li>
+        <span class="badge">🔒</span>
+        <span><strong>Chiffrement des données :</strong> les données sensibles sont chiffrées en transit (TLS/HTTPS) et au repos.</span>
+      </li>
+      <li>
+        <span class="badge">🛡️</span>
+        <span><strong>Règles de sécurité Firebase :</strong> des règles d'accès strictes garantissent que chaque utilisateur accède uniquement à ses propres données.</span>
+      </li>
+      <li>
+        <span class="badge">🔑</span>
+        <span><strong>Accès authentifié uniquement :</strong> toutes les opérations sur les données nécessitent une authentification préalable.</span>
+      </li>
+      <li>
+        <span class="badge">📱</span>
+        <span><strong>Base de données locale chiffrée :</strong> la base Room sur l'appareil est protégée par chiffrement.</span>
+      </li>
+      <li>
+        <span class="badge">📹</span>
+        <span><strong>Chiffrement des appels vidéo :</strong> les communications via Jitsi/WebRTC sont chiffrées de bout en bout.</span>
+      </li>
+      <li>
+        <span class="badge">🔐</span>
+        <span><strong>Mots de passe sécurisés :</strong> les mots de passe ne sont jamais stockés en clair ; ils sont gérés par Firebase Authentication.</span>
+      </li>
+    </ul>
+
+    <div class="callout callout-warn">
+      <span class="callout-icon">⚠️</span>
+      <div>Malgré ces mesures, aucun système électronique n'est sécurisé à 100 %. Utilisez un mot de passe robuste et activez les options de sécurité de votre appareil.</div>
+    </div>
+  </section>
+
+  <!-- ── Section 10 ── -->
+  <section id="s10">
+    <h2><span class="num">10</span> Cookies et Technologies Similaires</h2>
+
+    <h3>Application Mobile</h3>
+    <p>L'application mobile DiaSmart n'utilise pas de cookies au sens traditionnel. Des technologies similaires (jetons de session, identifiants locaux) sont utilisées pour maintenir votre session active et assurer le bon fonctionnement de l'application.</p>
+
+    <h3>Site Web DiaSmart</h3>
+    <p>Le site web associé à DiaSmart peut utiliser des <strong>cookies techniques strictement nécessaires</strong> au fonctionnement du site. Ces cookies ne collectent pas d'informations permettant de vous identifier à des fins publicitaires. Aucun cookie de traçage ou de publicité comportementale n'est utilisé.</p>
+  </section>
+
+  <!-- ── Section 11 ── -->
+  <section id="s11">
+    <h2><span class="num">11</span> Protection des Mineurs</h2>
+    <p>DiaSmart est destinée aux personnes âgées de <strong>16 ans et plus</strong>. Nous ne collectons pas sciemment des données personnelles concernant des enfants de moins de 16 ans sans le consentement préalable vérifiable d'un parent ou tuteur légal.</p>
+    <p>Si vous êtes le parent ou tuteur d'un enfant de moins de 16 ans et pensez qu'il nous a fourni des données sans votre consentement, contactez-nous immédiatement à <a href="mailto:ngostheo30@gmail.com">ngostheo30@gmail.com</a>. Nous procéderons à la suppression de ces données dans les meilleurs délais.</p>
+    <p>Dans le cas où DiaSmart est utilisée pour la gestion du diabète d'un enfant, le compte doit être créé et géré par un parent ou tuteur légal.</p>
+  </section>
+
+  <!-- ── Section 12 ── -->
+  <section id="s12">
+    <h2><span class="num">12</span> Transferts Internationaux de Données</h2>
+    <p>Vos données peuvent être transférées et traitées dans des pays situés hors de votre pays de résidence, notamment aux <strong>États-Unis</strong>, où sont hébergés les services Google Firebase et Google Gemini.</p>
+    <p>Ces transferts sont encadrés par les <strong>Clauses Contractuelles Types (CCT)</strong> approuvées par la Commission Européenne et par les mécanismes de conformité de Google, certifié sous les accords de transfert de données appropriés.</p>
+  </section>
+
+  <!-- ── Section 13 ── -->
+  <section id="s13">
+    <h2><span class="num">13</span> Modifications de la Politique</h2>
+    <p>Nous nous réservons le droit de modifier la présente Politique de Confidentialité pour refléter les évolutions légales, techniques ou fonctionnelles de DiaSmart.</p>
+    <p>En cas de modification substantielle, vous serez informé :</p>
+    <ul>
+      <li>Par une notification dans l'application</li>
+      <li>Par e-mail à l'adresse associée à votre compte</li>
+      <li>Par la mise à jour de la date « Dernière mise à jour » en haut de ce document</li>
+    </ul>
+    <p>Votre utilisation continue de l'application après cette date constituera votre acceptation des modifications.</p>
+  </section>
+
+  <!-- ── Section 14 ── -->
+  <section id="s14">
+    <h2><span class="num">14</span> Contact</h2>
+    <p>Pour toute question ou demande relative à la présente Politique de Confidentialité ou au traitement de vos données personnelles :</p>
+    <div class="contact-box">
+      <p><strong>NGOS THEODORE</strong></p>
+      <p>Développeur de DiaSmart</p>
+      <p>Nous nous engageons à répondre dans un délai de <strong>30 jours ouvrables</strong>.</p>
+      <a href="mailto:ngostheo30@gmail.com" class="email-link">ngostheo30@gmail.com</a>
+    </div>
+  </section>
+
+  <!-- ── Section 15 ── -->
+  <section id="s15">
+    <h2><span class="num">15</span> Droit Applicable</h2>
+    <p>La présente Politique de Confidentialité est régie par le <strong>Règlement (UE) 2016/679 du Parlement européen et du Conseil</strong> du 27 avril 2016 (RGPD), ainsi que par toute législation nationale applicable en matière de protection des données personnelles.</p>
+    <p>Si vous souhaitez introduire une réclamation, vous pouvez vous adresser à l'autorité de protection des données de votre pays de résidence.</p>
+  </section>
+
+  <a href="#" class="back-top">↑ Retour en haut</a>
+
+</main>
+
+<!-- ═══════════════════════════════════════ FOOTER ══════════════════════════════════════ -->
+<footer>
+  <p><strong>DiaSmart</strong> — Votre partenaire intelligent dans la gestion du diabète</p>
+  <p style="margin-top:0.35rem;">© 2026 NGOS THEODORE. Tous droits réservés.</p>
+  <div class="footer-links">
+    <a href="index.html">Accueil</a>
+    <a href="mailto:ngostheo30@gmail.com">Contact</a>
+    <a href="privacy.html">Politique de confidentialité</a>
+  </div>
+</footer>
+
+</body>
+</html>
