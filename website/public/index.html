@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiaSmart - Diabétologie Intelligente</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23001A3C'/><circle cx='50' cy='50' r='38' fill='none' stroke='%2300D2FF' stroke-width='2'/><path d='M25 50 L40 50 L43 42 L50 65 L57 35 L60 50 L75 50' fill='none' stroke='%2300D2FF' stroke-width='3' stroke-linecap='round'/></svg>">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --cyan: #00D2FF;
+            --teal: #0B8FAC;
+            --dark: #001A3C;
+            --darker: #000D1F;
+            --white: #FFFFFF;
+            --gray: #94A3B8;
+            --green: #4CAF50;
+            --red: #E53935;
+            --orange: #FF9800;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--darker);
+            color: var(--white);
+            overflow-x: hidden;
+        }
+
+        /* ══════════════════════════════════════════════
+           ANIMATIONS
+        ══════════════════════════════════════════════ */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            25% { transform: translateY(-15px) rotate(1deg); }
+            50% { transform: translateY(-25px) rotate(0deg); }
+            75% { transform: translateY(-10px) rotate(-1deg); }
+        }
+        @keyframes floatLogo {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-20px) scale(1.03); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideLeft {
+            from { opacity: 0; transform: translateX(60px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes ecgLine {
+            0% { stroke-dashoffset: 600; }
+            100% { stroke-dashoffset: 0; }
+        }
+        @keyframes glowPulse {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(0,210,255,0.3)); }
+            50% { filter: drop-shadow(0 0 20px rgba(0,210,255,0.6)); }
+        }
+        @keyframes logoGlow {
+            0%, 100% {
+                box-shadow: 0 0 30px rgba(0,210,255,0.2), 0 20px 60px rgba(0,0,0,0.3);
+                border-color: rgba(0,210,255,0.15);
+            }
+            50% {
+                box-shadow: 0 0 60px rgba(0,210,255,0.4), 0 20px 60px rgba(0,0,0,0.3), 0 0 100px rgba(0,210,255,0.1);
+                border-color: rgba(0,210,255,0.3);
+            }
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes spinReverse { to { transform: rotate(-360deg); } }
+
+        /* Bulles flottantes aléatoires */
+        @keyframes bubble1 {
+            0%   { transform: translate(0, 0) scale(1); }
+            20%  { transform: translate(80px, -60px) scale(1.1); }
+            40%  { transform: translate(-40px, -120px) scale(0.95); }
+            60%  { transform: translate(60px, -30px) scale(1.05); }
+            80%  { transform: translate(-20px, 50px) scale(1.1); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+        @keyframes bubble2 {
+            0%   { transform: translate(0, 0) scale(1); }
+            15%  { transform: translate(-70px, 40px) scale(1.05); }
+            35%  { transform: translate(50px, 80px) scale(0.9); }
+            55%  { transform: translate(-90px, -20px) scale(1.1); }
+            75%  { transform: translate(30px, -60px) scale(1.05); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+        @keyframes bubble3 {
+            0%   { transform: translate(0, 0) scale(1); }
+            25%  { transform: translate(60px, 70px) scale(1.08); }
+            50%  { transform: translate(-80px, 30px) scale(0.95); }
+            75%  { transform: translate(40px, -50px) scale(1.12); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+        @keyframes bubble4 {
+            0%   { transform: translate(0, 0) scale(1); }
+            30%  { transform: translate(-50px, -80px) scale(1.06); }
+            60%  { transform: translate(70px, 40px) scale(0.92); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+        @keyframes bubble5 {
+            0%   { transform: translate(0, 0) scale(1); }
+            20%  { transform: translate(90px, 30px) scale(1.1); }
+            45%  { transform: translate(-60px, -70px) scale(0.98); }
+            70%  { transform: translate(40px, 60px) scale(1.05); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+        @keyframes bubble6 {
+            0%   { transform: translate(0, 0) scale(1); }
+            35%  { transform: translate(-40px, 90px) scale(1.08); }
+            65%  { transform: translate(80px, -40px) scale(0.95); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+
+        @keyframes orbitDot {
+            0% { transform: rotate(0deg) translateX(220px) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(220px) rotate(-360deg); }
+        }
+
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ══════════════════════════════════════════════
+           NAVIGATION
+        ══════════════════════════════════════════════ */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 16px 0;
+            transition: all 0.3s;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            background: rgba(0, 13, 31, 0.8);
+            border-bottom: 1px solid rgba(0, 210, 255, 0.1);
+        }
+        nav.scrolled {
+            padding: 10px 0;
+            background: rgba(0, 13, 31, 0.95);
+        }
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--white);
+        }
+        .nav-logo img { width: 36px; height: 36px; border-radius: 8px; }
+        .nav-logo span {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--cyan), var(--teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+        .nav-links a {
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        .nav-links a:hover { color: var(--cyan); }
+        .nav-cta {
+            background: linear-gradient(135deg, var(--cyan), var(--teal));
+            color: var(--white) !important;
+            padding: 10px 24px;
+            border-radius: 12px;
+            font-weight: 600 !important;
+            transition: transform 0.3s, box-shadow 0.3s !important;
+        }
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 210, 255, 0.3);
+        }
+        .mobile-menu { display: none; cursor: pointer; }
+        .mobile-menu span {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: var(--white);
+            margin: 5px 0;
+            transition: 0.3s;
+        }
+
+        /* ══════════════════════════════════════════════
+           HERO SECTION - Splash Screen Style
+        ══════════════════════════════════════════════ */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            padding: 120px 24px 80px;
+            background: linear-gradient(160deg, #001A3C 0%, #003355 30%, #0B5E7E 50%, #0B8FAC 70%, #001A3C 100%);
+        }
+
+        /* Bulles splash screen animées */
+        .splash-bubble {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.15;
+            z-index: 0;
+        }
+        .splash-bubble.b1 {
+            width: 550px; height: 550px;
+            background: radial-gradient(circle, #0B8FAC 0%, #0B6E8E 40%, transparent 70%);
+            top: -15%; left: -10%;
+            animation: bubble1 25s ease-in-out infinite;
+        }
+        .splash-bubble.b2 {
+            width: 450px; height: 450px;
+            background: radial-gradient(circle, #0B9FBC 0%, #0B7E9E 40%, transparent 70%);
+            top: 5%; right: -8%;
+            animation: bubble2 30s ease-in-out infinite;
+            opacity: 0.12;
+        }
+        .splash-bubble.b3 {
+            width: 380px; height: 380px;
+            background: radial-gradient(circle, #0BAFC0 0%, #0B8FAC 40%, transparent 70%);
+            bottom: -10%; left: 15%;
+            animation: bubble3 22s ease-in-out infinite;
+            opacity: 0.18;
+        }
+        .splash-bubble.b4 {
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, #0B8FAC 0%, #0B6E8E 40%, transparent 70%);
+            bottom: 10%; right: 20%;
+            animation: bubble4 28s ease-in-out infinite;
+            opacity: 0.1;
+        }
+        .splash-bubble.b5 {
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, #00D2FF 0%, #0B8FAC 40%, transparent 70%);
+            top: 40%; left: 50%;
+            animation: bubble5 20s ease-in-out infinite;
+            opacity: 0.08;
+        }
+        .splash-bubble.b6 {
+            width: 350px; height: 350px;
+            background: radial-gradient(circle, #0B9FBC 0%, #0B7E9E 40%, transparent 70%);
+            top: 60%; left: -5%;
+            animation: bubble6 35s ease-in-out infinite;
+            opacity: 0.1;
+        }
+
+        /* ECG animé en fond */
+        .hero-ecg {
+            position: absolute;
+            bottom: 12%;
+            left: 0;
+            width: 100%;
+            opacity: 0.06;
+            z-index: 0;
+        }
+        .hero-ecg svg { width: 100%; height: 80px; }
+        .hero-ecg path {
+            stroke-dasharray: 600;
+            animation: ecgLine 4s linear infinite;
+        }
+
+        .hero-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+        .hero-text { animation: slideUp 1s ease-out; }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 210, 255, 0.1);
+            border: 1px solid rgba(0, 210, 255, 0.25);
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 13px;
+            color: var(--cyan);
+            font-weight: 500;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+        }
+        .hero-badge::before { content: ''; width: 6px; height: 6px; background: var(--cyan); border-radius: 50%; animation: pulse 2s infinite; }
+        .hero-title {
+            font-size: clamp(36px, 5vw, 56px);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 20px;
+        }
+        .hero-title .gradient {
+            background: linear-gradient(135deg, var(--cyan), var(--teal), #005F73);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-subtitle {
+            font-size: 18px;
+            color: rgba(255,255,255,0.75);
+            line-height: 1.7;
+            margin-bottom: 36px;
+            max-width: 500px;
+        }
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, var(--cyan), var(--teal));
+            color: var(--white);
+            padding: 16px 32px;
+            border-radius: 16px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 16px;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(0, 210, 255, 0.3);
+        }
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(10px);
+            color: var(--white);
+            padding: 16px 32px;
+            border-radius: 16px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            border: 1px solid rgba(255,255,255,0.15);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .btn-secondary:hover {
+            border-color: var(--cyan);
+            background: rgba(0, 210, 255, 0.1);
+        }
+        .hero-stats {
+            display: flex;
+            gap: 40px;
+            margin-top: 40px;
+        }
+        .hero-stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--cyan);
+        }
+        .hero-stat-label {
+            font-size: 13px;
+            color: rgba(255,255,255,0.6);
+            margin-top: 4px;
+        }
+
+        /* ═══ TELEPHONE MOCKUP IMAGE ═══ */
+        .hero-visual {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: slideLeft 1s ease-out 0.3s both;
+        }
+        .phone-mockup-wrapper {
+            position: relative;
+            animation: phoneFloat 4s ease-in-out infinite;
+        }
+        @keyframes phoneFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-18px); }
+        }
+        .phone-mockup-img {
+            max-width: 420px;
+            width: 100%;
+            height: auto;
+            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.4)) drop-shadow(0 0 20px rgba(0,210,255,0.08));
+        }
+
+        /* ══════════════════════════════════════════════
+           SCREENSHOTS SECTION
+        ══════════════════════════════════════════════ */
+        .screenshots {
+            padding: 100px 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        .screenshots-track {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+        .screenshot-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            max-width: 300px;
+        }
+        .screenshot-phone {
+            width: 240px;
+            height: 490px;
+            background: linear-gradient(180deg, #0a0a1a 0%, #111128 100%);
+            border-radius: 32px;
+            border: 3px solid rgba(0, 210, 255, 0.15);
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.4), 0 0 40px rgba(0,210,255,0.05);
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.5s;
+        }
+        .screenshot-phone:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 35px 80px rgba(0,0,0,0.5), 0 0 60px rgba(0,210,255,0.1);
+        }
+        .screenshot-phone::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 24px;
+            background: #0a0a1a;
+            border-radius: 0 0 14px 14px;
+            z-index: 3;
+        }
+        .screenshot-phone img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top;
+        }
+        .screenshot-label {
+            text-align: center;
+        }
+        .screenshot-label h4 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .screenshot-label p {
+            color: var(--gray);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        /* ══════════════════════════════════════════════
+           FEATURES SECTION
+        ══════════════════════════════════════════════ */
+        .features {
+            padding: 100px 24px;
+            position: relative;
+        }
+        .section-header {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto 60px;
+        }
+        .section-tag {
+            color: var(--cyan);
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+        }
+        .section-title {
+            font-size: clamp(28px, 4vw, 42px);
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+        .section-desc {
+            color: var(--gray);
+            font-size: 16px;
+            line-height: 1.7;
+        }
+        .features-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        .feature-card {
+            background: linear-gradient(180deg, rgba(0,210,255,0.03), rgba(0,0,0,0.2));
+            border: 1px solid rgba(0,210,255,0.08);
+            border-radius: 20px;
+            padding: 32px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+        .feature-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(0,210,255,0.2);
+            box-shadow: 0 20px 50px rgba(0,210,255,0.08);
+        }
+        .feature-card:hover::before { opacity: 1; }
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .feature-icon.blue { background: linear-gradient(135deg, rgba(0,210,255,0.15), rgba(0,210,255,0.05)); color: var(--cyan); }
+        .feature-icon.green { background: linear-gradient(135deg, rgba(76,175,80,0.15), rgba(76,175,80,0.05)); color: var(--green); }
+        .feature-icon.orange { background: linear-gradient(135deg, rgba(255,152,0,0.15), rgba(255,152,0,0.05)); color: var(--orange); }
+        .feature-icon.red { background: linear-gradient(135deg, rgba(229,57,53,0.15), rgba(229,57,53,0.05)); color: var(--red); }
+        .feature-icon.teal { background: linear-gradient(135deg, rgba(11,143,172,0.15), rgba(11,143,172,0.05)); color: var(--teal); }
+        .feature-icon.purple { background: linear-gradient(135deg, rgba(124,77,255,0.15), rgba(124,77,255,0.05)); color: #7C4DFF; }
+        .feature-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .feature-desc {
+            color: var(--gray);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* ══════════════════════════════════════════════
+           ROLLY AI SECTION
+        ══════════════════════════════════════════════ */
+        .rolly-section {
+            padding: 100px 24px;
+            background: linear-gradient(180deg, transparent 0%, rgba(0,210,255,0.03) 50%, transparent 100%);
+        }
+        .rolly-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+        .rolly-visual {
+            display: flex;
+            justify-content: center;
+        }
+        .rolly-icon-large {
+            width: 280px;
+            height: 280px;
+            background: linear-gradient(135deg, var(--dark), #003366);
+            border-radius: 60px;
+            border: 2px solid rgba(0,210,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            animation: glowPulse 3s infinite;
+        }
+        .rolly-icon-large svg { width: 180px; height: 180px; }
+        .rolly-orbit {
+            position: absolute;
+            inset: -30px;
+            border-radius: 80px;
+            border: 1px dashed rgba(0,210,255,0.15);
+            animation: spin 20s linear infinite;
+        }
+        .rolly-orbit-dot {
+            position: absolute;
+            width: 10px; height: 10px;
+            background: var(--cyan);
+            border-radius: 50%;
+            top: -5px; left: 50%;
+        }
+        .rolly-features { list-style: none; margin-top: 30px; }
+        .rolly-features li {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .rolly-check {
+            width: 24px; height: 24px;
+            background: rgba(76,175,80,0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--green);
+            font-size: 14px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* ══════════════════════════════════════════════
+           DOWNLOAD SECTION
+        ══════════════════════════════════════════════ */
+        .download {
+            padding: 100px 24px;
+            text-align: center;
+        }
+        .download-card {
+            max-width: 700px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, var(--dark), #002244);
+            border: 1px solid rgba(0,210,255,0.15);
+            border-radius: 28px;
+            padding: 60px 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        .download-card::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(ellipse at center, rgba(0,210,255,0.08) 0%, transparent 70%);
+        }
+        .download-card > * { position: relative; z-index: 1; }
+        .download-version {
+            display: inline-block;
+            background: rgba(0,210,255,0.1);
+            border: 1px solid rgba(0,210,255,0.2);
+            padding: 6px 18px;
+            border-radius: 50px;
+            font-size: 13px;
+            color: var(--cyan);
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+        .download-title {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+        .download-desc {
+            color: var(--gray);
+            font-size: 16px;
+            margin-bottom: 36px;
+            line-height: 1.6;
+        }
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, var(--cyan), var(--teal));
+            color: var(--white);
+            padding: 18px 40px;
+            border-radius: 16px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 18px;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        .download-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0,210,255,0.3);
+        }
+        .download-btn svg { width: 24px; height: 24px; }
+        .download-info {
+            margin-top: 20px;
+            color: var(--gray);
+            font-size: 13px;
+        }
+        .download-info span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0 12px;
+        }
+
+        /* ══════════════════════════════════════════════
+           FOOTER
+        ══════════════════════════════════════════════ */
+        footer {
+            padding: 40px 24px 24px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            text-align: center;
+        }
+        footer p { color: var(--gray); font-size: 13px; }
+        footer a { color: var(--cyan); text-decoration: none; }
+
+        /* ══════════════════════════════════════════════
+           RESPONSIVE
+        ══════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            .hero-content { grid-template-columns: 1fr; text-align: center; }
+            .hero-subtitle { margin: 0 auto 36px; }
+            .hero-buttons { justify-content: center; }
+            .hero-stats { justify-content: center; }
+            .hero-visual { margin-top: 20px; }
+            .phone-mockup-img { max-width: 300px; }
+            .rolly-content { grid-template-columns: 1fr; text-align: center; }
+            .rolly-visual { order: -1; }
+            .rolly-icon-large { width: 200px; height: 200px; border-radius: 40px; }
+            .rolly-icon-large svg { width: 120px; height: 120px; }
+            .nav-links { display: none; }
+            .mobile-menu { display: block; }
+            .features-grid { grid-template-columns: 1fr; }
+            .download-card { padding: 40px 24px; }
+            .screenshots-track { gap: 30px; }
+            .screenshot-phone { width: 200px; height: 410px; }
+            .splash-bubble.b1 { width: 350px; height: 350px; }
+            .splash-bubble.b2 { width: 300px; height: 300px; }
+            .splash-bubble.b3 { width: 250px; height: 250px; }
+        }
+
+        @keyframes orbitDotMobile {
+            0% { transform: rotate(0deg) translateX(170px) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(170px) rotate(-360deg); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══════════ NAVIGATION ══════════ -->
+<nav id="navbar">
+    <div class="nav-container">
+        <a href="#" class="nav-logo">
+            <img src="diasmart-logo.png" alt="DiaSmart">
+            <span>DiaSmart</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="#screenshots">Apercu</a></li>
+            <li><a href="#features">Fonctionnalites</a></li>
+            <li><a href="#rolly">ROLLY IA</a></li>
+            <li><a href="#nouveautes">Nouveautes</a></li>
+            <li><a href="#download" class="nav-cta">Telecharger</a></li>
+        </ul>
+        <div class="mobile-menu" onclick="toggleMenu()">
+            <span></span><span></span><span></span>
+        </div>
+    </div>
+</nav>
+
+<!-- ══════════ HERO - Splash Screen Background ══════════ -->
+<section class="hero">
+    <!-- Bulles splash screen animees aleatoirement -->
+    <div class="splash-bubble b1"></div>
+    <div class="splash-bubble b2"></div>
+    <div class="splash-bubble b3"></div>
+    <div class="splash-bubble b4"></div>
+    <div class="splash-bubble b5"></div>
+    <div class="splash-bubble b6"></div>
+
+    <!-- ECG anime -->
+    <div class="hero-ecg">
+        <svg viewBox="0 0 1200 80">
+            <path d="M0 40 L200 40 L240 40 L260 20 L280 60 L300 10 L320 70 L340 40 L380 40 L600 40 L640 40 L660 20 L680 60 L700 10 L720 70 L740 40 L780 40 L1000 40 L1040 40 L1060 20 L1080 60 L1100 10 L1120 70 L1140 40 L1200 40"
+                  fill="none" stroke="#00D2FF" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+    </div>
+
+    <div class="hero-content">
+        <div class="hero-text">
+            <div class="hero-badge">Application disponible</div>
+            <h1 class="hero-title">
+                <span class="gradient">DiaSmart</span><br>
+                Diabetologie<br>Intelligente
+            </h1>
+            <p class="hero-subtitle">
+                Gerez votre diabete avec l'intelligence artificielle. Suivi glycemique,
+                predictions ROLLY, analyse nutritionnelle et communication medecin-patient
+                &mdash; tout dans une seule application.
+            </p>
+            <div class="hero-buttons">
+                <a href="#download" class="btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Telecharger l'APK
+                </a>
+                <a href="#screenshots" class="btn-secondary">
+                    Decouvrir
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+            <div class="hero-stats">
+                <div>
+                    <div class="hero-stat-value">100%</div>
+                    <div class="hero-stat-label">Gratuit</div>
+                </div>
+                <div>
+                    <div class="hero-stat-value">IA</div>
+                    <div class="hero-stat-label">ROLLY integre</div>
+                </div>
+                <div>
+                    <div class="hero-stat-value">24/7</div>
+                    <div class="hero-stat-label">Suivi continu</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Telephone mockup image -->
+        <div class="hero-visual">
+            <div class="phone-mockup-wrapper">
+                <img src="phone-mockup.png" alt="DiaSmart sur smartphone" class="phone-mockup-img">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ SCREENSHOTS ══════════ -->
+<section class="screenshots" id="screenshots">
+    <div class="section-header animate-on-scroll">
+        <div class="section-tag">Apercu de l'application</div>
+        <h2 class="section-title">Decouvrez DiaSmart en images</h2>
+        <p class="section-desc">Une interface moderne et intuitive concue pour simplifier la gestion quotidienne du diabete.</p>
+    </div>
+
+    <div class="screenshots-track">
+        <!-- Screenshot 1: Splash -->
+        <div class="screenshot-item animate-on-scroll">
+            <div class="screenshot-phone">
+                <img src="screen-splash.jpg" alt="DiaSmart Splash Screen">
+            </div>
+            <div class="screenshot-label">
+                <h4>Demarrage</h4>
+                <p>Animation fluide avec le logo DiaSmart et visuel medical attractif</p>
+            </div>
+        </div>
+
+        <!-- Screenshot 2: Dashboard -->
+        <div class="screenshot-item animate-on-scroll" style="transition-delay: 0.15s">
+            <div class="screenshot-phone">
+                <img src="screen-dashboard.jpg" alt="DiaSmart Tableau de bord">
+            </div>
+            <div class="screenshot-label">
+                <h4>Tableau de bord</h4>
+                <p>Acces rapide a toutes les fonctionnalites : glycemie, ROLLY, messagerie, rendez-vous</p>
+            </div>
+        </div>
+
+        <!-- Screenshot 3: ROLLY -->
+        <div class="screenshot-item animate-on-scroll" style="transition-delay: 0.3s">
+            <div class="screenshot-phone">
+                <img src="screen-rolly.jpg" alt="ROLLY Assistant IA">
+            </div>
+            <div class="screenshot-label">
+                <h4>ROLLY - Assistant IA</h4>
+                <p>Chatbot clinique intelligent pour analyse glycemique, conseils nutritionnels et predictions</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ FEATURES ══════════ -->
+<section class="features" id="features">
+    <div class="section-header animate-on-scroll">
+        <div class="section-tag">Fonctionnalites</div>
+        <h2 class="section-title">Tout pour gerer votre diabete</h2>
+        <p class="section-desc">DiaSmart combine suivi glycemique, intelligence artificielle et communication medicale dans une interface intuitive.</p>
+    </div>
+
+    <div class="features-grid">
+        <div class="feature-card animate-on-scroll">
+            <div class="feature-icon blue">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            </div>
+            <h3 class="feature-title">Suivi glycemique</h3>
+            <p class="feature-desc">Enregistrez vos lectures de glycemie avec contexte (a jeun, post-prandial, etc.) et visualisez vos tendances sur des graphiques interactifs.</p>
+        </div>
+
+        <div class="feature-card animate-on-scroll">
+            <div class="feature-icon red">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <h3 class="feature-title">HbA1c & Diagramme</h3>
+            <p class="feature-desc">Suivez votre hemoglobine glyquee avec un diagramme double courbe (Glycemie + HbA1c) pour observer votre progression dans le temps.</p>
+        </div>
+
+        <div class="feature-card animate-on-scroll">
+            <div class="feature-icon green">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <h3 class="feature-title">ROLLY - IA Predictive</h3>
+            <p class="feature-desc">Notre assistant IA analyse vos donnees, predit votre glycemie, detecte les risques et fournit des conseils nutritionnels personnalises.</p>
+        </div>
+
+        <div class="feature-card animate-on-scroll">
+            <div class="feature-icon orange">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+            </div>
+            <h3 class="feature-title">Analyse repas</h3>
+            <p class="feature-desc">Decrivez votre repas et ROLLY calcule les glucides, l'index glycemique, la charge glycemique et propose des alternatives saines.</p>
+        </div>
+
+        <div class="feature-card animate-on-scroll">
+            <div class="feature-icon purple">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <h3 class="feature-title">Partage medecin</h3>
+            <p class="feature-desc">Partagez vos donnees avec votre medecin en toute securite. Export CSV/PDF disponible. Consentement revocable a tout moment.</p>
+        </div>
+
+        <div class="feature-card animate-on-scroll">
+            <div class="feature-icon teal">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <h3 class="feature-title">Rendez-vous & Medicaments</h3>
+            <p class="feature-desc">Gerez vos rendez-vous medicaux, suivez vos medicaments avec rappels automatiques et ne manquez plus aucune prise.</p>
+        </div>
+
+        <div class="feature-card animate-on-scroll">
+            <div class="feature-icon purple">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            </div>
+            <h3 class="feature-title">Carnet de bord</h3>
+            <p class="feature-desc">Journal quotidien pour suivre votre humeur, stress, sommeil et activite physique avec correlation automatique a votre glycemie.</p>
+        </div>
+
+        <div class="feature-card animate-on-scroll">
+            <div class="feature-icon green">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            </div>
+            <h3 class="feature-title">Podometre integre</h3>
+            <p class="feature-desc">Compteur de pas avec objectif quotidien, distance parcourue, calories brulees et impact sur votre glycemie en temps reel.</p>
+        </div>
+
+        <div class="feature-card animate-on-scroll">
+            <div class="feature-icon orange">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+            <h3 class="feature-title">Rappels intelligents</h3>
+            <p class="feature-desc">ROLLY detecte les oublis de mesure et relance le patient. Rappels medicaments, glycemie et rendez-vous via WorkManager.</p>
+        </div>
+
+        <div class="feature-card animate-on-scroll">
+            <div class="feature-icon teal">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12" y2="18.01"/><path d="M8 7h3v3l2-1 2 1V7h3"/></svg>
+            </div>
+            <h3 class="feature-title">Widget Android</h3>
+            <p class="feature-desc">Glycemie actuelle et tendance directement sur votre ecran d'accueil. Mise a jour automatique toutes les 30 minutes.</p>
+        </div>
+
+        <div class="feature-card animate-on-scroll">
+            <div class="feature-icon red">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/><path d="M12 17l4 4 4-8" stroke="#4CAF50" stroke-width="2" fill="none"/></svg>
+            </div>
+            <h3 class="feature-title">Courbes predictives</h3>
+            <p class="feature-desc">ROLLY predit votre glycemie des 6 prochaines heures avec un graphique anime, zones de confiance et alertes de risque.</p>
+        </div>
+
+        <div class="feature-card animate-on-scroll">
+            <div class="feature-icon blue">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            </div>
+            <h3 class="feature-title">Mode sombre / clair</h3>
+            <p class="feature-desc">Basculez entre le mode clair et sombre selon vos preferences ou suivez automatiquement le theme de votre systeme Android.</p>
+        </div>
+
+        <div class="feature-card animate-on-scroll">
+            <div class="feature-icon red">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <h3 class="feature-title">Multi-langue</h3>
+            <p class="feature-desc">Application disponible en francais, anglais et arabe. Changez de langue a tout moment depuis les parametres de l'application.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ ROLLY SECTION ══════════ -->
+<section class="rolly-section" id="rolly">
+    <div class="rolly-content">
+        <div class="rolly-visual animate-on-scroll">
+            <div class="rolly-icon-large">
+                <div class="rolly-orbit"><div class="rolly-orbit-dot"></div></div>
+                <svg viewBox="0 0 200 200">
+                    <circle cx="100" cy="100" r="85" fill="none" stroke="#00D2FF" stroke-width="1" opacity="0.3"/>
+                    <circle cx="140" cy="30" r="3" fill="#00D2FF" opacity="0.5"/>
+                    <circle cx="170" cy="120" r="2" fill="#00D2FF" opacity="0.4"/>
+                    <circle cx="40" cy="150" r="3" fill="#00D2FF" opacity="0.5"/>
+                    <rect x="88" y="60" width="24" height="80" rx="6" fill="white" opacity="0.9"/>
+                    <rect x="60" y="88" width="80" height="24" rx="6" fill="white" opacity="0.9"/>
+                    <path d="M30 100 L65 100 L72 85 L80 100 L88 115 L100 60 L112 120 L120 100 L128 90 L135 100 L170 100"
+                          fill="none" stroke="#00D2FF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M30 100 L65 100 L72 85 L80 100 L88 115 L100 60 L112 120 L120 100 L128 90 L135 100 L170 100"
+                          fill="none" stroke="#00D2FF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.2"/>
+                    <path d="M145 110 L160 75" fill="none" stroke="#4CAF50" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M153 72 L160 75 L163 82" fill="none" stroke="#4CAF50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <rect x="82" y="115" width="36" height="55" rx="5" fill="none" stroke="#00D2FF" stroke-width="1.5" opacity="0.5"/>
+                    <rect x="88" y="145" width="6" height="12" rx="1" fill="#00D2FF" opacity="0.4"/>
+                    <rect x="97" y="140" width="6" height="17" rx="1" fill="#4CAF50" opacity="0.4"/>
+                    <rect x="106" y="148" width="6" height="9" rx="1" fill="#00D2FF" opacity="0.3"/>
+                </svg>
+            </div>
+        </div>
+        <div class="animate-on-scroll">
+            <div class="section-tag">Intelligence Artificielle</div>
+            <h2 class="section-title">Rencontrez ROLLY</h2>
+            <p class="section-desc">Votre assistant IA personnel, specialise en diabetologie. ROLLY connait la physiologie metabolique, la pharmacologie antidiabetique et analyse vos donnees en temps reel.</p>
+            <ul class="rolly-features">
+                <li>
+                    <div class="rolly-check">&#10003;</div>
+                    <div><strong>Prediction glycemique</strong> &mdash; Analyse vos tendances pour anticiper hypo/hyperglycemies et vous alerter</div>
+                </li>
+                <li>
+                    <div class="rolly-check">&#10003;</div>
+                    <div><strong>Analyse nutritionnelle</strong> &mdash; Calcul automatique des glucides, index glycemique et recommandations alimentaires</div>
+                </li>
+                <li>
+                    <div class="rolly-check">&#10003;</div>
+                    <div><strong>Conseils personnalises</strong> &mdash; Bases sur vos donnees reelles (IMC, HbA1c, glycemie, medicaments)</div>
+                </li>
+                <li>
+                    <div class="rolly-check">&#10003;</div>
+                    <div><strong>Pharmacologie integree</strong> &mdash; Connait Metformine, SGLT2, GLP-1, DPP-4, Insuline et leurs interactions</div>
+                </li>
+                <li>
+                    <div class="rolly-check">&#10003;</div>
+                    <div><strong>Anti-hallucination</strong> &mdash; Ne fabrique jamais de donnees, s'appuie uniquement sur vos mesures reelles</div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ NOUVEAUTÉS ══════════ -->
+<section class="features" id="nouveautes" style="padding-top: 60px; padding-bottom: 60px;">
+    <div class="section-header animate-on-scroll">
+        <div class="section-tag" style="color: #7C4DFF;">Nouveautes v1.7</div>
+        <h2 class="section-title">9 fonctionnalites avancees</h2>
+        <p class="section-desc">DiaSmart evolue avec un chatbot ROLLY redesigne style Gemini, des courbes predictives, un widget Android et bien plus.</p>
+    </div>
+
+    <div style="max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px;">
+        <div class="feature-card animate-on-scroll" style="padding: 24px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <span style="font-size: 28px;">📱</span>
+                <h3 class="feature-title" style="margin: 0;">Widget Android</h3>
+            </div>
+            <p class="feature-desc">Glycemie actuelle + tendance directement sur votre ecran d'accueil. Mise a jour automatique.</p>
+        </div>
+        <div class="feature-card animate-on-scroll" style="padding: 24px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <span style="font-size: 28px;">📈</span>
+                <h3 class="feature-title" style="margin: 0;">Courbes predictives</h3>
+            </div>
+            <p class="feature-desc">ROLLY predit votre glycemie des 6 prochaines heures avec graphique anime et alertes.</p>
+        </div>
+        <div class="feature-card animate-on-scroll" style="padding: 24px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <span style="font-size: 28px;">💬</span>
+                <h3 class="feature-title" style="margin: 0;">Messagerie temps reel</h3>
+            </div>
+            <p class="feature-desc">Communication instantanee medecin-patient via Firestore listeners. Notifications push incluses.</p>
+        </div>
+        <div class="feature-card animate-on-scroll" style="padding: 24px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <span style="font-size: 28px;">🔔</span>
+                <h3 class="feature-title" style="margin: 0;">Rappels intelligents</h3>
+            </div>
+            <p class="feature-desc">ROLLY detecte les oublis de mesure et relance le patient. Medicaments, RDV et glycemie.</p>
+        </div>
+        <div class="feature-card animate-on-scroll" style="padding: 24px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <span style="font-size: 28px;">🌙</span>
+                <h3 class="feature-title" style="margin: 0;">Mode sombre</h3>
+            </div>
+            <p class="feature-desc">Basculez entre mode clair, sombre ou automatique. Ideal pour une utilisation nocturne.</p>
+        </div>
+        <div class="feature-card animate-on-scroll" style="padding: 24px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <span style="font-size: 28px;">🌍</span>
+                <h3 class="feature-title" style="margin: 0;">Multi-langue</h3>
+            </div>
+            <p class="feature-desc">Francais, English, العربية. Changez de langue a tout moment dans les parametres.</p>
+        </div>
+        <div class="feature-card animate-on-scroll" style="padding: 24px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <span style="font-size: 28px;">📖</span>
+                <h3 class="feature-title" style="margin: 0;">Carnet de bord</h3>
+            </div>
+            <p class="feature-desc">Suivez humeur, stress, sommeil et activite physique avec correlation glycemique.</p>
+        </div>
+        <div class="feature-card animate-on-scroll" style="padding: 24px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <span style="font-size: 28px;">👟</span>
+                <h3 class="feature-title" style="margin: 0;">Podometre</h3>
+            </div>
+            <p class="feature-desc">Compteur de pas integre avec impact glycemique, distance et calories brulees.</p>
+        </div>
+        <div class="feature-card animate-on-scroll" style="padding: 24px; border: 1px solid rgba(0,210,255,0.3); background: linear-gradient(135deg, rgba(0,210,255,0.08), rgba(11,143,172,0.05));">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <span style="font-size: 28px;">🤖</span>
+                <h3 class="feature-title" style="margin: 0; color: #00D2FF;">ROLLY Redesigne</h3>
+            </div>
+            <p class="feature-desc">Interface chatbot entierement repensee style Gemini : rendu Markdown riche, titres colores, tableaux formates, alertes visuelles, theme sombre immersif et animations fluides.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ DOWNLOAD ══════════ -->
+<section class="download" id="download">
+    <div class="download-card animate-on-scroll">
+        <div class="download-version">v1.9.0 &mdash; Android</div>
+        <h2 class="download-title">Telechargez DiaSmart</h2>
+        <p class="download-desc">
+            Disponible sur Android et sur iPhone/navigateur via la version Web App.
+        </p>
+
+        <!-- Version Web (iPhone + tous navigateurs) -->
+        <a href="app.html" class="download-btn" id="webAppBtn" style="background: linear-gradient(135deg, #7C4DFF, #00D2FF); margin-bottom: 12px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px">
+                <circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            Ouvrir la Web App (iPhone &amp; Web)
+        </a>
+
+        <!-- Version Android -->
+        <a href="diasmart.zip" download class="download-btn" id="downloadBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Telecharger v1.9.0 (.zip)
+        </a>
+        <div class="download-info">
+            <span>&#128230; ~30 Mo</span>
+            <span>&#128241; Android 8+</span>
+            <span>&#128274; 100% gratuit</span>
+        </div>
+        <div style="margin-top: 24px; background: rgba(0,210,255,0.08); border: 1px solid rgba(0,210,255,0.2); border-radius: 12px; padding: 16px; text-align: left;">
+            <p style="color: #00D2FF; font-weight: 600; font-size: 13px; margin-bottom: 8px;">&#128221; Guide d'installation :</p>
+            <ol style="color: var(--gray); font-size: 12px; line-height: 1.8; padding-left: 20px; margin: 0;">
+                <li>Telechargez le fichier <strong>.zip</strong></li>
+                <li>Ouvrez le ZIP et <strong>extrayez DiaSmart.apk</strong></li>
+                <li>Appuyez sur le fichier <strong>.apk</strong> extrait</li>
+                <li>Si demande, autorisez <strong>"Sources inconnues"</strong> dans les parametres</li>
+                <li>Appuyez sur <strong>Installer</strong></li>
+            </ol>
+            <p style="color: rgba(255,255,255,0.4); font-size: 11px; margin-top: 8px;">&#9888;&#65039; Si vous avez une ancienne version, desinstallez-la d'abord avant d'installer la nouvelle.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ FOOTER ══════════ -->
+<footer>
+    <p>&copy; 2026 <a href="#">DiaSmart</a> &mdash; Diabetologie Intelligente. Tous droits reserves.</p>
+    <p style="margin-top: 8px; font-size: 11px; color: rgba(255,255,255,0.3);">
+        Avis informatif &mdash; DiaSmart ne remplace pas un suivi medical professionnel.
+    </p>
+</footer>
+
+<!-- ══════════ SCRIPTS ══════════ -->
+<script>
+    // Navbar scroll effect
+    window.addEventListener('scroll', () => {
+        document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    // Scroll animation observer
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) target.scrollIntoView({ behavior: 'smooth' });
+        });
+    });
+
+    // Mobile menu
+    function toggleMenu() {
+        const links = document.querySelector('.nav-links');
+        if (links.style.display === 'flex') {
+            links.style.display = 'none';
+        } else {
+            links.style.display = 'flex';
+            links.style.flexDirection = 'column';
+            links.style.position = 'absolute';
+            links.style.top = '100%';
+            links.style.left = '0';
+            links.style.right = '0';
+            links.style.background = 'rgba(0,13,31,0.98)';
+            links.style.padding = '20px';
+            links.style.gap = '16px';
+            links.style.borderBottom = '1px solid rgba(0,210,255,0.1)';
+        }
+    }
+
+    // Randomize bubble animation delays for more organic feel
+    document.querySelectorAll('.splash-bubble').forEach((bubble, i) => {
+        bubble.style.animationDelay = `-${Math.random() * 15}s`;
+    });
+</script>
+
+</body>
+</html>

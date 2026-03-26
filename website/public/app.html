@@ -1,0 +1,3624 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#001A3C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DiaSmart">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="diasmart-logo.png">
+<title>DiaSmart</title>
+<style>
+/* ══════════ RESET & BASE ══════════ */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#001A3C;--bg2:#00264D;--bg3:#002B5C;
+  --surface:#0A2647;--surface2:#144272;
+  --cyan:#00D2FF;--teal:#0B8FAC;--mint:#26A69A;
+  --purple:#7C4DFF;--red:#FF5252;--orange:#FF9800;--green:#4CAF50;
+  --text:#FFFFFF;--text2:rgba(255,255,255,.7);--text3:rgba(255,255,255,.4);
+  --radius:16px;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text)}
+body{display:flex;flex-direction:column}
+
+/* ══════════ SCREENS ══════════ */
+.screen{display:none;flex-direction:column;height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.screen.active{display:flex}
+.screen-content{flex:1;overflow-y:auto;padding:16px;padding-bottom:calc(80px + var(--safe-bottom))}
+
+/* ══════════ SPLASH ══════════ */
+#splash{display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#001A3C,#003366,#00264D,#001A3C);position:fixed;inset:0;z-index:1000}
+#splash .logo{width:120px;height:120px;border-radius:50%;animation:pulse 1.5s ease infinite alternate}
+#splash h1{font-size:32px;margin-top:20px;opacity:0;animation:fadeUp .6s ease .8s forwards}
+#splash p{color:var(--text2);font-size:14px;letter-spacing:2px;opacity:0;animation:fadeUp .6s ease 1.2s forwards}
+#splash .loader{width:100px;height:3px;background:rgba(255,255,255,.1);border-radius:3px;margin-top:32px;overflow:hidden;opacity:0;animation:fadeUp .4s ease 1.6s forwards}
+#splash .loader-bar{height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--teal),var(--cyan));border-radius:3px;animation:load 1.5s ease 1.8s forwards}
+@keyframes pulse{0%{transform:scale(1);box-shadow:0 0 20px rgba(0,210,255,.2)}100%{transform:scale(1.05);box-shadow:0 0 40px rgba(0,210,255,.4)}}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+@keyframes load{to{width:100%}}
+.fade-out{animation:fadeOut .4s ease forwards}
+@keyframes fadeOut{to{opacity:0;pointer-events:none}}
+
+/* ══════════ ONBOARDING ══════════ */
+#onboarding{background:linear-gradient(180deg,var(--bg),var(--bg2),var(--bg))}
+.onb-pages{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.onb-pages::-webkit-scrollbar{display:none}
+.onb-page{min-width:100%;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center}
+.onb-icon{font-size:64px;width:120px;height:120px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(0,210,255,.1);margin-bottom:32px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.onb-page h2{font-size:26px;font-weight:700;margin-bottom:12px}
+.onb-page p{color:var(--text2);font-size:15px;margin-bottom:32px}
+.onb-features{width:100%;max-width:320px}
+.onb-feat{background:rgba(255,255,255,.06);border-radius:12px;padding:14px 16px;margin-bottom:12px;text-align:left;font-size:14px;color:var(--text2)}
+.onb-bottom{padding:20px 32px;padding-bottom:calc(32px + var(--safe-bottom))}
+.onb-dots{display:flex;justify-content:center;gap:8px;margin-bottom:20px}
+.onb-dot{width:8px;height:8px;border-radius:4px;background:rgba(255,255,255,.3);transition:.3s}
+.onb-dot.active{width:28px;background:var(--cyan)}
+.btn{width:100%;padding:16px;border:none;border-radius:var(--radius);font-size:17px;font-weight:600;color:#fff;cursor:pointer;transition:.2s}
+.btn:active{transform:scale(.97)}
+.btn-cyan{background:var(--cyan)}
+.btn-purple{background:var(--purple)}
+.btn-outline{background:transparent;border:1px solid rgba(255,255,255,.2);color:var(--cyan);font-size:14px;margin-top:12px}
+
+/* ══════════ LOGIN ══════════ */
+#login{background:linear-gradient(180deg,var(--bg),var(--bg2),var(--bg));padding:32px;justify-content:center;align-items:center}
+#login .login-logo{width:80px;height:80px;border-radius:50%;margin-bottom:24px}
+#login h1{font-size:28px;margin-bottom:4px}
+#login .subtitle{color:var(--text2);font-size:14px;margin-bottom:32px}
+.input-group{width:100%;max-width:360px;margin-bottom:16px;position:relative}
+.input-group input{width:100%;padding:16px 16px 16px 48px;background:var(--surface);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:var(--text);font-size:15px;outline:none;transition:.2s}
+.input-group input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,210,255,.15)}
+.input-group input::placeholder{color:var(--text3)}
+.input-group .icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:18px;opacity:.5}
+.input-group .toggle-pw{position:absolute;right:16px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px}
+.login-tabs{display:flex;gap:0;margin-bottom:24px;background:var(--surface);border-radius:12px;overflow:hidden;width:100%;max-width:360px}
+.login-tab{flex:1;padding:12px;border:none;background:transparent;color:var(--text3);font-size:14px;font-weight:500;cursor:pointer;transition:.2s}
+.login-tab.active{background:var(--cyan);color:#fff}
+.divider{display:flex;align-items:center;gap:12px;width:100%;max-width:360px;margin:20px 0;color:var(--text3);font-size:13px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.1)}
+.btn-google{width:100%;max-width:360px;padding:14px;background:var(--surface);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:var(--text);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:.2s}
+.btn-google:hover{background:var(--surface2)}
+.login-switch{color:var(--text3);font-size:13px;margin-top:20px;text-align:center}
+.login-switch a{color:var(--cyan);text-decoration:none;font-weight:500}
+.login-error{color:var(--red);font-size:13px;text-align:center;margin-top:8px;min-height:20px}
+.role-select{display:flex;gap:12px;width:100%;max-width:360px;margin-bottom:16px}
+.role-btn{flex:1;padding:12px;background:var(--surface);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:var(--text2);font-size:14px;text-align:center;cursor:pointer;transition:.2s}
+.role-btn.active{border-color:var(--cyan);background:rgba(0,210,255,.1);color:var(--cyan)}
+
+/* ══════════ DASHBOARD ══════════ */
+#dashboard .dash-header{padding:20px 16px;padding-top:calc(20px + var(--safe-top));background:linear-gradient(135deg,var(--bg3),var(--surface))}
+#dashboard .dash-header h1{font-size:22px}
+#dashboard .dash-header p{color:var(--text2);font-size:13px;margin-top:2px}
+.dash-greeting{display:flex;align-items:center;gap:12px}
+.dash-avatar{width:44px;height:44px;border-radius:50%;background:var(--cyan);display:flex;align-items:center;justify-content:center;font-size:20px}
+.dash-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.stat-card{background:var(--surface);border-radius:var(--radius);padding:16px;border:1px solid rgba(255,255,255,.06)}
+.stat-card .stat-icon{font-size:24px;margin-bottom:8px}
+.stat-card .stat-value{font-size:22px;font-weight:700}
+.stat-card .stat-label{font-size:12px;color:var(--text3);margin-top:2px}
+.dash-section-title{font-size:16px;font-weight:600;margin:20px 0 12px;padding:0 4px}
+.feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.feature-card{background:var(--surface);border-radius:var(--radius);padding:18px 14px;text-align:center;cursor:pointer;transition:.2s;border:1px solid rgba(255,255,255,.04)}
+.feature-card:active{transform:scale(.96);border-color:var(--cyan)}
+.feature-card .feat-icon{font-size:28px;margin-bottom:8px}
+.feature-card .feat-name{font-size:13px;font-weight:500}
+.feature-card .feat-desc{font-size:11px;color:var(--text3);margin-top:4px}
+
+/* ══════════ GLUCOSE ══════════ */
+.glucose-current{text-align:center;padding:24px;margin-bottom:16px;background:var(--surface);border-radius:var(--radius)}
+.glucose-value{font-size:56px;font-weight:800}
+.glucose-unit{font-size:14px;color:var(--text3)}
+.glucose-status{display:inline-block;padding:6px 16px;border-radius:20px;font-size:13px;font-weight:500;margin-top:8px}
+.status-normal{background:rgba(76,175,80,.15);color:var(--green)}
+.status-high{background:rgba(255,152,0,.15);color:var(--orange)}
+.status-low{background:rgba(255,82,82,.15);color:var(--red)}
+.glucose-chart{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.glucose-chart canvas{width:100%;height:200px}
+.glucose-add{position:fixed;bottom:calc(80px + var(--safe-bottom) + 16px);right:16px;width:56px;height:56px;border-radius:50%;background:var(--cyan);border:none;color:#fff;font-size:28px;cursor:pointer;box-shadow:0 4px 20px rgba(0,210,255,.3);z-index:10}
+.glucose-list{display:flex;flex-direction:column;gap:8px}
+.glucose-item{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border-radius:12px;padding:14px 16px}
+.glucose-item .gi-left{display:flex;align-items:center;gap:12px}
+.glucose-item .gi-dot{width:10px;height:10px;border-radius:50%}
+.glucose-item .gi-val{font-size:18px;font-weight:600}
+.glucose-item .gi-time{font-size:12px;color:var(--text3)}
+
+/* ══════════ CHATBOT ══════════ */
+#chatbot{background:#0D0D1A;position:relative}
+.chat-header{padding:16px;padding-top:calc(16px + var(--safe-top));background:#1A1A2E;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.06)}
+.chat-header .back-btn{background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;padding:4px 8px}
+.chat-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#003366,#001A3C);display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden}
+.rolly-svg{width:100%;height:100%}
+.rolly-icon-sm{display:inline-block;width:20px;height:20px;vertical-align:middle}
+.rolly-icon-md{display:inline-block;width:48px;height:48px}
+.rolly-nav-icon{display:inline-block;width:22px;height:22px;vertical-align:middle}
+/* Sidebar conversations */
+.chat-sidebar-overlay{display:none;position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:60}
+.chat-sidebar-overlay.active{display:block}
+.chat-sidebar{position:absolute;top:0;left:-280px;width:280px;height:100%;background:#111128;z-index:61;transition:left .3s ease;display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.08)}
+.chat-sidebar.open{left:0}
+.chat-sidebar-header{padding:16px;padding-top:calc(16px + var(--safe-top));display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.08)}
+.chat-sidebar-header h3{font-size:15px;font-weight:600;color:var(--text)}
+.chat-sidebar .new-chat-btn{display:flex;align-items:center;gap:8px;margin:12px;padding:12px;background:rgba(0,210,255,.1);border:1px dashed rgba(0,210,255,.3);border-radius:12px;color:var(--cyan);font-size:13px;cursor:pointer;transition:.2s}
+.chat-sidebar .new-chat-btn:hover{background:rgba(0,210,255,.2)}
+.chat-conv-list{flex:1;overflow-y:auto;padding:8px}
+.chat-conv-item{padding:12px;border-radius:10px;margin-bottom:4px;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:10px;position:relative}
+.chat-conv-item:hover{background:rgba(255,255,255,.05)}
+.chat-conv-item.active{background:rgba(0,210,255,.1);border:1px solid rgba(0,210,255,.15)}
+.chat-conv-item .conv-icon{font-size:16px;flex-shrink:0;opacity:.6}
+.chat-conv-item .conv-info{flex:1;min-width:0}
+.chat-conv-item .conv-title{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-conv-item .conv-date{font-size:10px;color:var(--text3);margin-top:2px}
+.chat-conv-item .conv-preview{font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.chat-conv-item .conv-del{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--red);font-size:14px;cursor:pointer;opacity:0;transition:.2s;padding:4px}
+.chat-conv-item:hover .conv-del{opacity:.7}
+.chat-conv-item .conv-del:hover{opacity:1}
+.chat-date-group{font-size:11px;color:var(--text3);padding:8px 12px 4px;font-weight:500}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.chat-msg{max-width:85%;padding:14px 16px;border-radius:16px;font-size:14px;line-height:1.6;word-wrap:break-word}
+.chat-msg.user{align-self:flex-end;background:rgba(0,210,255,.15);border-bottom-right-radius:4px;color:var(--text)}
+.chat-msg.ai{align-self:flex-start;background:transparent;color:var(--text2);padding-left:0}
+.chat-msg.ai strong{color:var(--text);font-weight:600}
+.chat-msg.ai h3{color:var(--cyan);font-size:15px;margin:8px 0 4px}
+.chat-msg.ai ul{padding-left:16px;margin:4px 0}
+.chat-msg.ai li{margin:4px 0}
+.chat-msg.ai .alert-box{background:rgba(255,82,82,.1);border:1px solid rgba(255,82,82,.2);border-radius:8px;padding:10px;margin:8px 0;font-size:13px}
+.chat-typing{display:flex;gap:6px;padding:8px 0;align-self:flex-start}
+.chat-typing span{width:8px;height:8px;border-radius:50%;background:var(--cyan);animation:typeDot 1.4s infinite}
+.chat-typing span:nth-child(2){animation-delay:.2s}
+.chat-typing span:nth-child(3){animation-delay:.4s}
+@keyframes typeDot{0%,60%,100%{opacity:.3;transform:scale(.8)}30%{opacity:1;transform:scale(1.2)}}
+.chat-suggestions{display:flex;gap:8px;overflow-x:auto;padding:4px 0;scrollbar-width:none}
+.chat-suggestions::-webkit-scrollbar{display:none}
+.chat-sug{flex-shrink:0;padding:8px 16px;background:#1A1A2E;border:1px solid rgba(0,210,255,.15);border-radius:20px;color:var(--cyan);font-size:13px;cursor:pointer;transition:.2s}
+.chat-sug:active{background:rgba(0,210,255,.1)}
+.chat-input-area{padding:12px 16px;padding-bottom:calc(12px + var(--safe-bottom));background:#1A1A2E;display:flex;gap:8px;align-items:flex-end}
+.chat-input-area textarea{flex:1;padding:12px 16px;background:#252540;border:1px solid rgba(255,255,255,.08);border-radius:24px;color:var(--text);font-size:14px;resize:none;outline:none;max-height:100px;font-family:inherit;line-height:1.4}
+.chat-input-area textarea:focus{border-color:var(--cyan)}
+.chat-send{width:44px;height:44px;border-radius:50%;background:var(--cyan);border:none;color:#fff;font-size:18px;cursor:pointer;flex-shrink:0;transition:.2s}
+.chat-send:disabled{opacity:.3}
+
+/* ══════════ PATIENTS ══════════ */
+.patient-card{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;cursor:pointer;border:1px solid rgba(255,255,255,.04);transition:.2s}
+.patient-card:active{border-color:var(--cyan)}
+.patient-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600}
+.patient-info h3{font-size:15px;font-weight:600}
+.patient-info p{font-size:12px;color:var(--text3);margin-top:2px}
+.patient-add{display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(0,210,255,.08);border:1px dashed rgba(0,210,255,.3);border-radius:var(--radius);padding:16px;margin-bottom:12px;cursor:pointer;color:var(--cyan);font-size:14px;transition:.2s}
+.patient-add:active{background:rgba(0,210,255,.15)}
+
+/* ══════════ TOP BAR ══════════ */
+.top-bar{display:flex;align-items:center;gap:12px;padding:16px;padding-top:calc(16px + var(--safe-top));background:var(--surface)}
+.top-bar .back-btn{background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;padding:4px 8px}
+.top-bar h2{font-size:18px;font-weight:600;flex:1}
+
+/* ══════════ BOTTOM NAV ══════════ */
+.bottom-nav{display:flex;background:var(--surface);border-top:1px solid rgba(255,255,255,.06);padding:8px 0;padding-bottom:calc(8px + var(--safe-bottom));position:fixed;bottom:0;left:0;right:0;z-index:50}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0;cursor:pointer;color:var(--text3);font-size:10px;transition:.2s;background:none;border:none}
+.nav-item.active{color:var(--cyan)}
+.nav-item .nav-icon{font-size:22px}
+
+/* ══════════ MODAL ══════════ */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:flex-end;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal{background:var(--surface);border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:500px;max-height:80vh;overflow-y:auto;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(100%)}}
+.modal h3{font-size:18px;margin-bottom:16px}
+.modal .input-group{margin-bottom:12px}
+.modal .input-group label{display:block;font-size:13px;color:var(--text2);margin-bottom:6px}
+.modal .input-group input,.modal .input-group select{width:100%;padding:12px;background:var(--bg);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:var(--text);font-size:14px;outline:none}
+.modal .input-group input:focus,.modal .input-group select:focus{border-color:var(--cyan)}
+
+/* ══════════ SETTINGS ══════════ */
+.settings-item{display:flex;align-items:center;justify-content:space-between;padding:16px;background:var(--surface);border-radius:12px;margin-bottom:8px;cursor:pointer}
+.settings-item .si-left{display:flex;align-items:center;gap:12px}
+.settings-item .si-icon{font-size:20px}
+.settings-item .si-label{font-size:14px}
+.settings-item .si-arrow{color:var(--text3)}
+
+/* ══════════ PHONE AUTH ══════════ */
+.phone-input-row{display:flex;gap:8px;width:100%;max-width:360px;margin-bottom:16px}
+.phone-prefix{width:80px;padding:16px 8px;background:var(--surface);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:var(--text);font-size:15px;text-align:center;outline:none}
+.phone-prefix:focus{border-color:var(--cyan)}
+.phone-input-row .input-group{flex:1;margin-bottom:0}
+.otp-row{display:flex;gap:8px;justify-content:center;margin:16px 0;width:100%;max-width:360px}
+.otp-box{width:48px;height:56px;background:var(--surface);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:var(--text);font-size:24px;text-align:center;outline:none;font-weight:700}
+.otp-box:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,210,255,.15)}
+.auth-mode-tabs{display:flex;gap:0;margin-bottom:20px;background:var(--surface);border-radius:12px;overflow:hidden;width:100%;max-width:360px}
+.auth-mode-tab{flex:1;padding:10px;border:none;background:transparent;color:var(--text3);font-size:13px;cursor:pointer;transition:.2s}
+.auth-mode-tab.active{background:rgba(0,210,255,.15);color:var(--cyan)}
+
+/* ══════════ PROFILE ══════════ */
+.profile-photo-wrap{position:relative;width:90px;height:90px;margin:0 auto 16px}
+.profile-photo{width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid var(--cyan);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden}
+.profile-photo img{width:100%;height:100%;object-fit:cover}
+.profile-photo-edit{position:absolute;bottom:0;right:0;width:30px;height:30px;border-radius:50%;background:var(--cyan);border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.profile-section{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.profile-section h4{font-size:14px;color:var(--cyan);margin-bottom:12px;font-weight:600}
+.profile-field{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.profile-field:last-child{border-bottom:none}
+.profile-field .pf-label{font-size:12px;color:var(--text3)}
+.profile-field .pf-value{font-size:14px;font-weight:500}
+.profile-field .pf-edit{color:var(--cyan);background:none;border:none;font-size:13px;cursor:pointer}
+.morpho-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.morpho-card{background:var(--bg);border-radius:12px;padding:14px;text-align:center}
+.morpho-card .mc-icon{font-size:24px;margin-bottom:4px}
+.morpho-card .mc-val{font-size:20px;font-weight:700}
+.morpho-card .mc-label{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* ══════════ MEDICAMENTS ══════════ */
+.med-card{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:12px;border:1px solid rgba(255,255,255,.04)}
+.med-card.inactive{opacity:.5}
+.med-card .med-top{display:flex;justify-content:space-between;align-items:center}
+.med-card .med-name{font-size:16px;font-weight:600}
+.med-card .med-badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
+.med-badge.active{background:rgba(76,175,80,.15);color:var(--green)}
+.med-badge.paused{background:rgba(255,152,0,.15);color:var(--orange)}
+.med-card .med-details{display:flex;gap:16px;margin-top:10px;font-size:13px;color:var(--text2)}
+.med-card .med-details span{display:flex;align-items:center;gap:4px}
+.med-actions{display:flex;gap:8px;margin-top:12px;justify-content:flex-end}
+.med-actions button{background:none;border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--text2);padding:6px 12px;font-size:12px;cursor:pointer;transition:.2s}
+.med-actions button:active{background:rgba(255,255,255,.05)}
+.med-actions .med-del{border-color:rgba(255,82,82,.3);color:var(--red)}
+
+/* ══════════ RENDEZ-VOUS ══════════ */
+.rdv-filters{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
+.rdv-filters::-webkit-scrollbar{display:none}
+.rdv-chip{padding:8px 16px;border-radius:20px;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;white-space:nowrap;transition:.2s}
+.rdv-chip.active{background:var(--cyan);color:#fff;border-color:var(--cyan)}
+.rdv-card{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:12px;border-left:4px solid var(--cyan);border:1px solid rgba(255,255,255,.04)}
+.rdv-card.today{border-left:4px solid var(--green)}
+.rdv-card.past{border-left:4px solid var(--text3);opacity:.7}
+.rdv-card .rdv-title{font-size:15px;font-weight:600}
+.rdv-card .rdv-info{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;font-size:12px;color:var(--text2)}
+.rdv-card .rdv-info span{display:flex;align-items:center;gap:4px}
+.rdv-card .rdv-type{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;background:rgba(0,210,255,.1);color:var(--cyan);margin-top:8px}
+
+/* ══════════ JOURNAL ══════════ */
+.journal-today{background:var(--surface);border-radius:var(--radius);padding:20px;margin-bottom:16px;text-align:center}
+.journal-emojis{display:flex;justify-content:center;gap:16px;margin-top:12px;font-size:28px}
+.journal-form{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.journal-form h4{font-size:14px;color:var(--cyan);margin-bottom:12px}
+.emoji-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.emoji-chip{padding:8px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.1);background:transparent;font-size:14px;cursor:pointer;transition:.2s}
+.emoji-chip.selected{background:rgba(0,210,255,.15);border-color:var(--cyan)}
+.journal-history .jh-item{background:var(--surface);border-radius:12px;padding:14px;margin-bottom:8px}
+.journal-history .jh-date{font-size:12px;color:var(--text3);margin-bottom:6px}
+.journal-history .jh-emojis{font-size:20px}
+
+/* ══════════ PEDOMETER ══════════ */
+.pedo-circle{width:200px;height:200px;border-radius:50%;margin:20px auto;position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.pedo-circle canvas{position:absolute;inset:0}
+.pedo-steps{font-size:42px;font-weight:800;z-index:1}
+.pedo-goal{font-size:13px;color:var(--text3);z-index:1}
+.pedo-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px}
+.pedo-stat{background:var(--surface);border-radius:var(--radius);padding:16px;text-align:center}
+.pedo-stat .ps-val{font-size:20px;font-weight:700}
+.pedo-stat .ps-label{font-size:11px;color:var(--text3);margin-top:4px}
+.pedo-btn{display:block;width:80%;max-width:300px;margin:20px auto;padding:16px;border:none;border-radius:var(--radius);font-size:16px;font-weight:600;cursor:pointer;transition:.2s}
+.pedo-btn.start{background:var(--green);color:#fff}
+.pedo-btn.stop{background:var(--red);color:#fff}
+
+/* ══════════ PREDICTIVE ══════════ */
+.pred-current{background:var(--surface);border-radius:var(--radius);padding:20px;margin-bottom:16px;text-align:center}
+.pred-value{font-size:48px;font-weight:800}
+.pred-risk{display:inline-block;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;margin-top:8px}
+.pred-risk.low{background:rgba(76,175,80,.15);color:var(--green)}
+.pred-risk.normal{background:rgba(0,210,255,.15);color:var(--cyan)}
+.pred-risk.moderate{background:rgba(255,152,0,.15);color:var(--orange)}
+.pred-risk.high{background:rgba(255,82,82,.15);color:var(--red)}
+.pred-chart{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.pred-chart canvas{width:100%;height:220px}
+.pred-table{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.pred-table table{width:100%;border-collapse:collapse}
+.pred-table th{font-size:12px;color:var(--text3);padding:8px 4px;text-align:left;border-bottom:1px solid rgba(255,255,255,.06)}
+.pred-table td{font-size:14px;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.03)}
+
+/* ══════════ MESSAGERIE ══════════ */
+.conv-card{display:flex;align-items:center;gap:14px;background:var(--surface);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:.2s;border:1px solid rgba(255,255,255,.04)}
+.conv-card:active{border-color:var(--cyan)}
+.conv-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;flex-shrink:0}
+.conv-info{flex:1;min-width:0}
+.conv-info h4{font-size:14px;font-weight:600}
+.conv-info p{font-size:12px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv-meta{text-align:right;flex-shrink:0}
+.conv-meta .conv-time{font-size:11px;color:var(--text3)}
+.conv-meta .conv-unread{background:var(--red);color:#fff;font-size:11px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-top:4px;margin-left:auto}
+.msg-input-bar{padding:12px 16px;padding-bottom:calc(12px + var(--safe-bottom));background:var(--surface);display:flex;gap:8px;align-items:flex-end}
+.msg-input-bar input{flex:1;padding:12px 16px;background:var(--bg);border:1px solid rgba(255,255,255,.08);border-radius:24px;color:var(--text);font-size:14px;outline:none}
+.msg-input-bar input:focus{border-color:var(--cyan)}
+.msg-input-bar button{width:44px;height:44px;border-radius:50%;background:var(--cyan);border:none;color:#fff;font-size:18px;cursor:pointer;flex-shrink:0}
+
+/* ══════════ REPAS ANALYSE ══════════ */
+.repas-input{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.repas-input textarea{width:100%;min-height:80px;background:var(--bg);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px;color:var(--text);font-size:14px;font-family:inherit;resize:vertical;outline:none}
+.repas-input textarea:focus{border-color:var(--cyan)}
+.repas-result{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.repas-nutrients{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.repas-nutrient{background:var(--bg);border-radius:10px;padding:10px;text-align:center}
+.repas-nutrient .rn-val{font-size:18px;font-weight:700}
+.repas-nutrient .rn-label{font-size:10px;color:var(--text3);margin-top:2px}
+.repas-score{display:inline-block;padding:4px 14px;border-radius:20px;font-size:13px;font-weight:600}
+.repas-history .rh-item{background:var(--surface);border-radius:12px;padding:14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+
+/* ══════════ DATA SHARING ══════════ */
+.share-info{background:rgba(0,210,255,.06);border:1px solid rgba(0,210,255,.15);border-radius:var(--radius);padding:16px;margin-bottom:16px;font-size:13px;color:var(--text2);line-height:1.6}
+.consent-card{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:12px;border:1px solid rgba(255,255,255,.04)}
+.consent-card .cc-top{display:flex;justify-content:space-between;align-items:center}
+.consent-card .cc-name{font-size:15px;font-weight:600}
+.consent-card .cc-status{font-size:11px;color:var(--green)}
+.consent-badges{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.consent-badge{padding:4px 10px;border-radius:12px;font-size:11px;background:rgba(0,210,255,.1);color:var(--cyan)}
+.consent-revoke{margin-top:12px;background:none;border:1px solid rgba(255,82,82,.3);border-radius:8px;color:var(--red);padding:6px 16px;font-size:12px;cursor:pointer}
+
+/* ══════════ VALIDATIONS ══════════ */
+.validation-card{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:12px;border-left:4px solid var(--purple);border:1px solid rgba(255,255,255,.04)}
+.validation-card .vc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.validation-card .vc-patient{font-size:14px;font-weight:600}
+.validation-card .vc-status{font-size:11px;padding:3px 10px;border-radius:20px}
+.vc-status.pending{background:rgba(255,152,0,.15);color:var(--orange)}
+.vc-status.validated{background:rgba(76,175,80,.15);color:var(--green)}
+.vc-status.rejected{background:rgba(255,82,82,.15);color:var(--red)}
+.validation-card .vc-question{font-size:13px;color:var(--text2);margin-bottom:8px;padding:8px;background:var(--bg);border-radius:8px}
+.validation-card .vc-response{font-size:13px;color:var(--text2);margin-bottom:12px;padding:10px;background:rgba(124,77,255,.06);border-radius:8px;border-left:3px solid var(--purple);max-height:150px;overflow-y:auto}
+.vc-actions{display:flex;gap:8px}
+.vc-actions button{flex:1;padding:10px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer}
+.vc-actions .vc-approve{background:var(--green);color:#fff}
+.vc-actions .vc-reject{background:var(--red);color:#fff}
+.doctor-select-list{max-height:200px;overflow-y:auto;margin:8px 0}
+.doctor-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface);border-radius:12px;margin-bottom:8px;cursor:pointer;border:2px solid transparent;transition:.2s}
+.doctor-item:active,.doctor-item.selected{border-color:var(--cyan);background:rgba(0,210,255,.06)}
+.doctor-item .di-avatar{width:40px;height:40px;border-radius:50%;background:rgba(0,210,255,.15);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:var(--cyan);flex-shrink:0}
+.doctor-item .di-name{font-size:14px;font-weight:600}
+.doctor-item .di-spec{font-size:12px;color:var(--text3)}
+.validation-banner{background:rgba(124,77,255,.1);border:1px solid rgba(124,77,255,.2);border-radius:12px;padding:12px 16px;margin-top:8px;font-size:12px;color:var(--text2)}
+.validation-banner .vb-status{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;margin-left:6px}
+
+/* ══════════ UTILS ══════════ */
+.hidden{display:none!important}
+.text-cyan{color:var(--cyan)}
+.text-center{text-align:center}
+.mt-8{margin-top:8px}.mt-16{margin-top:16px}.mt-24{margin-top:24px}
+.mb-16{margin-bottom:16px}
+.w-full{width:100%;max-width:360px}
+</style>
+</head>
+<body>
+
+<!-- ══════════ SPLASH ══════════ -->
+<div id="splash">
+  <div style="display:flex;flex-direction:column;align-items:center">
+    <img src="diasmart-logo.png" alt="DiaSmart" class="logo">
+    <h1 style="transform:translateY(10px)">DiaSmart</h1>
+    <p style="transform:translateY(10px)">DIABETOLOGIE INTELLIGENTE</p>
+    <div class="loader"><div class="loader-bar"></div></div>
+  </div>
+</div>
+
+<!-- ══════════ ONBOARDING ══════════ -->
+<div id="onboarding" class="screen">
+  <div style="padding:48px 24px 0;display:flex;justify-content:flex-end">
+    <button onclick="showLogin()" style="background:none;border:none;color:var(--text3);font-size:14px;cursor:pointer">Passer</button>
+  </div>
+  <div class="onb-pages" id="onbPages">
+    <div class="onb-page">
+      <div class="onb-icon">&#129656;</div>
+      <h2>Suivi Intelligent</h2>
+      <p>Gerez votre diabete au quotidien</p>
+      <div class="onb-features">
+        <div class="onb-feat">&#128200; Suivi glycemique en temps reel</div>
+        <div class="onb-feat">&#128138; Gestion des medicaments</div>
+        <div class="onb-feat">&#127869;&#65039; Analyse nutritionnelle par IA</div>
+        <div class="onb-feat">&#128694; Podometre integre</div>
+      </div>
+    </div>
+    <div class="onb-page">
+      <div class="onb-icon rolly-icon-md" style="background:rgba(124,77,255,.1)" id="onbRollyIcon"></div>
+      <h2>ROLLY, votre assistant IA</h2>
+      <p>Un chatbot medical disponible 24h/24</p>
+      <div class="onb-features">
+        <div class="onb-feat">&#128172; Reponses personnalisees</div>
+        <div class="onb-feat">&#128201; Predictions glycemiques a 6h</div>
+        <div class="onb-feat">&#9888;&#65039; Alertes intelligentes</div>
+        <div class="onb-feat">&#128203; Rapports detailles</div>
+      </div>
+    </div>
+    <div class="onb-page">
+      <div class="onb-icon" style="background:rgba(38,166,154,.1)">&#128101;</div>
+      <h2>Connecte &amp; Securise</h2>
+      <p>Partagez avec votre equipe medicale</p>
+      <div class="onb-features">
+        <div class="onb-feat">&#128233; Messagerie medecin-patient</div>
+        <div class="onb-feat">&#128276; Rappels intelligents</div>
+        <div class="onb-feat">&#128274; Donnees chiffrees et privees</div>
+        <div class="onb-feat">&#127760; Fonctionne sur Android et iPhone</div>
+      </div>
+    </div>
+  </div>
+  <div class="onb-bottom">
+    <div class="onb-dots" id="onbDots">
+      <div class="onb-dot active"></div><div class="onb-dot"></div><div class="onb-dot"></div>
+    </div>
+    <button class="btn btn-cyan" id="onbBtn" onclick="onbNext()">Suivant</button>
+    <button class="btn btn-outline" onclick="showLogin()">Deja un compte ? Se connecter</button>
+  </div>
+</div>
+
+<!-- ══════════ LOGIN ══════════ -->
+<div id="login" class="screen">
+  <img src="diasmart-logo.png" alt="DiaSmart" class="login-logo">
+  <h1>DiaSmart</h1>
+  <p class="subtitle">Diabetologie Intelligente</p>
+
+  <div class="login-tabs">
+    <button class="login-tab active" onclick="setLoginMode('login')">Connexion</button>
+    <button class="login-tab" onclick="setLoginMode('register')">Inscription</button>
+  </div>
+
+  <!-- Auth method tabs: Email / Telephone -->
+  <div class="auth-mode-tabs" id="authModeTabs">
+    <button class="auth-mode-tab active" onclick="setAuthMethod('email')">&#9993; Email</button>
+    <button class="auth-mode-tab" onclick="setAuthMethod('phone')">&#128222; Telephone</button>
+  </div>
+
+  <div id="registerFields" class="hidden w-full">
+    <div class="input-group">
+      <span class="icon">&#128100;</span>
+      <input type="text" id="regName" placeholder="Nom complet">
+    </div>
+    <div class="role-select">
+      <div class="role-btn active" onclick="setRole('patient',this)">&#129657; Patient</div>
+      <div class="role-btn" onclick="setRole('medecin',this)">&#129658; Medecin</div>
+    </div>
+  </div>
+
+  <!-- EMAIL fields -->
+  <div id="emailFields" class="w-full">
+    <div class="input-group w-full">
+      <span class="icon">&#9993;</span>
+      <input type="email" id="loginEmail" placeholder="Email">
+    </div>
+    <div class="input-group w-full">
+      <span class="icon">&#128274;</span>
+      <input type="password" id="loginPassword" placeholder="Mot de passe">
+      <button class="toggle-pw" onclick="togglePw()">&#128065;</button>
+    </div>
+  </div>
+
+  <!-- PHONE fields -->
+  <div id="phoneFields" class="hidden w-full">
+    <div class="phone-input-row">
+      <input type="text" class="phone-prefix" value="+33" id="phonePrefix">
+      <div class="input-group">
+        <span class="icon">&#128222;</span>
+        <input type="tel" id="phoneNumber" placeholder="6 12 34 56 78">
+      </div>
+    </div>
+    <div id="otpSection" class="hidden w-full" style="text-align:center">
+      <p style="color:var(--text2);font-size:13px;margin-bottom:12px">Code envoye par SMS</p>
+      <div class="otp-row">
+        <input type="text" class="otp-box" maxlength="1" oninput="otpNext(this,1)">
+        <input type="text" class="otp-box" maxlength="1" oninput="otpNext(this,2)">
+        <input type="text" class="otp-box" maxlength="1" oninput="otpNext(this,3)">
+        <input type="text" class="otp-box" maxlength="1" oninput="otpNext(this,4)">
+        <input type="text" class="otp-box" maxlength="1" oninput="otpNext(this,5)">
+        <input type="text" class="otp-box" maxlength="1" oninput="otpNext(this,6)">
+      </div>
+    </div>
+    <div id="recaptchaContainer"></div>
+  </div>
+
+  <button class="btn btn-cyan w-full" id="loginBtn" onclick="doAuth()">Se connecter</button>
+  <div class="login-error" id="loginError"></div>
+
+  <div class="divider">ou</div>
+
+  <button class="btn-google" onclick="doGoogleLogin()">
+    <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
+    Continuer avec Google
+  </button>
+
+  <p class="login-switch mt-16" id="loginSwitch">
+    Pas de compte ? <a href="#" onclick="setLoginMode('register');return false">S'inscrire</a>
+  </p>
+</div>
+
+<!-- ══════════ DASHBOARD ══════════ -->
+<div id="dashboard" class="screen">
+  <div class="dash-header">
+    <div class="dash-greeting">
+      <div class="dash-avatar" id="dashAvatar">&#128100;</div>
+      <div>
+        <h1 id="dashName">Bonjour</h1>
+        <p id="dashRole">Patient</p>
+      </div>
+    </div>
+    <div class="dash-stats">
+      <div class="stat-card">
+        <div class="stat-icon">&#129656;</div>
+        <div class="stat-value" id="statGlucose">--</div>
+        <div class="stat-label">Derniere glycemie (mg/dL)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">&#128200;</div>
+        <div class="stat-value" id="statReadings">0</div>
+        <div class="stat-label">Mesures ce mois</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">&#128138;</div>
+        <div class="stat-value" id="statMeds">0</div>
+        <div class="stat-label">Medicaments actifs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">&#128197;</div>
+        <div class="stat-value" id="statRdv">0</div>
+        <div class="stat-label">Prochain RDV</div>
+      </div>
+    </div>
+  </div>
+  <div class="screen-content">
+    <div class="dash-section-title">Fonctionnalites</div>
+    <div class="feature-grid">
+      <div class="feature-card" onclick="navigate('glucose')">
+        <div class="feat-icon">&#129656;</div>
+        <div class="feat-name">Glycemie</div>
+        <div class="feat-desc">Suivi & historique</div>
+      </div>
+      <div class="feature-card" onclick="navigate('chatbot')">
+        <div class="feat-icon" id="dashRollyIcon"></div>
+        <div class="feat-name">ROLLY</div>
+        <div class="feat-desc">Assistant IA</div>
+      </div>
+      <div class="feature-card" onclick="navigate('patients')">
+        <div class="feat-icon">&#128101;</div>
+        <div class="feat-name">Patients</div>
+        <div class="feat-desc">Gerer les dossiers</div>
+      </div>
+      <div class="feature-card" onclick="navigate('settings')">
+        <div class="feat-icon">&#9881;&#65039;</div>
+        <div class="feat-name">Parametres</div>
+        <div class="feat-desc">Profil & preferences</div>
+      </div>
+    </div>
+
+    <div class="dash-section-title mt-24">Sante & Suivi</div>
+    <div class="feature-grid">
+      <div class="feature-card" onclick="navigate('medicaments')">
+        <div class="feat-icon">&#128138;</div>
+        <div class="feat-name">Medicaments</div>
+        <div class="feat-desc">Gestion traitements</div>
+      </div>
+      <div class="feature-card" onclick="navigate('rendezvous')">
+        <div class="feat-icon">&#128197;</div>
+        <div class="feat-name">Rendez-vous</div>
+        <div class="feat-desc">Agenda medical</div>
+      </div>
+      <div class="feature-card" onclick="navigate('journal')">
+        <div class="feat-icon">&#128214;</div>
+        <div class="feat-name">Journal</div>
+        <div class="feat-desc">Carnet de bord</div>
+      </div>
+      <div class="feature-card" onclick="navigate('pedometer')">
+        <div class="feat-icon">&#128694;</div>
+        <div class="feat-name">Podometre</div>
+        <div class="feat-desc">Activite physique</div>
+      </div>
+      <div class="feature-card" onclick="navigate('predictive')">
+        <div class="feat-icon">&#128201;</div>
+        <div class="feat-name">Predictions</div>
+        <div class="feat-desc">Courbes predictives</div>
+      </div>
+      <div class="feature-card" onclick="navigate('repas')">
+        <div class="feat-icon">&#127869;</div>
+        <div class="feat-name">Repas</div>
+        <div class="feat-desc">Analyse nutritionnelle</div>
+      </div>
+      <div class="feature-card" onclick="navigate('messagerie')">
+        <div class="feat-icon">&#128233;</div>
+        <div class="feat-name">Messagerie</div>
+        <div class="feat-desc">Contact medecin</div>
+      </div>
+      <div class="feature-card" onclick="navigate('datasharing')">
+        <div class="feat-icon">&#128274;</div>
+        <div class="feat-name">Partage</div>
+        <div class="feat-desc">Donnees medicales</div>
+      </div>
+      <div class="feature-card" id="validationsCard" onclick="navigate('validations')" style="display:none">
+        <div class="feat-icon">&#9989;</div>
+        <div class="feat-name">Validations</div>
+        <div class="feat-desc">Reponses ROLLY</div>
+      </div>
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="navigate('dashboard')"><span class="nav-icon">&#127968;</span>Accueil</button>
+    <button class="nav-item" onclick="navigate('glucose')"><span class="nav-icon">&#129656;</span>Glycemie</button>
+    <button class="nav-item" onclick="navigate('chatbot')"><span class="nav-icon rolly-nav-icon"></span>ROLLY</button>
+    <button class="nav-item" onclick="navigate('patients')"><span class="nav-icon">&#128101;</span>Patients</button>
+    <button class="nav-item" onclick="navigate('settings')"><span class="nav-icon">&#9881;</span>Reglages</button>
+  </nav>
+</div>
+
+<!-- ══════════ GLUCOSE ══════════ -->
+<div id="glucose" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="navigate('dashboard')">&#8592;</button>
+    <h2>Suivi Glycemique</h2>
+  </div>
+  <div class="screen-content">
+    <div class="glucose-current">
+      <div class="glucose-value" id="glucoseVal">--</div>
+      <div class="glucose-unit">mg/dL</div>
+      <div class="glucose-status status-normal" id="glucoseStatus">En attente</div>
+    </div>
+    <div class="glucose-chart">
+      <canvas id="glucoseChart"></canvas>
+    </div>
+    <h3 style="font-size:15px;margin-bottom:12px">Historique</h3>
+    <div class="glucose-list" id="glucoseList"></div>
+  </div>
+  <button class="glucose-add" onclick="openGlucoseModal()">+</button>
+  <nav class="bottom-nav">
+    <button class="nav-item" onclick="navigate('dashboard')"><span class="nav-icon">&#127968;</span>Accueil</button>
+    <button class="nav-item active" onclick="navigate('glucose')"><span class="nav-icon">&#129656;</span>Glycemie</button>
+    <button class="nav-item" onclick="navigate('chatbot')"><span class="nav-icon rolly-nav-icon"></span>ROLLY</button>
+    <button class="nav-item" onclick="navigate('patients')"><span class="nav-icon">&#128101;</span>Patients</button>
+    <button class="nav-item" onclick="navigate('settings')"><span class="nav-icon">&#9881;</span>Reglages</button>
+  </nav>
+</div>
+
+<!-- ══════════ CHATBOT ══════════ -->
+<div id="chatbot" class="screen">
+  <!-- Sidebar overlay -->
+  <div class="chat-sidebar-overlay" id="chatSidebarOverlay" onclick="toggleChatSidebar()"></div>
+  <!-- Sidebar conversations list -->
+  <div class="chat-sidebar" id="chatSidebar">
+    <div class="chat-sidebar-header">
+      <h3>&#128172; Discussions</h3>
+      <button onclick="toggleChatSidebar()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer">&#10005;</button>
+    </div>
+    <div class="new-chat-btn" onclick="createNewChatSession()">&#10133; Nouvelle discussion</div>
+    <div class="chat-conv-list" id="chatConvList">
+      <div style="text-align:center;color:var(--text3);padding:24px;font-size:13px">Chargement...</div>
+    </div>
+  </div>
+  <div class="chat-header">
+    <button class="back-btn" onclick="navigate('dashboard')">&#8592;</button>
+    <button onclick="toggleChatSidebar()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;padding:4px 8px" title="Historique">&#9776;</button>
+    <div class="chat-avatar" id="chatRollyAvatar"></div>
+    <div style="flex:1"><strong style="font-size:15px">ROLLY</strong><br><span id="chatSessionTitle" style="font-size:11px;color:var(--text3)">Nouvelle discussion</span></div>
+    <button onclick="createNewChatSession()" style="background:none;border:none;color:var(--cyan);font-size:20px;cursor:pointer;padding:4px 8px" title="Nouvelle discussion">&#10133;</button>
+  </div>
+  <div class="chat-messages" id="chatMessages">
+    <div class="chat-msg ai">
+      Bonjour ! Je suis <strong>ROLLY</strong>, votre assistant medical IA. &#128075;<br><br>
+      Je peux vous aider avec :
+      <ul>
+        <li>Analyse de vos glycemies</li>
+        <li>Conseils nutritionnels</li>
+        <li>Informations sur le diabete</li>
+        <li>Rappels de medicaments</li>
+      </ul>
+      Comment puis-je vous aider ?
+    </div>
+    <div class="chat-suggestions">
+      <div class="chat-sug" onclick="sendSuggestion(this)">Analyser ma glycemie</div>
+      <div class="chat-sug" onclick="sendSuggestion(this)">Conseils alimentation</div>
+      <div class="chat-sug" onclick="sendSuggestion(this)">Que faire si hypo ?</div>
+    </div>
+  </div>
+  <div class="chat-input-area">
+    <textarea id="chatInput" rows="1" placeholder="Ecrivez votre message..." oninput="autoResize(this)"></textarea>
+    <button class="chat-send" id="chatSendBtn" onclick="sendMessage()">&#10148;</button>
+  </div>
+</div>
+
+<!-- ══════════ PATIENTS ══════════ -->
+<div id="patients" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="navigate('dashboard')">&#8592;</button>
+    <h2>Mes Patients</h2>
+  </div>
+  <div class="screen-content">
+    <div class="patient-add" onclick="openPatientModal()">
+      <span>&#10133;</span> Ajouter un patient
+    </div>
+    <div id="patientList"></div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-item" onclick="navigate('dashboard')"><span class="nav-icon">&#127968;</span>Accueil</button>
+    <button class="nav-item" onclick="navigate('glucose')"><span class="nav-icon">&#129656;</span>Glycemie</button>
+    <button class="nav-item" onclick="navigate('chatbot')"><span class="nav-icon rolly-nav-icon"></span>ROLLY</button>
+    <button class="nav-item active" onclick="navigate('patients')"><span class="nav-icon">&#128101;</span>Patients</button>
+    <button class="nav-item" onclick="navigate('settings')"><span class="nav-icon">&#9881;</span>Reglages</button>
+  </nav>
+</div>
+
+<!-- ══════════ SETTINGS / PROFIL ══════════ -->
+<div id="settings" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="navigate('dashboard')">&#8592;</button>
+    <h2>Mon Profil</h2>
+  </div>
+  <div class="screen-content">
+    <!-- Photo de profil -->
+    <div style="text-align:center;padding:12px 0">
+      <div class="profile-photo-wrap">
+        <div class="profile-photo" id="profilePhoto">&#128100;</div>
+        <label class="profile-photo-edit" for="photoInput">&#128247;</label>
+        <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhotoUpload(this)">
+      </div>
+      <h3 id="settingsName">Utilisateur</h3>
+      <p style="color:var(--text3);font-size:13px" id="settingsEmail">email@example.com</p>
+      <p style="color:var(--cyan);font-size:12px;margin-top:4px" id="settingsRole">Patient</p>
+    </div>
+
+    <!-- Informations du compte -->
+    <div class="profile-section">
+      <h4>&#128100; Informations du compte</h4>
+      <div class="profile-field">
+        <div><div class="pf-label">Nom complet</div><div class="pf-value" id="profName">--</div></div>
+        <button class="pf-edit" onclick="openEditModal('name')">Modifier</button>
+      </div>
+      <div class="profile-field">
+        <div><div class="pf-label">Email</div><div class="pf-value" id="profEmail">--</div></div>
+        <button class="pf-edit" onclick="openEditModal('email')">Modifier</button>
+      </div>
+      <div class="profile-field">
+        <div><div class="pf-label">Telephone</div><div class="pf-value" id="profPhone">Non renseigne</div></div>
+        <button class="pf-edit" onclick="openEditModal('phone')">Modifier</button>
+      </div>
+      <div class="profile-field">
+        <div><div class="pf-label">Compte Google</div><div class="pf-value" id="profGoogle">Non lie</div></div>
+        <button class="pf-edit" onclick="linkGoogle()">Lier</button>
+      </div>
+    </div>
+
+    <!-- Donnees morphometriques -->
+    <div class="profile-section">
+      <h4>&#128170; Donnees morphometriques</h4>
+      <div class="morpho-grid">
+        <div class="morpho-card" onclick="openEditModal('taille')">
+          <div class="mc-icon">&#128207;</div>
+          <div class="mc-val" id="profTaille">--</div>
+          <div class="mc-label">Taille (cm)</div>
+        </div>
+        <div class="morpho-card" onclick="openEditModal('poids')">
+          <div class="mc-icon">&#9878;&#65039;</div>
+          <div class="mc-val" id="profPoids">--</div>
+          <div class="mc-label">Poids (kg)</div>
+        </div>
+        <div class="morpho-card" onclick="openEditModal('tourTaille')">
+          <div class="mc-icon">&#11093;</div>
+          <div class="mc-val" id="profTourTaille">--</div>
+          <div class="mc-label">Tour de taille (cm)</div>
+        </div>
+        <div class="morpho-card" onclick="openEditModal('masseGrasse')">
+          <div class="mc-icon">&#128201;</div>
+          <div class="mc-val" id="profMasseGrasse">--</div>
+          <div class="mc-label">Masse grasse (%)</div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:12px">
+        <div style="font-size:13px;color:var(--text3)">IMC: <strong id="profIMC" style="color:var(--text);font-size:16px">--</strong></div>
+      </div>
+    </div>
+
+    <!-- Parametres -->
+    <div class="profile-section">
+      <h4>&#9881;&#65039; Parametres</h4>
+      <div class="settings-item" style="margin:0;border-radius:0;background:transparent;padding:12px 0">
+        <div class="si-left"><span class="si-icon">&#128276;</span><span class="si-label">Notifications</span></div>
+        <span class="si-arrow">&#8250;</span>
+      </div>
+      <div class="settings-item" style="margin:0;border-radius:0;background:transparent;padding:12px 0">
+        <div class="si-left"><span class="si-icon">&#128274;</span><span class="si-label">Confidentialite</span></div>
+        <span class="si-arrow">&#8250;</span>
+      </div>
+      <div class="settings-item" style="margin:0;border-radius:0;background:transparent;padding:12px 0">
+        <div class="si-left"><span class="si-icon">&#127760;</span><span class="si-label">Langue</span></div>
+        <span class="si-arrow">&#8250;</span>
+      </div>
+    </div>
+
+    <button class="btn w-full" onclick="doLogout()" style="background:transparent;border:1px solid var(--red);color:var(--red);max-width:100%;margin-top:8px">&#128682; Se deconnecter</button>
+    <p style="text-align:center;color:var(--text3);font-size:11px;margin-top:24px">DiaSmart v1.3.0 PWA<br>Diabetologie Intelligente</p>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-item" onclick="navigate('dashboard')"><span class="nav-icon">&#127968;</span>Accueil</button>
+    <button class="nav-item" onclick="navigate('glucose')"><span class="nav-icon">&#129656;</span>Glycemie</button>
+    <button class="nav-item" onclick="navigate('chatbot')"><span class="nav-icon rolly-nav-icon"></span>ROLLY</button>
+    <button class="nav-item" onclick="navigate('patients')"><span class="nav-icon">&#128101;</span>Patients</button>
+    <button class="nav-item active" onclick="navigate('settings')"><span class="nav-icon">&#9881;</span>Reglages</button>
+  </nav>
+</div>
+
+<!-- ══════════ MEDICAMENTS ══════════ -->
+<div id="medicaments" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="navigate('dashboard')">&#8592;</button>
+    <h2>Medicaments</h2>
+  </div>
+  <div class="screen-content">
+    <div id="medList"></div>
+    <p id="medEmpty" style="text-align:center;color:var(--text3);padding:32px">Aucun medicament enregistre</p>
+  </div>
+  <button class="glucose-add" onclick="openMedModal()">+</button>
+</div>
+
+<!-- ══════════ RENDEZ-VOUS ══════════ -->
+<div id="rendezvous" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="navigate('dashboard')">&#8592;</button>
+    <h2>Rendez-vous</h2>
+  </div>
+  <div class="screen-content">
+    <div class="rdv-filters">
+      <button class="rdv-chip active" onclick="filterRdv('all',this)">Tous</button>
+      <button class="rdv-chip" onclick="filterRdv('upcoming',this)">A venir</button>
+      <button class="rdv-chip" onclick="filterRdv('past',this)">Passes</button>
+    </div>
+    <div id="rdvList"></div>
+    <p id="rdvEmpty" style="text-align:center;color:var(--text3);padding:32px">Aucun rendez-vous</p>
+  </div>
+  <button class="glucose-add" onclick="openRdvModal()">+</button>
+</div>
+
+<!-- ══════════ JOURNAL ══════════ -->
+<div id="journal" class="screen">
+  <div class="top-bar" style="background:linear-gradient(135deg,var(--bg3),var(--surface))">
+    <button class="back-btn" onclick="navigate('dashboard')">&#8592;</button>
+    <h2>Journal de bord</h2>
+  </div>
+  <div class="screen-content">
+    <div class="journal-today">
+      <h3>Aujourd'hui</h3>
+      <div class="journal-emojis" id="journalTodayEmojis">--</div>
+    </div>
+    <div class="journal-form" id="journalForm">
+      <h4>&#9999;&#65039; Saisie quotidienne</h4>
+      <div style="margin-bottom:12px">
+        <label style="font-size:13px;color:var(--text2);display:block;margin-bottom:6px">Humeur</label>
+        <div class="emoji-chips" id="moodChips">
+          <button class="emoji-chip" onclick="selectChip(this,'mood')">&#128522; Bien</button>
+          <button class="emoji-chip" onclick="selectChip(this,'mood')">&#128528; Moyen</button>
+          <button class="emoji-chip" onclick="selectChip(this,'mood')">&#128543; Mal</button>
+          <button class="emoji-chip" onclick="selectChip(this,'mood')">&#128553; Tres mal</button>
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:13px;color:var(--text2);display:block;margin-bottom:6px">Stress</label>
+        <div class="emoji-chips" id="stressChips">
+          <button class="emoji-chip" onclick="selectChip(this,'stress')">&#128524; Faible</button>
+          <button class="emoji-chip" onclick="selectChip(this,'stress')">&#128528; Moyen</button>
+          <button class="emoji-chip" onclick="selectChip(this,'stress')">&#128556; Eleve</button>
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:13px;color:var(--text2);display:block;margin-bottom:6px">Sommeil</label>
+        <div class="emoji-chips" id="sleepChips">
+          <button class="emoji-chip" onclick="selectChip(this,'sleep')">&#128564; Bon</button>
+          <button class="emoji-chip" onclick="selectChip(this,'sleep')">&#128534; Moyen</button>
+          <button class="emoji-chip" onclick="selectChip(this,'sleep')">&#128557; Mauvais</button>
+        </div>
+      </div>
+      <div class="input-group" style="margin-bottom:12px">
+        <label style="font-size:13px;color:var(--text2);display:block;margin-bottom:6px">Heures de sommeil</label>
+        <input type="number" id="journalSleepHours" placeholder="Ex: 7" min="0" max="24" step="0.5" style="width:100%;padding:12px;background:var(--bg);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:var(--text);font-size:14px;outline:none">
+      </div>
+      <div style="margin-bottom:12px;display:flex;align-items:center;gap:10px">
+        <input type="checkbox" id="journalActivity" style="width:18px;height:18px;accent-color:var(--cyan)">
+        <label for="journalActivity" style="font-size:14px">Activite physique aujourd'hui</label>
+      </div>
+      <div class="input-group" id="journalActivityMinWrap" style="margin-bottom:12px;display:none">
+        <label style="font-size:13px;color:var(--text2);display:block;margin-bottom:6px">Minutes d'activite</label>
+        <input type="number" id="journalActivityMin" placeholder="Ex: 30" min="0" style="width:100%;padding:12px;background:var(--bg);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:var(--text);font-size:14px;outline:none">
+      </div>
+      <div class="input-group" style="margin-bottom:12px">
+        <label style="font-size:13px;color:var(--text2);display:block;margin-bottom:6px">Notes</label>
+        <input type="text" id="journalNotes" placeholder="Notes du jour..." style="width:100%;padding:12px;background:var(--bg);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:var(--text);font-size:14px;outline:none">
+      </div>
+      <button class="btn btn-cyan" onclick="saveJournal()">Enregistrer</button>
+    </div>
+    <h3 style="font-size:15px;margin:16px 0 12px">Historique</h3>
+    <div class="journal-history" id="journalHistory"></div>
+  </div>
+</div>
+
+<!-- ══════════ PEDOMETER ══════════ -->
+<div id="pedometer" class="screen">
+  <div class="top-bar" style="background:linear-gradient(135deg,var(--bg3),var(--surface))">
+    <button class="back-btn" onclick="navigate('dashboard')">&#8592;</button>
+    <h2>Podometre</h2>
+  </div>
+  <div class="screen-content" style="text-align:center">
+    <div class="pedo-circle">
+      <canvas id="pedoCanvas" width="200" height="200"></canvas>
+      <div class="pedo-steps" id="pedoSteps">0</div>
+      <div class="pedo-goal" id="pedoGoalText">/ 8 000 pas</div>
+    </div>
+    <button class="pedo-btn start" id="pedoBtn" onclick="togglePedometer()">&#128694; Demarrer le suivi</button>
+    <div class="pedo-stats">
+      <div class="pedo-stat">
+        <div class="ps-val" id="pedoDist">0.0</div>
+        <div class="ps-label">km</div>
+      </div>
+      <div class="pedo-stat">
+        <div class="ps-val" id="pedoCal">0</div>
+        <div class="ps-label">kcal</div>
+      </div>
+      <div class="pedo-stat">
+        <div class="ps-val" id="pedoTime">0</div>
+        <div class="ps-label">min</div>
+      </div>
+    </div>
+    <div style="background:var(--surface);border-radius:var(--radius);padding:16px;margin-top:16px;text-align:left">
+      <h4 style="font-size:14px;color:var(--cyan);margin-bottom:8px">&#128161; Impact glycemique</h4>
+      <p style="font-size:13px;color:var(--text2);line-height:1.6">La marche aide a reduire la glycemie en favorisant l'absorption du glucose par les muscles. 30 minutes de marche peuvent reduire la glycemie de 20-40 mg/dL.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PREDICTIVE ══════════ -->
+<div id="predictive" class="screen">
+  <div class="top-bar" style="background:linear-gradient(135deg,var(--bg3),var(--surface))">
+    <button class="back-btn" onclick="navigate('dashboard')">&#8592;</button>
+    <h2>Courbes predictives</h2>
+  </div>
+  <div class="screen-content">
+    <div class="pred-current">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:4px">Glycemie actuelle</div>
+      <div class="pred-value" id="predCurrent">--</div>
+      <div style="font-size:13px;color:var(--text2)">mg/dL</div>
+      <div class="pred-risk normal" id="predRisk">En attente</div>
+    </div>
+    <div class="pred-chart">
+      <h4 style="font-size:14px;margin-bottom:8px">Prediction a 6h</h4>
+      <canvas id="predCanvas"></canvas>
+    </div>
+    <div class="pred-table">
+      <h4 style="font-size:14px;margin-bottom:8px">Previsions horaires</h4>
+      <table>
+        <thead><tr><th>Heure</th><th>Valeur estimee</th><th>Confiance</th></tr></thead>
+        <tbody id="predTableBody"></tbody>
+      </table>
+    </div>
+    <button class="btn btn-purple" style="max-width:100%;display:flex;align-items:center;justify-content:center;gap:8px" onclick="requestRollyPrediction()"><span class="rolly-nav-icon"></span> Analyse ROLLY</button>
+  </div>
+</div>
+
+<!-- ══════════ MESSAGERIE ══════════ -->
+<div id="messagerie" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="navigate('dashboard')">&#8592;</button>
+    <h2>Messagerie</h2>
+  </div>
+  <div class="screen-content">
+    <div style="background:rgba(0,210,255,.06);border:1px solid rgba(0,210,255,.15);border-radius:var(--radius);padding:14px;margin-bottom:16px">
+      <h4 style="font-size:14px;color:var(--cyan);margin-bottom:6px">&#128101; Medecins disponibles</h4>
+      <div id="doctorListMsg" style="max-height:180px;overflow-y:auto"></div>
+      <p id="noDoctorsMsg" style="font-size:12px;color:var(--text3);display:none">Aucun medecin inscrit pour le moment</p>
+    </div>
+    <h4 style="font-size:15px;margin-bottom:12px">Conversations</h4>
+    <div id="convList"></div>
+    <p id="convEmpty" style="text-align:center;color:var(--text3);padding:32px">Aucune conversation</p>
+  </div>
+  <button class="glucose-add" onclick="openNewConvModal()">&#128233;</button>
+</div>
+
+<!-- ══════════ VALIDATIONS (MEDECIN) ══════════ -->
+<div id="validations" class="screen">
+  <div class="top-bar" style="background:linear-gradient(135deg,var(--purple),var(--surface))">
+    <button class="back-btn" onclick="navigate('dashboard')">&#8592;</button>
+    <h2><span class="rolly-nav-icon"></span> Validations ROLLY</h2>
+  </div>
+  <div class="screen-content">
+    <div style="background:rgba(124,77,255,.08);border:1px solid rgba(124,77,255,.2);border-radius:var(--radius);padding:14px;margin-bottom:16px;font-size:13px;color:var(--text2);line-height:1.6">
+      <span class="rolly-nav-icon"></span> <strong>Collaboration IA-Medecin</strong><br>
+      Les reponses de ROLLY necessitent votre validation medicale. Validez ou corrigez les recommandations avant qu'elles ne soient confirmees au patient.
+    </div>
+    <div id="validationList"></div>
+    <p id="validationEmpty" style="text-align:center;color:var(--text3);padding:32px">Aucune validation en attente</p>
+  </div>
+</div>
+
+<!-- ══════════ CONVERSATION DETAIL ══════════ -->
+<div id="conversation" class="screen" style="background:#0D0D1A">
+  <div class="chat-header">
+    <button class="back-btn" onclick="navigate('messagerie')">&#8592;</button>
+    <div class="conv-avatar" id="convDetailAvatar" style="background:var(--teal);color:#fff">?</div>
+    <div><strong id="convDetailName" style="font-size:15px">Conversation</strong><br><span style="font-size:11px;color:var(--text3)">En ligne</span></div>
+  </div>
+  <div class="chat-messages" id="convMessages"></div>
+  <div class="msg-input-bar">
+    <input type="text" id="convInput" placeholder="Votre message..." onkeydown="if(event.key==='Enter')sendConvMessage()">
+    <button onclick="sendConvMessage()">&#10148;</button>
+  </div>
+</div>
+
+<!-- ══════════ REPAS ANALYSE ══════════ -->
+<div id="repas" class="screen">
+  <div class="top-bar" style="background:linear-gradient(135deg,var(--bg3),var(--surface))">
+    <button class="back-btn" onclick="navigate('dashboard')">&#8592;</button>
+    <h2>Analyse Repas</h2>
+    <button style="background:none;border:none;color:var(--cyan);font-size:13px;cursor:pointer;margin-left:auto" onclick="toggleRepasView()">&#128195; Historique</button>
+  </div>
+  <div class="screen-content">
+    <div id="repasAnalyseView">
+      <div class="repas-input">
+        <h4 style="font-size:14px;color:var(--cyan);margin-bottom:8px">&#127869; Decrivez votre repas</h4>
+        <textarea id="repasDesc" placeholder="Ex: Un sandwich au poulet avec salade, une pomme et un verre de jus d'orange"></textarea>
+        <button class="btn btn-purple mt-16" style="max-width:100%;display:flex;align-items:center;justify-content:center;gap:8px" onclick="analyzeRepas()"><span class="rolly-nav-icon"></span> Analyser avec ROLLY</button>
+      </div>
+      <div id="repasResult" class="hidden"></div>
+    </div>
+    <div id="repasHistoryView" class="hidden">
+      <div class="repas-history" id="repasHistoryList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ DATA SHARING ══════════ -->
+<div id="datasharing" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="navigate('dashboard')">&#8592;</button>
+    <h2>Partage de donnees</h2>
+  </div>
+  <div class="screen-content">
+    <div class="share-info">
+      &#128274; <strong>Vos donnees vous appartiennent.</strong><br>
+      Partagez vos donnees de sante avec votre medecin en toute securite. Vous pouvez revoquer l'acces a tout moment.
+    </div>
+    <button class="btn btn-cyan mb-16" style="max-width:100%" onclick="openShareModal()">&#128101; Partager avec un medecin</button>
+    <h3 style="font-size:15px;margin-bottom:12px">Consentements actifs</h3>
+    <div id="consentList"></div>
+    <p id="consentEmpty" style="text-align:center;color:var(--text3);padding:24px">Aucun partage actif</p>
+    <div style="margin-top:24px">
+      <h3 style="font-size:15px;margin-bottom:12px">Exporter mes donnees</h3>
+      <div style="display:flex;gap:12px">
+        <button class="btn btn-outline" style="flex:1;max-width:none" onclick="exportData('csv')">&#128196; Export CSV</button>
+        <button class="btn btn-outline" style="flex:1;max-width:none" onclick="exportData('text')">&#128203; Export Texte</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODALS ══════════ -->
+<div class="modal-overlay" id="glucoseModal">
+  <div class="modal">
+    <h3>Nouvelle mesure</h3>
+    <div class="input-group">
+      <label>Glycemie (mg/dL)</label>
+      <input type="number" id="newGlucoseVal" placeholder="Ex: 120" min="20" max="600">
+    </div>
+    <div class="input-group">
+      <label>Contexte</label>
+      <select id="newGlucoseCtx">
+        <option value="a_jeun">A jeun</option>
+        <option value="avant_repas">Avant repas</option>
+        <option value="apres_repas">Apres repas</option>
+        <option value="coucher">Coucher</option>
+        <option value="autre">Autre</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label>Note (optionnel)</label>
+      <input type="text" id="newGlucoseNote" placeholder="Ex: apres sport">
+    </div>
+    <button class="btn btn-cyan mt-16" onclick="saveGlucose()">Enregistrer</button>
+    <button class="btn btn-outline" onclick="closeModal('glucoseModal')">Annuler</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="patientModal">
+  <div class="modal">
+    <h3>Nouveau patient</h3>
+    <div class="input-group">
+      <label>Nom complet</label>
+      <input type="text" id="newPatientName" placeholder="Ex: Jean Dupont">
+    </div>
+    <div class="input-group">
+      <label>Date de naissance</label>
+      <input type="date" id="newPatientDob">
+    </div>
+    <div class="input-group">
+      <label>Type de diabete</label>
+      <select id="newPatientType">
+        <option value="type1">Type 1</option>
+        <option value="type2">Type 2</option>
+        <option value="gestationnel">Gestationnel</option>
+        <option value="autre">Autre</option>
+      </select>
+    </div>
+    <button class="btn btn-cyan mt-16" onclick="savePatient()">Ajouter</button>
+    <button class="btn btn-outline" onclick="closeModal('patientModal')">Annuler</button>
+  </div>
+</div>
+
+<!-- Medicament Modal -->
+<div class="modal-overlay" id="medModal">
+  <div class="modal">
+    <h3>Nouveau medicament</h3>
+    <div class="input-group"><label>Nom du medicament</label><input type="text" id="newMedName" placeholder="Ex: Metformine"></div>
+    <div class="input-group"><label>Dosage</label><input type="text" id="newMedDosage" placeholder="Ex: 500mg"></div>
+    <div class="input-group"><label>Frequence</label>
+      <select id="newMedFreq">
+        <option value="1x/jour">1 fois par jour</option>
+        <option value="2x/jour">2 fois par jour</option>
+        <option value="3x/jour">3 fois par jour</option>
+        <option value="hebdomadaire">Hebdomadaire</option>
+      </select>
+    </div>
+    <div class="input-group"><label>Heure de prise</label><input type="time" id="newMedTime" value="08:00"></div>
+    <div class="input-group"><label>Notes (optionnel)</label><input type="text" id="newMedNotes" placeholder="Ex: Prendre pendant le repas"></div>
+    <button class="btn btn-cyan mt-16" onclick="saveMed()">Ajouter</button>
+    <button class="btn btn-outline" onclick="closeModal('medModal')">Annuler</button>
+  </div>
+</div>
+
+<!-- RDV Modal -->
+<div class="modal-overlay" id="rdvModal">
+  <div class="modal">
+    <h3>Nouveau rendez-vous</h3>
+    <div class="input-group"><label>Titre</label><input type="text" id="newRdvTitle" placeholder="Ex: Consultation diabetologue"></div>
+    <div class="input-group"><label>Date et heure</label><input type="datetime-local" id="newRdvDate"></div>
+    <div class="input-group"><label>Lieu</label><input type="text" id="newRdvLocation" placeholder="Ex: Cabinet Dr. Martin"></div>
+    <div class="input-group"><label>Type</label>
+      <select id="newRdvType">
+        <option value="consultation">Consultation</option>
+        <option value="controle">Controle</option>
+        <option value="urgence">Urgence</option>
+        <option value="telemedecine">Telemedecine</option>
+        <option value="autre">Autre</option>
+      </select>
+    </div>
+    <div class="input-group"><label>Duree (minutes)</label><input type="number" id="newRdvDuration" value="30" min="5" max="240"></div>
+    <div class="input-group"><label>Notes (optionnel)</label><input type="text" id="newRdvNotes" placeholder="Notes..."></div>
+    <button class="btn btn-cyan mt-16" onclick="saveRdv()">Ajouter</button>
+    <button class="btn btn-outline" onclick="closeModal('rdvModal')">Annuler</button>
+  </div>
+</div>
+
+<!-- New Conversation Modal -->
+<div class="modal-overlay" id="newConvModal">
+  <div class="modal">
+    <h3>&#128233; Contacter un medecin</h3>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px">Selectionnez un medecin disponible :</p>
+    <div class="doctor-select-list" id="doctorSelectList"></div>
+    <input type="hidden" id="selectedDoctorUid" value="">
+    <input type="hidden" id="selectedDoctorName" value="">
+    <div class="input-group"><label>Votre message</label><input type="text" id="newConvMsg" placeholder="Bonjour docteur..."></div>
+    <button class="btn btn-cyan mt-16" onclick="createConversation()">Envoyer</button>
+    <button class="btn btn-outline" onclick="closeModal('newConvModal')">Annuler</button>
+  </div>
+</div>
+
+<!-- Doctor Validation Selection Modal (after ROLLY response) -->
+<div class="modal-overlay" id="validationDoctorModal">
+  <div class="modal">
+    <h3><span class="rolly-nav-icon"></span> Validation medicale</h3>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:8px;line-height:1.5">ROLLY recommande de faire valider cette reponse par un medecin pour une meilleure prise en charge. <strong>Choisissez un medecin :</strong></p>
+    <div class="doctor-select-list" id="validationDoctorList"></div>
+    <input type="hidden" id="validationDoctorUid" value="">
+    <input type="hidden" id="validationDoctorNameHidden" value="">
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn btn-purple" style="flex:1" onclick="submitForValidation()">&#9989; Envoyer pour validation</button>
+    </div>
+    <button class="btn btn-outline" onclick="skipValidation()">Passer (sans validation)</button>
+  </div>
+</div>
+
+<!-- Share with Doctor Modal -->
+<div class="modal-overlay" id="shareModal">
+  <div class="modal">
+    <h3>Partager avec un medecin</h3>
+    <div class="input-group"><label>Email ou nom du medecin</label><input type="text" id="shareDoctorName" placeholder="Ex: Dr. Martin"></div>
+    <div style="margin:12px 0">
+      <label style="display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:8px"><input type="checkbox" id="shareGlucose" checked style="accent-color:var(--cyan)"> Glycemie</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:8px"><input type="checkbox" id="shareHbA1c" checked style="accent-color:var(--cyan)"> HbA1c</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:14px"><input type="checkbox" id="shareMeds" checked style="accent-color:var(--cyan)"> Medicaments</label>
+    </div>
+    <button class="btn btn-cyan mt-16" onclick="createConsent()">Partager</button>
+    <button class="btn btn-outline" onclick="closeModal('shareModal')">Annuler</button>
+  </div>
+</div>
+
+<!-- Profile Edit Modal -->
+<div class="modal-overlay" id="profileEditModal">
+  <div class="modal">
+    <h3 id="editModalTitle">Modifier</h3>
+    <div class="input-group">
+      <label id="editModalLabel">Valeur</label>
+      <input type="text" id="editModalInput" placeholder="">
+    </div>
+    <button class="btn btn-cyan mt-16" onclick="saveProfileField()">Enregistrer</button>
+    <button class="btn btn-outline" onclick="closeModal('profileEditModal')">Annuler</button>
+  </div>
+</div>
+
+<!-- ══════════ FIREBASE SDK ══════════ -->
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+import{getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,signInWithPopup,GoogleAuthProvider,onAuthStateChanged,signOut,updateProfile,RecaptchaVerifier,signInWithPhoneNumber,updateEmail,linkWithPopup,PhoneAuthProvider,updatePhoneNumber}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+import{getFirestore,collection,addDoc,getDocs,getDoc,query,where,orderBy,limit,doc,setDoc,updateDoc,serverTimestamp,Timestamp}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+import{getStorage,ref,uploadBytes,getDownloadURL}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
+
+const firebaseConfig={
+  apiKey:"AIzaSyCMx0rYw9rua20M_SPJW6LtXZ8xIbTcHvo",
+  authDomain:"project-d-r1997t.firebaseapp.com",
+  projectId:"project-d-r1997t",
+  storageBucket:"project-d-r1997t.firebasestorage.app",
+  messagingSenderId:"630181163819"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+const storage=getStorage(app);
+const googleProvider=new GoogleAuthProvider();
+
+// ── Expose to global scope ──
+window._auth=auth;
+window._db=db;
+window._storage=storage;
+window._googleProvider=googleProvider;
+window._fbFuncs={signInWithEmailAndPassword,createUserWithEmailAndPassword,signInWithPopup,signOut,updateProfile,updateEmail,linkWithPopup,RecaptchaVerifier,signInWithPhoneNumber,PhoneAuthProvider,updatePhoneNumber,collection,addDoc,getDocs,getDoc,query,where,orderBy,limit,doc,setDoc,updateDoc,serverTimestamp,Timestamp,ref,uploadBytes,getDownloadURL};
+
+// ── Auth state listener ──
+onAuthStateChanged(auth,async user=>{
+  window._user=user;
+  if(user){
+    const name=user.displayName||user.email?.split('@')[0]||'Utilisateur';
+    document.getElementById('dashName').textContent='Bonjour, '+name;
+    document.getElementById('settingsName').textContent=name;
+    document.getElementById('settingsEmail').textContent=user.email||user.phoneNumber||'';
+    const initial=name.charAt(0).toUpperCase();
+    document.getElementById('dashAvatar').textContent=initial;
+    // Load profile from Firestore
+    try{
+      const profileSnap=await getDoc(doc(db,'users',user.uid));
+      if(profileSnap.exists()){
+        const p=profileSnap.data();
+        window._profile=p;
+        if(p.name){document.getElementById('profName').textContent=p.name;document.getElementById('settingsName').textContent=p.name;document.getElementById('dashName').textContent='Bonjour, '+p.name}
+        document.getElementById('profEmail').textContent=user.email||'Non renseigne';
+        document.getElementById('profPhone').textContent=p.phone||user.phoneNumber||'Non renseigne';
+        document.getElementById('settingsRole').textContent=p.role==='medecin'?'Medecin':'Patient';
+        document.getElementById('dashRole').textContent=p.role==='medecin'?'Medecin':'Patient';
+        // Google
+        const isGoogle=user.providerData.some(pd=>pd.providerId==='google.com');
+        document.getElementById('profGoogle').textContent=isGoogle?user.email:'Non lie';
+        // Morpho
+        if(p.taille)document.getElementById('profTaille').textContent=p.taille;
+        if(p.poids)document.getElementById('profPoids').textContent=p.poids;
+        if(p.tourTaille)document.getElementById('profTourTaille').textContent=p.tourTaille;
+        if(p.masseGrasse)document.getElementById('profMasseGrasse').textContent=p.masseGrasse;
+        if(p.taille&&p.poids){const imc=(p.poids/((p.taille/100)**2)).toFixed(1);document.getElementById('profIMC').textContent=imc}
+        // Photo
+        if(p.photoURL){
+          document.getElementById('profilePhoto').innerHTML='<img src="'+p.photoURL+'" alt="photo" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+          document.getElementById('dashAvatar').innerHTML='<img src="'+p.photoURL+'" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+        }else if(user.photoURL){
+          document.getElementById('profilePhoto').innerHTML='<img src="'+user.photoURL+'" alt="photo" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+          document.getElementById('dashAvatar').innerHTML='<img src="'+user.photoURL+'" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+        }
+      } else {
+        document.getElementById('profName').textContent=name;
+        document.getElementById('profEmail').textContent=user.email||'Non renseigne';
+        document.getElementById('profPhone').textContent=user.phoneNumber||'Non renseigne';
+        if(user.photoURL){
+          document.getElementById('profilePhoto').innerHTML='<img src="'+user.photoURL+'" alt="photo" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+          document.getElementById('dashAvatar').innerHTML='<img src="'+user.photoURL+'" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+        }
+      }
+    }catch(e){console.log('Profile load:',e)}
+    loadGlucoseData();
+    loadPatients();
+    loadMedicaments();
+    loadRendezVous();
+    loadJournal();
+    loadConversations();
+    loadRepasHistory();
+    loadConsents();
+    loadDoctors();
+    loadValidations();
+    // Show validations card for doctors
+    const userDoc=await getDoc(doc(db,'users',user.uid));
+    if(userDoc.exists()){
+      const role=userDoc.data().role||'patient';
+      window._userRole=role;
+      if(role==='medecin'){
+        const vc=document.getElementById('validationsCard');
+        if(vc)vc.style.display='';
+      }
+    }
+  }
+});
+
+// ── Auth check on splash finish ──
+window._checkAuth=()=>{
+  if(auth.currentUser){
+    showScreen('dashboard');
+  } else {
+    showScreen('onboarding');
+  }
+};
+
+// ── Glucose data ──
+window.loadGlucoseData=async()=>{
+  if(!auth.currentUser)return;
+  try{
+    const uid=auth.currentUser.uid;
+    const q=query(collection(db,'glucose'),where('userId','==',uid),orderBy('timestamp','desc'),limit(30));
+    const snap=await getDocs(q);
+    const readings=[];
+    snap.forEach(d=>readings.push({id:d.id,...d.data()}));
+    window._glucoseData=readings;
+    renderGlucose(readings);
+  }catch(e){console.log('Glucose load:',e);renderGlucose([])}
+};
+
+window.saveGlucoseToDb=async(val,ctx,note)=>{
+  if(!auth.currentUser){alert('Veuillez vous reconnecter');return}
+  try{
+    const docData={
+      userId:auth.currentUser.uid,
+      value:val,
+      context:ctx,
+      note:note||'',
+      timestamp:serverTimestamp(),
+      createdAt:new Date().toISOString()
+    };
+    await addDoc(collection(db,'glucose'),docData);
+    loadGlucoseData();
+    alert('Glycemie enregistree !');
+  }catch(e){console.error('Save glucose error:',e);alert('Erreur sauvegarde: '+e.message)}
+};
+
+// ── Patients data ──
+window.loadPatients=async()=>{
+  if(!auth.currentUser)return;
+  try{
+    const uid=auth.currentUser.uid;
+    const q=query(collection(db,'patients'),where('userId','==',uid),orderBy('name'));
+    const snap=await getDocs(q);
+    const patients=[];
+    snap.forEach(d=>patients.push({id:d.id,...d.data()}));
+    window._patients=patients;
+    renderPatients(patients);
+  }catch(e){console.log('Patients load:',e);renderPatients([])}
+};
+
+window.savePatientToDb=async(name,dob,type)=>{
+  if(!auth.currentUser){alert('Veuillez vous reconnecter');return}
+  try{
+    await addDoc(collection(db,'patients'),{
+      userId:auth.currentUser.uid,
+      name,dateOfBirth:dob,diabetesType:type,
+      createdAt:serverTimestamp()
+    });
+    loadPatients();
+    alert('Patient enregistre !');
+  }catch(e){console.error('Save patient error:',e);alert('Erreur sauvegarde: '+e.message)}
+};
+
+// ── Gemini AI for ROLLY ──
+window.callGemini=async(prompt,includeHistory=true)=>{
+  const GEMINI_KEY='AIzaSyD4eOlk-Agx1rUVurd9o-jwE4MC6z760SI';
+  const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+  const systemPrompt=`Tu es ROLLY, un assistant medical IA specialise en diabetologie pour l'app DiaSmart. Tu es bienveillant, professionnel et tu reponds en francais. Tu donnes des conseils pratiques mais tu rappelles toujours de consulter un medecin pour les decisions medicales importantes. Utilise du markdown pour formater tes reponses (gras, listes, titres). Si un historique de conversations est fourni, utilise-le pour personnaliser tes reponses et assurer la continuite du suivi.`;
+
+  // Inject history context into the prompt
+  let fullPrompt=prompt;
+  if(includeHistory && _chatHistoryContext){
+    fullPrompt=_chatHistoryContext+'\n\nQuestion actuelle : '+prompt;
+  }
+
+  const res=await fetch(url,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      system_instruction:{parts:[{text:systemPrompt}]},
+      contents:[{parts:[{text:fullPrompt}]}],
+      generationConfig:{temperature:0.7,maxOutputTokens:1024}
+    })
+  });
+  const data=await res.json();
+  return data?.candidates?.[0]?.content?.parts?.[0]?.text||"Desole, je n'ai pas pu generer de reponse.";
+};
+
+// ── Medicaments data ──
+window.loadMedicaments=async()=>{
+  if(!auth.currentUser)return;
+  try{
+    const q=query(collection(db,'medicaments'),where('userId','==',auth.currentUser.uid),orderBy('nom'));
+    const snap=await getDocs(q);
+    const meds=[];snap.forEach(d=>meds.push({id:d.id,...d.data()}));
+    window._meds=meds;
+    window.renderMeds(meds);
+  }catch(e){console.log('Meds load:',e);window.renderMeds([])}
+};
+
+window.saveMedToDb=async(data)=>{
+  if(!auth.currentUser){alert('Veuillez vous reconnecter');return}
+  try{
+    await addDoc(collection(db,'medicaments'),{userId:auth.currentUser.uid,...data,createdAt:serverTimestamp()});
+    window.loadMedicaments();
+    alert('Medicament enregistre !');
+  }catch(e){console.error('Save med error:',e);alert('Erreur sauvegarde: '+e.message)}
+};
+
+window.toggleMedStatus=async(id,active)=>{
+  try{
+    await updateDoc(doc(db,'medicaments',id),{estActif:!active});
+    window.loadMedicaments();
+  }catch(e){console.error('Toggle med:',e);alert('Erreur: '+e.message)}
+};
+
+window.deleteMedFromDb=async(id)=>{
+  const{deleteDoc}=await import("https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js");
+  await deleteDoc(doc(db,'medicaments',id));
+  window.loadMedicaments();
+};
+
+// ── Rendez-vous data ──
+window.loadRendezVous=async()=>{
+  if(!auth.currentUser)return;
+  try{
+    const q=query(collection(db,'rendezvous'),where('userId','==',auth.currentUser.uid),orderBy('dateHeure','desc'));
+    const snap=await getDocs(q);
+    const rdvs=[];snap.forEach(d=>rdvs.push({id:d.id,...d.data()}));
+    window._rdvs=rdvs;
+    window.renderRdvs(rdvs);
+  }catch(e){console.log('RDV load:',e);window.renderRdvs([])}
+};
+
+window.saveRdvToDb=async(data)=>{
+  if(!auth.currentUser){alert('Veuillez vous reconnecter');return}
+  try{
+    await addDoc(collection(db,'rendezvous'),{userId:auth.currentUser.uid,...data,createdAt:serverTimestamp()});
+    window.loadRendezVous();
+    alert('Rendez-vous enregistre !');
+  }catch(e){console.error('Save rdv error:',e);alert('Erreur sauvegarde: '+e.message)}
+};
+
+// ── Journal data ──
+window.loadJournal=async()=>{
+  if(!auth.currentUser)return;
+  try{
+    const q=query(collection(db,'journal'),where('userId','==',auth.currentUser.uid),orderBy('date','desc'),limit(30));
+    const snap=await getDocs(q);
+    const entries=[];snap.forEach(d=>entries.push({id:d.id,...d.data()}));
+    window._journal=entries;
+    window.renderJournal(entries);
+  }catch(e){console.log('Journal load:',e);window.renderJournal([])}
+};
+
+window.saveJournalToDb=async(data)=>{
+  if(!auth.currentUser){alert('Veuillez vous reconnecter');return}
+  try{
+    const today=new Date().toISOString().split('T')[0];
+    await setDoc(doc(db,'journal',auth.currentUser.uid+'_'+today),{userId:auth.currentUser.uid,date:today,...data,updatedAt:serverTimestamp()});
+    window.loadJournal();
+  }catch(e){console.error('Save journal error:',e);alert('Erreur sauvegarde: '+e.message)}
+};
+
+// ── Messagerie data ──
+window.loadConversations=async()=>{
+  if(!auth.currentUser)return;
+  try{
+    const q=query(collection(db,'conversations'),where('participants','array-contains',auth.currentUser.uid),orderBy('dernierMessageAt','desc'));
+    const snap=await getDocs(q);
+    const convs=[];snap.forEach(d=>convs.push({id:d.id,...d.data()}));
+    window._conversations=convs;
+    window.renderConversations(convs);
+  }catch(e){console.log('Conv load:',e);window.renderConversations([])}
+};
+
+window.loadMessages=async(convId)=>{
+  try{
+    const q=query(collection(db,'conversations',convId,'messages'),orderBy('timestamp','asc'));
+    const snap=await getDocs(q);
+    const msgs=[];snap.forEach(d=>msgs.push({id:d.id,...d.data()}));
+    window.renderMessages(msgs);
+  }catch(e){console.log('Msgs load:',e);window.renderMessages([])}
+};
+
+window.sendMsgToDb=async(convId,text)=>{
+  if(!auth.currentUser)return;
+  const user=auth.currentUser;
+  await addDoc(collection(db,'conversations',convId,'messages'),{
+    contenu:text,envoyeurId:user.uid,envoyeurNom:user.displayName||'Moi',timestamp:serverTimestamp()
+  });
+  await updateDoc(doc(db,'conversations',convId),{dernierMessage:text,dernierMessageAt:serverTimestamp()});
+  window.loadMessages(convId);
+};
+
+window.createConvInDb=async(recipientName,firstMsg)=>{
+  if(!auth.currentUser)return;
+  const user=auth.currentUser;
+  const convRef=await addDoc(collection(db,'conversations'),{
+    participants:[user.uid],
+    participantNames:{[user.uid]:user.displayName||'Moi',recipient:recipientName},
+    medecinNom:recipientName,
+    patientNom:user.displayName||'Patient',
+    dernierMessage:firstMsg,
+    dernierMessageAt:serverTimestamp(),
+    createdAt:serverTimestamp()
+  });
+  await addDoc(collection(db,'conversations',convRef.id,'messages'),{
+    contenu:firstMsg,envoyeurId:user.uid,envoyeurNom:user.displayName||'Moi',timestamp:serverTimestamp()
+  });
+  return convRef.id;
+};
+
+// ── Repas data ──
+window.loadRepasHistory=async()=>{
+  if(!auth.currentUser)return;
+  try{
+    const q=query(collection(db,'repas'),where('userId','==',auth.currentUser.uid),orderBy('timestamp','desc'),limit(20));
+    const snap=await getDocs(q);
+    const meals=[];snap.forEach(d=>meals.push({id:d.id,...d.data()}));
+    window._repas=meals;
+    window.renderRepasHistory(meals);
+  }catch(e){console.log('Repas load:',e);window.renderRepasHistory([])}
+};
+
+window.saveRepasToDb=async(data)=>{
+  if(!auth.currentUser){alert('Veuillez vous reconnecter');return}
+  try{
+    await addDoc(collection(db,'repas'),{userId:auth.currentUser.uid,...data,timestamp:serverTimestamp()});
+    window.loadRepasHistory();
+    alert('Repas enregistre !');
+  }catch(e){console.error('Save repas error:',e);alert('Erreur sauvegarde: '+e.message)}
+};
+
+// ── Data Sharing ──
+window.loadConsents=async()=>{
+  if(!auth.currentUser)return;
+  try{
+    const q=query(collection(db,'consents'),where('patientUid','==',auth.currentUser.uid),where('isActive','==',true));
+    const snap=await getDocs(q);
+    const consents=[];snap.forEach(d=>consents.push({id:d.id,...d.data()}));
+    window._consents=consents;
+    window.renderConsents(consents);
+  }catch(e){console.log('Consents load:',e);window.renderConsents([])}
+};
+
+window.createConsentInDb=async(doctorName,shareGlucose,shareHbA1c,shareMeds)=>{
+  if(!auth.currentUser)return;
+  await addDoc(collection(db,'consents'),{
+    patientUid:auth.currentUser.uid,
+    patientNom:auth.currentUser.displayName||'Patient',
+    medecinNom:doctorName,
+    shareGlucose,shareHbA1c,shareMedications:shareMeds,
+    isActive:true,
+    createdAt:serverTimestamp()
+  });
+  window.loadConsents();
+};
+
+window.revokeConsentInDb=async(id)=>{
+  await updateDoc(doc(db,'consents',id),{isActive:false});
+  window.loadConsents();
+};
+
+// ── Load all doctors (users with role=medecin) ──
+window.loadDoctors=async()=>{
+  try{
+    const q=query(collection(db,'users'),where('role','==','medecin'));
+    const snap=await getDocs(q);
+    const docs=[];snap.forEach(d=>docs.push({uid:d.id,...d.data()}));
+    window._doctors=docs;
+    window.renderDoctorList(docs);
+    return docs;
+  }catch(e){console.log('Doctors load:',e);window._doctors=[];window.renderDoctorList([]);return[]}
+};
+
+// ── Validations data ──
+window.saveValidation=async(question,response,medecinUid,medecinNom)=>{
+  if(!auth.currentUser)return;
+  const user=auth.currentUser;
+  const vRef=await addDoc(collection(db,'validations'),{
+    patientUid:user.uid,
+    patientNom:user.displayName||'Patient',
+    medecinUid,
+    medecinNom,
+    question,
+    rollyResponse:response,
+    status:'pending',
+    medecinComment:'',
+    createdAt:serverTimestamp()
+  });
+  // Notify doctor via conversation
+  const notifMsg=`🤖 [Validation ROLLY] Le patient ${user.displayName||'Patient'} demande votre validation sur une reponse de ROLLY.\n\n📋 Question: ${question.substring(0,100)}...\n\n👉 Allez dans "Validations ROLLY" pour valider.`;
+  // Check if conversation exists with this doctor
+  let convId=null;
+  try{
+    const cq=query(collection(db,'conversations'),where('participants','array-contains',user.uid));
+    const cs=await getDocs(cq);
+    cs.forEach(c=>{
+      const d=c.data();
+      if(d.participants&&d.participants.includes(medecinUid))convId=c.id;
+    });
+  }catch(e){}
+  if(convId){
+    await addDoc(collection(db,'conversations',convId,'messages'),{
+      contenu:notifMsg,envoyeurId:'rolly',envoyeurNom:'ROLLY IA',timestamp:serverTimestamp(),isSystem:true
+    });
+    await updateDoc(doc(db,'conversations',convId),{dernierMessage:'[Validation ROLLY] En attente...',dernierMessageAt:serverTimestamp()});
+  }
+  return vRef.id;
+};
+
+window.loadValidations=async()=>{
+  if(!auth.currentUser)return;
+  const uid=auth.currentUser.uid;
+  const role=window._userRole||'patient';
+  try{
+    let q;
+    if(role==='medecin'){
+      q=query(collection(db,'validations'),where('medecinUid','==',uid),orderBy('createdAt','desc'));
+    }else{
+      q=query(collection(db,'validations'),where('patientUid','==',uid),orderBy('createdAt','desc'),limit(20));
+    }
+    const snap=await getDocs(q);
+    const vals=[];snap.forEach(d=>vals.push({id:d.id,...d.data()}));
+    window._validations=vals;
+    window.renderValidations(vals);
+  }catch(e){console.log('Validations load:',e);window.renderValidations([])}
+};
+
+window.validateResponse=async(valId,approved,comment)=>{
+  await updateDoc(doc(db,'validations',valId),{
+    status:approved?'validated':'rejected',
+    medecinComment:comment||'',
+    validatedAt:serverTimestamp()
+  });
+  window.loadValidations();
+};
+</script>
+
+<!-- ══════════ APP LOGIC ══════════ -->
+<script>
+// ── Service Worker avec notification de mise a jour ──
+if('serviceWorker'in navigator){
+  navigator.serviceWorker.register('sw.js').then(reg=>{
+    setInterval(()=>{reg.update()},30*60*1000);
+    reg.addEventListener('updatefound',()=>{
+      const newSW=reg.installing;
+      if(newSW){newSW.addEventListener('statechange',()=>{
+        if(newSW.state==='installed'&&navigator.serviceWorker.controller)showUpdateBanner();
+      })}
+    });
+  }).catch(()=>{});
+  navigator.serviceWorker.addEventListener('message',e=>{
+    if(e.data&&e.data.type==='SW_UPDATED')showUpdateBanner();
+  });
+}
+function showUpdateBanner(){
+  if(document.getElementById('updateBanner'))return;
+  const b=document.createElement('div');b.id='updateBanner';
+  b.style.cssText='position:fixed;bottom:0;left:0;right:0;background:linear-gradient(135deg,#6C63FF,#00D2FF);color:#fff;padding:14px 20px;z-index:99999;display:flex;align-items:center;justify-content:space-between;font-family:system-ui;box-shadow:0 -4px 20px rgba(0,0,0,0.3)';
+  b.innerHTML='<div style="display:flex;align-items:center;gap:10px"><span style="font-size:20px">&#128260;</span><div><b>Nouvelle version disponible</b><br><small>Cliquez pour mettre a jour</small></div></div><button onclick="window.location.reload(true)" style="background:#fff;color:#6C63FF;border:none;padding:8px 20px;border-radius:20px;font-weight:bold;cursor:pointer">Mettre a jour</button>';
+  document.body.appendChild(b);
+}
+
+// ── Splash ──
+setTimeout(()=>{
+  document.getElementById('splash').classList.add('fade-out');
+  setTimeout(()=>{
+    document.getElementById('splash').style.display='none';
+    if(window._checkAuth)window._checkAuth();
+    else showScreen('onboarding');
+  },400);
+},3200);
+
+// ── Navigation ──
+let currentScreen='splash';
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById(id);
+  if(el)el.classList.add('active');
+  currentScreen=id;
+}
+function navigate(id){showScreen(id)}
+window.navigate=navigate;
+window.showScreen=showScreen;
+
+// ── ROLLY SVG Icon Generator ──
+let _rollyIdCtr=0;
+function rollySVG(size){
+  size=size||36;
+  const uid='r'+(++_rollyIdCtr);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="${size}" height="${size}" class="rolly-svg">
+  <defs>
+    <linearGradient id="${uid}bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#003366"/><stop offset="100%" stop-color="#001A3C"/></linearGradient>
+    <filter id="${uid}gl"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#${uid}bg)"/>
+  <!-- Orbital circle -->
+  <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(0,210,255,0.3)" stroke-width="0.8"/>
+  <!-- Orbital dots -->
+  <circle cx="78.28" cy="21.72" r="2" fill="rgba(0,210,255,0.6)"/>
+  <circle cx="21.72" cy="21.72" r="1.5" fill="rgba(0,210,255,0.6)"/>
+  <circle cx="21.72" cy="78.28" r="2" fill="rgba(0,210,255,0.6)"/>
+  <circle cx="78.28" cy="78.28" r="1.5" fill="rgba(0,210,255,0.6)"/>
+  <!-- Medical cross -->
+  <rect x="44" y="34" width="12" height="32" rx="3" fill="#E0F7FA"/>
+  <rect x="34" y="44" width="32" height="12" rx="3" fill="#E0F7FA"/>
+  <!-- ECG line -->
+  <polyline points="18,50 32,50 36,44 40,50 44,58 50,32 56,60 60,50 66,45 70,50 82,50" fill="none" stroke="rgba(0,210,255,0.3)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="18,50 32,50 36,44 40,50 44,58 50,32 56,60 60,50 66,45 70,50 82,50" fill="none" stroke="#00D2FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" filter="url(#${uid}gl)"/>
+  <!-- Arrow (prediction) -->
+  <polyline points="72,55 80,30" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round"/>
+  <polyline points="74,28 80,30 84,34" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Phone outline -->
+  <rect x="41" y="55" width="18" height="28" rx="3" fill="none" stroke="rgba(0,210,255,0.4)" stroke-width="1.5"/>
+  <!-- Mini data bars -->
+  <rect x="44" y="72" width="3" height="6" rx="0.5" fill="rgba(0,210,255,0.6)"/>
+  <rect x="49" y="68" width="3" height="10" rx="0.5" fill="rgba(76,175,80,0.6)"/>
+  <rect x="54" y="70" width="3" height="8" rx="0.5" fill="rgba(0,210,255,0.5)"/>
+  <!-- Circuit lines -->
+  <line x1="5" y1="30" x2="15" y2="30" stroke="rgba(0,210,255,0.2)" stroke-width="0.8"/>
+  <line x1="85" y1="70" x2="95" y2="70" stroke="rgba(0,210,255,0.2)" stroke-width="0.8"/>
+  <circle cx="5" cy="30" r="1" fill="rgba(0,210,255,0.2)"/>
+  <circle cx="95" cy="70" r="1" fill="rgba(0,210,255,0.2)"/>
+</svg>`;
+}
+window.rollySVG=rollySVG;
+
+// Initialize ROLLY icons
+function initRollyIcons(){
+  // Chat avatar
+  const chatAv=document.getElementById('chatRollyAvatar');
+  if(chatAv&&!chatAv.querySelector('svg')) chatAv.innerHTML=rollySVG(36);
+  // Onboarding icon
+  const onbIcon=document.getElementById('onbRollyIcon');
+  if(onbIcon&&!onbIcon.querySelector('svg')) onbIcon.innerHTML=rollySVG(48);
+  // Dashboard feature icon
+  const dashIcon=document.getElementById('dashRollyIcon');
+  if(dashIcon&&!dashIcon.querySelector('svg')) dashIcon.innerHTML=rollySVG(32);
+  // All nav/inline icons
+  document.querySelectorAll('.rolly-nav-icon').forEach(el=>{
+    if(!el.querySelector('svg')) el.innerHTML=rollySVG(22);
+  });
+}
+window.initRollyIcons=initRollyIcons;
+document.addEventListener('DOMContentLoaded',initRollyIcons);
+
+// ── Onboarding ──
+let onbPage=0;
+const onbPages=document.getElementById('onbPages');
+function updateOnbDots(){
+  document.querySelectorAll('.onb-dot').forEach((d,i)=>d.classList.toggle('active',i===onbPage));
+  document.getElementById('onbBtn').textContent=onbPage===2?'Commencer':'Suivant';
+}
+function onbNext(){
+  if(onbPage>=2){showLogin();return}
+  onbPage++;
+  onbPages.children[onbPage].scrollIntoView({behavior:'smooth',inline:'start'});
+  updateOnbDots();
+}
+onbPages.addEventListener('scroll',()=>{
+  const w=onbPages.offsetWidth;
+  const newPage=Math.round(onbPages.scrollLeft/w);
+  if(newPage!==onbPage){onbPage=newPage;updateOnbDots()}
+});
+window.onbNext=onbNext;
+
+function showLogin(){showScreen('login')}
+window.showLogin=showLogin;
+
+// ── Login ──
+let loginMode='login';
+let authMethod='email';
+let userRole='patient';
+let phoneConfirmation=null;
+
+function setLoginMode(mode){
+  loginMode=mode;
+  document.querySelectorAll('.login-tab').forEach((t,i)=>t.classList.toggle('active',i===(mode==='login'?0:1)));
+  document.getElementById('registerFields').classList.toggle('hidden',mode==='login');
+  const isPhone=authMethod==='phone';
+  document.getElementById('loginBtn').textContent=isPhone?(phoneConfirmation?'Verifier le code':'Envoyer le code SMS'):(mode==='login'?'Se connecter':"S'inscrire");
+  document.getElementById('loginSwitch').innerHTML=mode==='login'
+    ?'Pas de compte ? <a href="#" onclick="setLoginMode(\'register\');return false">S\'inscrire</a>'
+    :'Deja un compte ? <a href="#" onclick="setLoginMode(\'login\');return false">Se connecter</a>';
+  document.getElementById('loginError').textContent='';
+}
+window.setLoginMode=setLoginMode;
+
+function setAuthMethod(method){
+  authMethod=method;
+  document.querySelectorAll('.auth-mode-tab').forEach((t,i)=>t.classList.toggle('active',i===(method==='email'?0:1)));
+  document.getElementById('emailFields').classList.toggle('hidden',method==='phone');
+  document.getElementById('phoneFields').classList.toggle('hidden',method==='email');
+  document.getElementById('otpSection').classList.add('hidden');
+  phoneConfirmation=null;
+  document.getElementById('loginBtn').textContent=method==='phone'?'Envoyer le code SMS':(loginMode==='login'?'Se connecter':"S'inscrire");
+  document.getElementById('loginError').textContent='';
+}
+window.setAuthMethod=setAuthMethod;
+
+function setRole(role,el){
+  userRole=role;
+  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+window.setRole=setRole;
+
+function togglePw(){
+  const inp=document.getElementById('loginPassword');
+  inp.type=inp.type==='password'?'text':'password';
+}
+window.togglePw=togglePw;
+
+// OTP box navigation
+function otpNext(el,idx){
+  if(el.value.length===1&&idx<6){
+    const boxes=document.querySelectorAll('.otp-box');
+    boxes[idx]?.focus();
+  }
+  // Auto-verify when all 6 digits entered
+  const boxes=document.querySelectorAll('.otp-box');
+  const code=Array.from(boxes).map(b=>b.value).join('');
+  if(code.length===6&&phoneConfirmation){verifyOtp(code)}
+}
+window.otpNext=otpNext;
+
+async function doAuth(){
+  const errEl=document.getElementById('loginError');
+  errEl.textContent='';
+  const btn=document.getElementById('loginBtn');
+
+  if(authMethod==='phone'){
+    await doPhoneAuth();
+    return;
+  }
+
+  const email=document.getElementById('loginEmail').value.trim();
+  const pw=document.getElementById('loginPassword').value;
+  if(!email||!pw){errEl.textContent='Veuillez remplir tous les champs';return}
+  btn.disabled=true;btn.textContent='Chargement...';
+  try{
+    const f=window._fbFuncs;
+    if(loginMode==='register'){
+      const name=document.getElementById('regName').value.trim();
+      if(!name){errEl.textContent='Veuillez entrer votre nom';btn.disabled=false;btn.textContent="S'inscrire";return}
+      const cred=await f.createUserWithEmailAndPassword(window._auth,email,pw);
+      await f.updateProfile(cred.user,{displayName:name});
+      await f.setDoc(f.doc(window._db,'users',cred.user.uid),{
+        name,email,role:userRole,createdAt:f.serverTimestamp()
+      });
+    } else {
+      await f.signInWithEmailAndPassword(window._auth,email,pw);
+    }
+    showScreen('dashboard');
+  }catch(e){
+    const msg=e.code==='auth/user-not-found'?'Aucun compte avec cet email'
+      :e.code==='auth/wrong-password'?'Mot de passe incorrect'
+      :e.code==='auth/email-already-in-use'?'Cet email est deja utilise'
+      :e.code==='auth/weak-password'?'Mot de passe trop faible (6 car. min)'
+      :e.code==='auth/invalid-email'?'Email invalide'
+      :e.code==='auth/invalid-credential'?'Email ou mot de passe incorrect'
+      :'Erreur: '+e.message;
+    errEl.textContent=msg;
+  }
+  btn.disabled=false;
+  btn.textContent=loginMode==='login'?'Se connecter':"S'inscrire";
+}
+window.doAuth=doAuth;
+
+async function doPhoneAuth(){
+  const errEl=document.getElementById('loginError');
+  const btn=document.getElementById('loginBtn');
+  const f=window._fbFuncs;
+
+  if(phoneConfirmation){
+    // Verify OTP
+    const boxes=document.querySelectorAll('.otp-box');
+    const code=Array.from(boxes).map(b=>b.value).join('');
+    if(code.length!==6){errEl.textContent='Entrez le code a 6 chiffres';return}
+    btn.disabled=true;btn.textContent='Verification...';
+    try{
+      const result=await phoneConfirmation.confirm(code);
+      // Save profile if registering
+      if(loginMode==='register'){
+        const name=document.getElementById('regName').value.trim()||'Utilisateur';
+        const phone=document.getElementById('phonePrefix').value+document.getElementById('phoneNumber').value.replace(/\s/g,'');
+        await f.setDoc(f.doc(window._db,'users',result.user.uid),{
+          name,phone,role:userRole,createdAt:f.serverTimestamp()
+        },{merge:true});
+        await f.updateProfile(result.user,{displayName:name});
+      }
+      showScreen('dashboard');
+    }catch(e){
+      errEl.textContent='Code incorrect ou expire';
+    }
+    btn.disabled=false;btn.textContent='Verifier le code';
+    return;
+  }
+
+  // Send SMS
+  const prefix=document.getElementById('phonePrefix').value.trim();
+  const num=document.getElementById('phoneNumber').value.replace(/\s/g,'');
+  if(!num||num.length<8){errEl.textContent='Numero de telephone invalide';return}
+  const fullPhone=prefix+num;
+  btn.disabled=true;btn.textContent='Envoi du SMS...';
+  try{
+    // Setup recaptcha
+    if(!window._recaptchaVerifier){
+      window._recaptchaVerifier=new f.RecaptchaVerifier(window._auth,'recaptchaContainer',{size:'invisible'});
+    }
+    phoneConfirmation=await f.signInWithPhoneNumber(window._auth,fullPhone,window._recaptchaVerifier);
+    document.getElementById('otpSection').classList.remove('hidden');
+    document.querySelectorAll('.otp-box')[0]?.focus();
+    btn.textContent='Verifier le code';
+    errEl.textContent='';
+  }catch(e){
+    const msg=e.code==='auth/invalid-phone-number'?'Numero invalide (format: +33612345678)'
+      :e.code==='auth/too-many-requests'?'Trop de tentatives, reessayez plus tard'
+      :'Erreur SMS: '+e.message;
+    errEl.textContent=msg;
+    phoneConfirmation=null;
+  }
+  btn.disabled=false;
+}
+
+async function verifyOtp(code){
+  if(!phoneConfirmation)return;
+  const errEl=document.getElementById('loginError');
+  try{
+    const result=await phoneConfirmation.confirm(code);
+    const f=window._fbFuncs;
+    if(loginMode==='register'){
+      const name=document.getElementById('regName').value.trim()||'Utilisateur';
+      const phone=document.getElementById('phonePrefix').value+document.getElementById('phoneNumber').value.replace(/\s/g,'');
+      await f.setDoc(f.doc(window._db,'users',result.user.uid),{
+        name,phone,role:userRole,createdAt:f.serverTimestamp()
+      },{merge:true});
+    }
+    showScreen('dashboard');
+  }catch(e){errEl.textContent='Code incorrect'}
+}
+
+async function doGoogleLogin(){
+  try{
+    const result=await window._fbFuncs.signInWithPopup(window._auth,window._googleProvider);
+    // Save Google profile info if first time
+    const f=window._fbFuncs;
+    const userDoc=await f.getDoc(f.doc(window._db,'users',result.user.uid));
+    if(!userDoc.exists()){
+      await f.setDoc(f.doc(window._db,'users',result.user.uid),{
+        name:result.user.displayName||'',
+        email:result.user.email||'',
+        photoURL:result.user.photoURL||'',
+        role:'patient',
+        createdAt:f.serverTimestamp()
+      });
+    }
+    showScreen('dashboard');
+  }catch(e){
+    document.getElementById('loginError').textContent='Connexion Google annulee';
+  }
+}
+window.doGoogleLogin=doGoogleLogin;
+
+async function doLogout(){
+  await window._fbFuncs.signOut(window._auth);
+  window._profile=null;
+  showScreen('login');
+}
+window.doLogout=doLogout;
+
+// ── Profile editing ──
+let editingField=null;
+const fieldConfig={
+  name:{title:'Modifier le nom',label:'Nom complet',type:'text'},
+  email:{title:'Modifier l\'email',label:'Nouvel email',type:'email'},
+  phone:{title:'Modifier le telephone',label:'Numero (ex: +33612345678)',type:'tel'},
+  taille:{title:'Modifier la taille',label:'Taille (cm)',type:'number'},
+  poids:{title:'Modifier le poids',label:'Poids (kg)',type:'number'},
+  tourTaille:{title:'Modifier le tour de taille',label:'Tour de taille (cm)',type:'number'},
+  masseGrasse:{title:'Modifier la masse grasse',label:'Masse grasse (%)',type:'number'}
+};
+
+function openEditModal(field){
+  editingField=field;
+  const cfg=fieldConfig[field];
+  if(!cfg)return;
+  document.getElementById('editModalTitle').textContent=cfg.title;
+  document.getElementById('editModalLabel').textContent=cfg.label;
+  const inp=document.getElementById('editModalInput');
+  inp.type=cfg.type;
+  inp.placeholder=cfg.label;
+  // Pre-fill current value
+  const p=window._profile||{};
+  if(field==='name')inp.value=p.name||'';
+  else if(field==='email')inp.value=window._user?.email||'';
+  else if(field==='phone')inp.value=p.phone||'';
+  else inp.value=p[field]||'';
+  document.getElementById('profileEditModal').classList.add('active');
+  inp.focus();
+}
+window.openEditModal=openEditModal;
+
+async function saveProfileField(){
+  if(!editingField||!window._user)return;
+  const val=document.getElementById('editModalInput').value.trim();
+  if(!val){alert('Veuillez entrer une valeur');return}
+  const f=window._fbFuncs;
+  const uid=window._user.uid;
+  try{
+    if(editingField==='email'){
+      // Update Firebase Auth email
+      await f.updateEmail(window._user,val);
+      await f.updateDoc(f.doc(window._db,'users',uid),{email:val});
+    } else if(editingField==='name'){
+      await f.updateProfile(window._user,{displayName:val});
+      await f.updateDoc(f.doc(window._db,'users',uid),{name:val});
+    } else if(editingField==='phone'){
+      await f.updateDoc(f.doc(window._db,'users',uid),{phone:val});
+    } else {
+      // Morphometric data - store as numbers
+      const numVal=parseFloat(val);
+      if(isNaN(numVal)){alert('Veuillez entrer un nombre valide');return}
+      const update={};
+      update[editingField]=numVal;
+      await f.updateDoc(f.doc(window._db,'users',uid),update);
+    }
+    closeModal('profileEditModal');
+    // Refresh profile - trigger auth state reload
+    const profileSnap=await f.getDoc(f.doc(window._db,'users',uid));
+    if(profileSnap.exists()){
+      const p=profileSnap.data();
+      window._profile=p;
+      if(p.name){document.getElementById('profName').textContent=p.name;document.getElementById('settingsName').textContent=p.name;document.getElementById('dashName').textContent='Bonjour, '+p.name}
+      document.getElementById('profEmail').textContent=window._user.email||'Non renseigne';
+      document.getElementById('profPhone').textContent=p.phone||'Non renseigne';
+      if(p.taille)document.getElementById('profTaille').textContent=p.taille;
+      if(p.poids)document.getElementById('profPoids').textContent=p.poids;
+      if(p.tourTaille)document.getElementById('profTourTaille').textContent=p.tourTaille;
+      if(p.masseGrasse)document.getElementById('profMasseGrasse').textContent=p.masseGrasse;
+      if(p.taille&&p.poids){document.getElementById('profIMC').textContent=(p.poids/((p.taille/100)**2)).toFixed(1)}
+    }
+  }catch(e){
+    alert('Erreur: '+(e.code==='auth/requires-recent-login'?'Veuillez vous reconnecter pour modifier l\'email':e.message));
+  }
+}
+window.saveProfileField=saveProfileField;
+
+// ── Link Google account ──
+async function linkGoogle(){
+  if(!window._user)return;
+  try{
+    await window._fbFuncs.linkWithPopup(window._user,window._googleProvider);
+    document.getElementById('profGoogle').textContent=window._user.email||'Lie';
+    alert('Compte Google lie avec succes !');
+  }catch(e){
+    if(e.code==='auth/credential-already-in-use'){
+      alert('Ce compte Google est deja utilise par un autre compte DiaSmart');
+    }else if(e.code==='auth/provider-already-linked'){
+      alert('Un compte Google est deja lie');
+    }else{
+      alert('Erreur: '+e.message);
+    }
+  }
+}
+window.linkGoogle=linkGoogle;
+
+// ── Photo upload ──
+async function handlePhotoUpload(input){
+  const file=input.files[0];
+  const user=window._auth?.currentUser||window._user;
+  if(!file){alert('Aucun fichier selectionne');return}
+  if(!user){alert('Veuillez vous reconnecter');return}
+  if(file.size>10*1024*1024){alert('La photo doit faire moins de 10 Mo');return}
+  const f=window._fbFuncs;
+  const photoEl=document.getElementById('profilePhoto');
+  try{
+    // Show loading
+    photoEl.innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text3)">Envoi...</div>';
+
+    // Resize and convert to base64 JPEG (stored directly in Firestore — no Storage needed)
+    const bitmap=await createImageBitmap(file);
+    const canvas=document.createElement('canvas');
+    const maxSize=256;
+    let w=bitmap.width,h=bitmap.height;
+    if(w>maxSize||h>maxSize){
+      if(w>h){h=Math.round(h*maxSize/w);w=maxSize}
+      else{w=Math.round(w*maxSize/h);h=maxSize}
+    }
+    canvas.width=w;canvas.height=h;
+    const ctx=canvas.getContext('2d');
+    ctx.drawImage(bitmap,0,0,w,h);
+    const photoURL=canvas.toDataURL('image/jpeg',0.8);
+
+    // Save base64 directly in Firestore user document
+    await f.setDoc(f.doc(window._db,'users',user.uid),{photoURL},{merge:true});
+
+    // Update Auth profile (best effort)
+    try{await f.updateProfile(user,{photoURL})}catch(e2){console.warn('updateProfile skip:',e2)}
+
+    // Update UI
+    photoEl.innerHTML='<img src="'+photoURL+'" alt="photo" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+    const dashAv=document.getElementById('dashAvatar');
+    if(dashAv) dashAv.innerHTML='<img src="'+photoURL+'" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+    alert('Photo mise a jour !');
+  }catch(e){
+    console.error('Photo upload error:',e);
+    photoEl.innerHTML='&#128100;';
+    alert('Erreur: '+e.message);
+  }
+}
+window.handlePhotoUpload=handlePhotoUpload;
+window.doLogout=doLogout;
+
+// ── Glucose ──
+function renderGlucose(readings){
+  const list=document.getElementById('glucoseList');
+  const valEl=document.getElementById('glucoseVal');
+  const statusEl=document.getElementById('glucoseStatus');
+  const statEl=document.getElementById('statGlucose');
+  const countEl=document.getElementById('statReadings');
+
+  if(readings.length>0){
+    const latest=readings[0];
+    const v=latest.value;
+    valEl.textContent=v;
+    statEl.textContent=v;
+    statusEl.className='glucose-status '+(v<70?'status-low':v>180?'status-high':'status-normal');
+    statusEl.textContent=v<70?'Hypoglycemie':v>180?'Hyperglycemie':'Normal';
+    countEl.textContent=readings.length;
+  }
+
+  list.innerHTML=readings.slice(0,20).map(r=>{
+    const v=r.value;
+    const color=v<70?'var(--red)':v>180?'var(--orange)':'var(--green)';
+    const date=r.createdAt?new Date(r.createdAt).toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+    const ctx=r.context?({'a_jeun':'A jeun','avant_repas':'Avant repas','apres_repas':'Apres repas','coucher':'Coucher'}[r.context]||r.context):'';
+    return`<div class="glucose-item"><div class="gi-left"><div class="gi-dot" style="background:${color}"></div><div><div class="gi-val">${v} mg/dL</div><div class="gi-time">${ctx}${ctx&&date?' - ':''}${date}</div></div></div></div>`;
+  }).join('');
+
+  drawGlucoseChart(readings);
+}
+window.renderGlucose=renderGlucose;
+
+function drawGlucoseChart(readings){
+  const canvas=document.getElementById('glucoseChart');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
+  const rect=canvas.parentElement.getBoundingClientRect();
+  canvas.width=rect.width*dpr;
+  canvas.height=200*dpr;
+  canvas.style.width=rect.width+'px';
+  canvas.style.height='200px';
+  ctx.scale(dpr,dpr);
+  const W=rect.width,H=200;
+  ctx.clearRect(0,0,W,H);
+
+  if(readings.length<2){
+    ctx.fillStyle='rgba(255,255,255,.3)';
+    ctx.font='13px sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText('Ajoutez des mesures pour voir le graphique',W/2,H/2);
+    return;
+  }
+
+  const data=readings.slice(0,14).reverse();
+  const vals=data.map(d=>d.value);
+  const minV=Math.min(...vals,60);
+  const maxV=Math.max(...vals,200);
+  const pad={t:20,b:30,l:10,r:10};
+  const cW=W-pad.l-pad.r,cH=H-pad.t-pad.b;
+
+  // Target zone
+  const y70=pad.t+cH*(1-(70-minV)/(maxV-minV));
+  const y180=pad.t+cH*(1-(180-minV)/(maxV-minV));
+  ctx.fillStyle='rgba(76,175,80,.08)';
+  ctx.fillRect(pad.l,y180,cW,y70-y180);
+  ctx.strokeStyle='rgba(76,175,80,.2)';
+  ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(pad.l,y70);ctx.lineTo(W-pad.r,y70);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(pad.l,y180);ctx.lineTo(W-pad.r,y180);ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Line
+  ctx.beginPath();
+  data.forEach((d,i)=>{
+    const x=pad.l+i*(cW/(data.length-1));
+    const y=pad.t+cH*(1-(d.value-minV)/(maxV-minV));
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.strokeStyle='#00D2FF';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
+
+  // Gradient fill
+  const last=data.length-1;
+  ctx.lineTo(pad.l+last*(cW/last),H-pad.b);
+  ctx.lineTo(pad.l,H-pad.b);ctx.closePath();
+  const grad=ctx.createLinearGradient(0,pad.t,0,H-pad.b);
+  grad.addColorStop(0,'rgba(0,210,255,.2)');
+  grad.addColorStop(1,'rgba(0,210,255,0)');
+  ctx.fillStyle=grad;ctx.fill();
+
+  // Dots
+  data.forEach((d,i)=>{
+    const x=pad.l+i*(cW/(data.length-1));
+    const y=pad.t+cH*(1-(d.value-minV)/(maxV-minV));
+    const color=d.value<70?'#FF5252':d.value>180?'#FF9800':'#00D2FF';
+    ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
+    ctx.beginPath();ctx.arc(x,y,7,0,Math.PI*2);ctx.fillStyle=color.replace(')',',0.2)').replace('rgb','rgba');ctx.fill();
+  });
+}
+
+function openGlucoseModal(){
+  document.getElementById('glucoseModal').classList.add('active');
+  document.getElementById('newGlucoseVal').value='';
+  document.getElementById('newGlucoseNote').value='';
+}
+window.openGlucoseModal=openGlucoseModal;
+
+function closeModal(id){document.getElementById(id).classList.remove('active')}
+window.closeModal=closeModal;
+
+async function saveGlucose(){
+  const val=parseInt(document.getElementById('newGlucoseVal').value);
+  if(!val||val<20||val>600){alert('Valeur invalide (20-600)');return}
+  const ctx=document.getElementById('newGlucoseCtx').value;
+  const note=document.getElementById('newGlucoseNote').value;
+  try{
+    await window.saveGlucoseToDb(val,ctx,note);
+    closeModal('glucoseModal');
+  }catch(e){console.error('saveGlucose:',e);alert('Erreur: '+e.message)}
+}
+window.saveGlucose=saveGlucose;
+
+// ── Patients ──
+function renderPatients(patients){
+  const list=document.getElementById('patientList');
+  const colors=['#00D2FF','#7C4DFF','#26A69A','#FF9800','#FF5252'];
+  list.innerHTML=patients.map((p,i)=>{
+    const initial=p.name?p.name.charAt(0).toUpperCase():'?';
+    const color=colors[i%colors.length];
+    const type=p.diabetesType?({'type1':'Type 1','type2':'Type 2','gestationnel':'Gestationnel'}[p.diabetesType]||p.diabetesType):'';
+    return`<div class="patient-card"><div class="patient-avatar" style="background:${color}20;color:${color}">${initial}</div><div class="patient-info"><h3>${p.name}</h3><p>${type}${p.dateOfBirth?' - '+p.dateOfBirth:''}</p></div></div>`;
+  }).join('');
+  if(patients.length===0){
+    list.innerHTML='<p style="text-align:center;color:var(--text3);padding:32px">Aucun patient pour le moment</p>';
+  }
+}
+window.renderPatients=renderPatients;
+
+function openPatientModal(){
+  document.getElementById('patientModal').classList.add('active');
+  document.getElementById('newPatientName').value='';
+  document.getElementById('newPatientDob').value='';
+}
+window.openPatientModal=openPatientModal;
+
+async function savePatient(){
+  const name=document.getElementById('newPatientName').value.trim();
+  if(!name){alert('Veuillez entrer un nom');return}
+  const dob=document.getElementById('newPatientDob').value;
+  const type=document.getElementById('newPatientType').value;
+  try{
+    await window.savePatientToDb(name,dob,type);
+    closeModal('patientModal');
+  }catch(e){console.error('savePatient:',e);alert('Erreur: '+e.message)}
+}
+window.savePatient=savePatient;
+
+// ── Chatbot ROLLY ──
+let chatBusy=false;
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px'}
+window.autoResize=autoResize;
+
+function addChatMsg(text,isUser){
+  const msgs=document.getElementById('chatMessages');
+  // Remove suggestions
+  const sugs=msgs.querySelector('.chat-suggestions');
+  if(sugs)sugs.remove();
+
+  const div=document.createElement('div');
+  div.className='chat-msg '+(isUser?'user':'ai');
+  if(isUser){
+    div.textContent=text;
+  }else{
+    div.innerHTML=formatMarkdown(text);
+  }
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function showTyping(){
+  const msgs=document.getElementById('chatMessages');
+  const div=document.createElement('div');
+  div.className='chat-typing';div.id='typingIndicator';
+  div.innerHTML='<span></span><span></span><span></span>';
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+function hideTyping(){
+  const el=document.getElementById('typingIndicator');
+  if(el)el.remove();
+}
+
+function formatMarkdown(text){
+  // Basic markdown rendering
+  let html=text
+    .replace(/### (.+)/g,'<h3>$1</h3>')
+    .replace(/## (.+)/g,'<h3>$1</h3>')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/^- (.+)/gm,'<li>$1</li>')
+    .replace(/^\d+\. (.+)/gm,'<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/s,m=>'<ul>'+m+'</ul>')
+    .replace(/\n\n/g,'<br><br>')
+    .replace(/\n/g,'<br>');
+  // Wrap consecutive <li> in <ul>
+  html=html.replace(/(<li>[\s\S]*?<\/li>)/g,'<ul>$1</ul>');
+  // Remove nested ul
+  html=html.replace(/<\/ul>\s*<ul>/g,'');
+  return html;
+}
+
+let _lastRollyQuestion='';
+let _lastRollyResponse='';
+let _chatHistoryContext='';
+let _chatHistoryLoaded=false;
+let _currentSessionId=null;
+let _chatSessions=[];
+
+// ── Chat Sidebar toggle ──
+function toggleChatSidebar(){
+  const sidebar=document.getElementById('chatSidebar');
+  const overlay=document.getElementById('chatSidebarOverlay');
+  const isOpen=sidebar.classList.contains('open');
+  if(isOpen){
+    sidebar.classList.remove('open');
+    overlay.classList.remove('active');
+  }else{
+    sidebar.classList.add('open');
+    overlay.classList.add('active');
+    loadChatSessions();
+  }
+}
+window.toggleChatSidebar=toggleChatSidebar;
+
+// ── Create new chat session ──
+async function createNewChatSession(){
+  const user=window._auth?.currentUser;
+  if(!user)return;
+  const f=window._fbFuncs;
+  try{
+    await ensureRollyParentDoc();
+    const convRef=await f.addDoc(
+      f.collection(f.doc(window._db,'rolly_history',user.uid),'conversations'),
+      { title:'Nouvelle discussion', createdAt:Date.now(), lastMessageAt:Date.now(), messageCount:0, lastPreview:'' }
+    );
+    _currentSessionId=convRef.id;
+    _chatHistoryContext='';
+    window._recentHistory=[];
+    // Reset chat UI
+    resetChatUI();
+    document.getElementById('chatSessionTitle').textContent='Nouvelle discussion';
+    // Close sidebar
+    document.getElementById('chatSidebar').classList.remove('open');
+    document.getElementById('chatSidebarOverlay').classList.remove('active');
+    loadChatSessions();
+  }catch(e){console.error('New session:',e)}
+}
+window.createNewChatSession=createNewChatSession;
+
+function resetChatUI(){
+  const chatMsgs=document.getElementById('chatMessages');
+  chatMsgs.innerHTML=`<div class="chat-msg ai">
+    Bonjour ! Je suis <strong>ROLLY</strong>, votre assistant medical IA. &#128075;<br><br>
+    Je peux vous aider avec :
+    <ul><li>Analyse de vos glycemies</li><li>Conseils nutritionnels</li><li>Informations sur le diabete</li><li>Rappels de medicaments</li></ul>
+    Comment puis-je vous aider ?
+  </div>
+  <div class="chat-suggestions">
+    <div class="chat-sug" onclick="sendSuggestion(this)">Analyser ma glycemie</div>
+    <div class="chat-sug" onclick="sendSuggestion(this)">Conseils alimentation</div>
+    <div class="chat-sug" onclick="sendSuggestion(this)">Que faire si hypo ?</div>
+  </div>`;
+}
+
+// ── Load all chat sessions for sidebar ──
+async function loadChatSessions(){
+  const user=window._auth?.currentUser;
+  if(!user)return;
+  const f=window._fbFuncs;
+  try{
+    await ensureRollyParentDoc();
+    const q=f.query(
+      f.collection(f.doc(window._db,'rolly_history',user.uid),'conversations'),
+      f.orderBy('lastMessageAt','desc')
+    );
+    const snap=await f.getDocs(q);
+    _chatSessions=[];
+    snap.forEach(d=>_chatSessions.push({id:d.id,...d.data()}));
+    renderChatSessions();
+  }catch(e){console.error('Load sessions:',e)}
+}
+
+function renderChatSessions(){
+  const list=document.getElementById('chatConvList');
+  if(_chatSessions.length===0){
+    list.innerHTML='<div style="text-align:center;color:var(--text3);padding:24px;font-size:13px">Aucune discussion.<br>Commencez a discuter avec ROLLY !</div>';
+    return;
+  }
+  // Group by date
+  const groups={};
+  const now=new Date();
+  const today=now.toDateString();
+  const yesterday=new Date(now-86400000).toDateString();
+  _chatSessions.forEach(s=>{
+    const d=new Date(s.lastMessageAt||s.createdAt);
+    const ds=d.toDateString();
+    let label;
+    if(ds===today) label="Aujourd'hui";
+    else if(ds===yesterday) label='Hier';
+    else{
+      const diff=Math.floor((now-d)/(86400000));
+      if(diff<7) label='7 derniers jours';
+      else if(diff<30) label='Ce mois';
+      else label=d.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+    }
+    if(!groups[label]) groups[label]=[];
+    groups[label].push(s);
+  });
+  let html='';
+  for(const[label,sessions] of Object.entries(groups)){
+    html+=`<div class="chat-date-group">${label}</div>`;
+    sessions.forEach(s=>{
+      const isActive=s.id===_currentSessionId;
+      const title=s.title||'Discussion';
+      const preview=s.lastPreview||'';
+      html+=`<div class="chat-conv-item ${isActive?'active':''}" onclick="switchChatSession('${s.id}')">
+        <span class="conv-icon">&#128172;</span>
+        <div class="conv-info">
+          <div class="conv-title">${title}</div>
+          <div class="conv-preview">${preview}</div>
+        </div>
+        <button class="conv-del" onclick="event.stopPropagation();deleteChatSession('${s.id}')" title="Supprimer">&#128465;</button>
+      </div>`;
+    });
+  }
+  list.innerHTML=html;
+}
+
+// ── Switch to a session ──
+async function switchChatSession(sessionId){
+  _currentSessionId=sessionId;
+  _chatHistoryContext='';
+  window._recentHistory=[];
+  const chatMsgs=document.getElementById('chatMessages');
+  chatMsgs.innerHTML='<div style="text-align:center;color:var(--text3);padding:24px;font-size:13px">Chargement...</div>';
+  // Close sidebar
+  document.getElementById('chatSidebar').classList.remove('open');
+  document.getElementById('chatSidebarOverlay').classList.remove('active');
+  // Load messages
+  const user=window._auth?.currentUser;
+  if(!user)return;
+  const f=window._fbFuncs;
+  try{
+    const q=f.query(
+      f.collection(f.doc(window._db,'rolly_history',user.uid),'conversations',sessionId,'messages'),
+      f.orderBy('timestamp','asc')
+    );
+    const snap=await f.getDocs(q);
+    const msgs=[];
+    snap.forEach(d=>{const data=d.data();msgs.push({contenu:data.contenu,estUtilisateur:data.estUtilisateur,timestamp:data.timestamp})});
+    chatMsgs.innerHTML='';
+    if(msgs.length===0){
+      resetChatUI();
+    }else{
+      msgs.forEach(m=>addChatMsg(m.contenu,m.estUtilisateur));
+      chatMsgs.scrollTop=chatMsgs.scrollHeight;
+    }
+    // Update title
+    const session=_chatSessions.find(s=>s.id===sessionId);
+    document.getElementById('chatSessionTitle').textContent=session?.title||'Discussion';
+    // Build context
+    _chatHistoryContext=buildHistoryContext(msgs);
+    window._recentHistory=msgs.slice(-30);
+    renderChatSessions();
+  }catch(e){console.error('Switch session:',e)}
+}
+window.switchChatSession=switchChatSession;
+
+// ── Delete a session ──
+async function deleteChatSession(sessionId){
+  if(!confirm('Supprimer cette discussion ?'))return;
+  const user=window._auth?.currentUser;
+  if(!user)return;
+  const f=window._fbFuncs;
+  try{
+    const{deleteDoc}=await import("https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js");
+    // Delete messages
+    const q=f.query(f.collection(f.doc(window._db,'rolly_history',user.uid),'conversations',sessionId,'messages'));
+    const snap=await f.getDocs(q);
+    for(const d of snap.docs) await deleteDoc(d.ref);
+    // Delete session doc
+    await deleteDoc(f.doc(window._db,'rolly_history',user.uid,'conversations',sessionId));
+    // If this was the current session, create new
+    if(_currentSessionId===sessionId){
+      _currentSessionId=null;
+      _chatHistoryContext='';
+      window._recentHistory=[];
+      resetChatUI();
+      document.getElementById('chatSessionTitle').textContent='Nouvelle discussion';
+    }
+    loadChatSessions();
+  }catch(e){console.error('Delete session:',e);alert('Erreur: '+e.message)}
+}
+window.deleteChatSession=deleteChatSession;
+
+// ── Ensure parent doc exists for rolly_history ──
+async function ensureRollyParentDoc(){
+  const user=window._auth?.currentUser;
+  if(!user)return;
+  const f=window._fbFuncs;
+  try{
+    const parentRef=f.doc(window._db,'rolly_history',user.uid);
+    const parentSnap=await f.getDoc(parentRef);
+    if(!parentSnap.exists()){
+      await f.setDoc(parentRef,{createdAt:Date.now(),userId:user.uid});
+    }
+  }catch(e){console.error('Ensure parent doc:',e)}
+}
+
+// ── Chat History Persistence (Firestore) ──
+async function saveChatMessage(contenu, estUtilisateur){
+  const user=window._auth?.currentUser;
+  if(!user||!contenu)return;
+  const f=window._fbFuncs;
+  try{
+    await ensureRollyParentDoc();
+    // Auto-create session if none
+    if(!_currentSessionId){
+      const convRef=await f.addDoc(
+        f.collection(f.doc(window._db,'rolly_history',user.uid),'conversations'),
+        { title:'Nouvelle discussion', createdAt:Date.now(), lastMessageAt:Date.now(), messageCount:0, lastPreview:'' }
+      );
+      _currentSessionId=convRef.id;
+    }
+    // Save message to session
+    await f.addDoc(
+      f.collection(f.doc(window._db,'rolly_history',user.uid),'conversations',_currentSessionId,'messages'),
+      { contenu, estUtilisateur, timestamp: Date.now() }
+    );
+    // Update session metadata
+    const sessionRef=f.doc(window._db,'rolly_history',user.uid,'conversations',_currentSessionId);
+    const snap=await f.getDoc(sessionRef);
+    const count=(snap.exists()?snap.data().messageCount||0:0)+1;
+    const updateData={messageCount:count, lastMessageAt:Date.now()};
+    // Auto-title from first user message
+    if(estUtilisateur && count<=2){
+      updateData.title=contenu.length>50?contenu.substring(0,50)+'...':contenu;
+    }
+    if(!estUtilisateur){
+      updateData.lastPreview=contenu.length>80?contenu.substring(0,80)+'...':contenu;
+    }
+    await f.setDoc(sessionRef,updateData,{merge:true});
+    // Update session title in header
+    if(estUtilisateur && count<=2){
+      document.getElementById('chatSessionTitle').textContent=updateData.title||contenu;
+    }
+  }catch(e){console.error('Save chat msg:',e)}
+}
+
+// ── Load chat history (auto-load last session or migrate old) ──
+async function loadChatHistory(){
+  const user=window._auth?.currentUser;
+  if(!user)return;
+  if(_chatHistoryLoaded)return;
+  const f=window._fbFuncs;
+  try{
+    await ensureRollyParentDoc();
+    // Check for existing sessions
+    const q=f.query(
+      f.collection(f.doc(window._db,'rolly_history',user.uid),'conversations'),
+      f.orderBy('lastMessageAt','desc')
+    );
+    const snap=await f.getDocs(q);
+    if(snap.size>0){
+      // Load the most recent session
+      const firstDoc=snap.docs[0];
+      _currentSessionId=firstDoc.id;
+      const sessionData=firstDoc.data();
+      document.getElementById('chatSessionTitle').textContent=sessionData.title||'Discussion';
+      // Load its messages
+      const mq=f.query(
+        f.collection(f.doc(window._db,'rolly_history',user.uid),'conversations',_currentSessionId,'messages'),
+        f.orderBy('timestamp','asc')
+      );
+      const msnap=await f.getDocs(mq);
+      const msgs=[];
+      msnap.forEach(d=>{const data=d.data();msgs.push({contenu:data.contenu,estUtilisateur:data.estUtilisateur,timestamp:data.timestamp})});
+      if(msgs.length>0){
+        const chatMsgs=document.getElementById('chatMessages');
+        chatMsgs.innerHTML='';
+        msgs.forEach(m=>addChatMsg(m.contenu,m.estUtilisateur));
+        chatMsgs.scrollTop=chatMsgs.scrollHeight;
+      }
+      _chatHistoryContext=buildHistoryContext(msgs);
+      window._recentHistory=msgs.slice(-30);
+    }else{
+      // Check for old flat messages and migrate
+      const oldQ=f.query(
+        f.collection(f.doc(window._db,'rolly_history',user.uid),'messages'),
+        f.orderBy('timestamp','asc')
+      );
+      const oldSnap=await f.getDocs(oldQ);
+      if(oldSnap.size>0){
+        // Migrate to a new session
+        const convRef=await f.addDoc(
+          f.collection(f.doc(window._db,'rolly_history',user.uid),'conversations'),
+          { title:'Discussion precedente', createdAt:Date.now(), lastMessageAt:Date.now(), messageCount:oldSnap.size, lastPreview:'Historique migre' }
+        );
+        _currentSessionId=convRef.id;
+        const msgs=[];
+        for(const d of oldSnap.docs){
+          const data=d.data();
+          msgs.push({contenu:data.contenu,estUtilisateur:data.estUtilisateur,timestamp:data.timestamp});
+          await f.addDoc(
+            f.collection(f.doc(window._db,'rolly_history',user.uid),'conversations',convRef.id,'messages'),
+            {contenu:data.contenu,estUtilisateur:data.estUtilisateur,timestamp:data.timestamp}
+          );
+        }
+        if(msgs.length>0){
+          const chatMsgs=document.getElementById('chatMessages');
+          chatMsgs.innerHTML='';
+          msgs.forEach(m=>addChatMsg(m.contenu,m.estUtilisateur));
+          chatMsgs.scrollTop=chatMsgs.scrollHeight;
+        }
+        document.getElementById('chatSessionTitle').textContent='Discussion precedente';
+        _chatHistoryContext=buildHistoryContext(msgs);
+        window._recentHistory=msgs.slice(-30);
+      }
+    }
+    _chatSessions=[];
+    snap.forEach(d=>_chatSessions.push({id:d.id,...d.data()}));
+    _chatHistoryLoaded=true;
+  }catch(e){console.error('Load chat history:',e);_chatHistoryLoaded=true}
+}
+
+function buildHistoryContext(msgs){
+  if(!msgs||msgs.length===0)return '';
+  const recent=msgs.slice(-30);
+  let ctx='=== HISTORIQUE DES CONVERSATIONS PRECEDENTES ===\n';
+  ctx+='('+recent.length+' derniers echanges)\n';
+  recent.forEach(m=>{
+    const role=m.estUtilisateur?'Patient':'ROLLY';
+    const d=new Date(m.timestamp);
+    const time=d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    const contenu=m.contenu.length>300?m.contenu.substring(0,300)+'...':m.contenu;
+    ctx+='['+time+'] '+role+' : '+contenu+'\n';
+  });
+  ctx+='=== FIN HISTORIQUE ===\n';
+  ctx+='Utilise cet historique pour personnaliser tes reponses, suivre l evolution du patient et eviter de repeter les memes conseils.\n';
+  return ctx;
+}
+
+async function clearChatHistory(){
+  if(!confirm('Supprimer cette discussion ?'))return;
+  if(_currentSessionId){
+    await deleteChatSession(_currentSessionId);
+  }
+}
+window.clearChatHistory=clearChatHistory;
+
+async function sendMessage(){
+  if(chatBusy)return;
+  const input=document.getElementById('chatInput');
+  const text=input.value.trim();
+  if(!text)return;
+  input.value='';input.style.height='auto';
+
+  addChatMsg(text,true);
+  chatBusy=true;
+  showTyping();
+  _lastRollyQuestion=text;
+
+  try{
+    const response=await window.callGemini(text);
+    hideTyping();
+    addChatMsg(response,false);
+    _lastRollyResponse=response;
+
+    // Sauvegarder l'échange dans Firestore
+    saveChatMessage(text,true);
+    saveChatMessage(response,false);
+    // Mettre à jour le contexte historique en mémoire
+    if(!window._recentHistory) window._recentHistory=[];
+    window._recentHistory.push({contenu:text,estUtilisateur:true,timestamp:Date.now()});
+    window._recentHistory.push({contenu:response,estUtilisateur:false,timestamp:Date.now()});
+    // Garder les 30 derniers
+    if(window._recentHistory.length>60) window._recentHistory=window._recentHistory.slice(-30);
+    _chatHistoryContext=buildHistoryContext(window._recentHistory);
+
+    // Check if this is a medical question (not just greeting/small talk)
+    const isMedical=/glyc|diab|insul|medic|traitement|dose|symptom|tension|HbA1c|glucos|hypoglyc|hyperglyc|regime|alimenta|repas|calorie|glucide|poids|IMC/i.test(text+' '+response);
+    const doctors=window._doctors||[];
+    const userRole=window._userRole||'patient';
+
+    if(isMedical && doctors.length>0 && userRole==='patient'){
+      addValidationBanner();
+    }
+  }catch(e){
+    hideTyping();
+    addChatMsg("Desole, une erreur s'est produite. Veuillez reessayer.",false);
+  }
+  chatBusy=false;
+}
+window.sendMessage=sendMessage;
+
+function addValidationBanner(){
+  const msgs=document.getElementById('chatMessages');
+  const banner=document.createElement('div');
+  banner.className='validation-banner';
+  banner.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="display:inline-flex;align-items:center;gap:4px"><span class="rolly-nav-icon"></span>&#128105;&#8205;&#9877;&#65039;</span>
+      <strong style="color:var(--purple);font-size:13px">Collaboration IA-Medecin</strong>
+    </div>
+    <p style="margin-bottom:10px;line-height:1.5">Pour votre securite, ROLLY recommande de faire valider cette reponse medicale par votre medecin.</p>
+    <button onclick="openValidationDoctorModal()" style="width:100%;padding:10px;border:none;border-radius:10px;background:var(--purple);color:#fff;font-size:13px;font-weight:600;cursor:pointer">&#9989; Choisir un medecin pour valider</button>
+    <button onclick="this.parentElement.remove()" style="width:100%;padding:8px;border:none;background:transparent;color:var(--text3);font-size:12px;cursor:pointer;margin-top:4px">Passer</button>
+  `;
+  msgs.appendChild(banner);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+window.addValidationBanner=addValidationBanner;
+
+function sendSuggestion(el){
+  document.getElementById('chatInput').value=el.textContent;
+  sendMessage();
+}
+window.sendSuggestion=sendSuggestion;
+
+// Enter key sends message
+document.getElementById('chatInput').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}
+});
+
+// Enter key on login
+document.getElementById('loginPassword').addEventListener('keydown',e=>{
+  if(e.key==='Enter')doAuth();
+});
+
+// Click outside modal to close
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('active')});
+});
+
+// Resize chart on orientation change
+window.addEventListener('resize',()=>{
+  if(window._glucoseData)drawGlucoseChart(window._glucoseData);
+});
+
+// ══════════ MEDICAMENTS ══════════
+function renderMeds(meds){
+  const list=document.getElementById('medList');
+  const empty=document.getElementById('medEmpty');
+  if(!meds||meds.length===0){list.innerHTML='';empty.style.display='block';return}
+  empty.style.display='none';
+  list.innerHTML=meds.map(m=>{
+    const active=m.estActif!==false;
+    return`<div class="med-card ${active?'':'inactive'}">
+      <div class="med-top"><span class="med-name">${m.nom||''}</span><span class="med-badge ${active?'active':'paused'}">${active?'Actif':'Pause'}</span></div>
+      <div class="med-details">
+        <span>&#128138; ${m.dosage||''}</span>
+        <span>&#128337; ${m.frequence||''}</span>
+        <span>&#9200; ${m.heurePrise||''}</span>
+      </div>
+      ${m.notes?'<div style="font-size:12px;color:var(--text3);margin-top:6px">'+m.notes+'</div>':''}
+      <div class="med-actions">
+        <button onclick="toggleMedStatus('${m.id}',${active})">${active?'&#9208; Pause':'&#9654; Activer'}</button>
+        <button class="med-del" onclick="if(confirm('Supprimer ce medicament ?'))deleteMedFromDb('${m.id}')">&#128465; Supprimer</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+window.renderMeds=renderMeds;
+
+function openMedModal(){
+  document.getElementById('medModal').classList.add('active');
+  document.getElementById('newMedName').value='';
+  document.getElementById('newMedDosage').value='';
+  document.getElementById('newMedNotes').value='';
+}
+window.openMedModal=openMedModal;
+
+async function saveMed(){
+  const nom=document.getElementById('newMedName').value.trim();
+  if(!nom){alert('Entrez le nom du medicament');return}
+  try{
+    await window.saveMedToDb({
+      nom,
+      dosage:document.getElementById('newMedDosage').value.trim(),
+      frequence:document.getElementById('newMedFreq').value,
+      heurePrise:document.getElementById('newMedTime').value,
+      notes:document.getElementById('newMedNotes').value.trim(),
+      estActif:true,
+      rappelActive:true
+    });
+    closeModal('medModal');
+  }catch(e){console.error('saveMed:',e);alert('Erreur: '+e.message)}
+}
+window.saveMed=saveMed;
+
+// ══════════ RENDEZ-VOUS ══════════
+let rdvFilter='all';
+function renderRdvs(rdvs){
+  const list=document.getElementById('rdvList');
+  const empty=document.getElementById('rdvEmpty');
+  if(!rdvs||rdvs.length===0){list.innerHTML='';empty.style.display='block';return}
+  empty.style.display='none';
+  const now=new Date();
+  const today=now.toISOString().split('T')[0];
+  let filtered=rdvs;
+  if(rdvFilter==='upcoming')filtered=rdvs.filter(r=>(r.dateHeure||'')>=today);
+  if(rdvFilter==='past')filtered=rdvs.filter(r=>(r.dateHeure||'')<today);
+  if(filtered.length===0){list.innerHTML='<p style="text-align:center;color:var(--text3);padding:16px">Aucun resultat</p>';return}
+  const typeLabels={consultation:'Consultation',controle:'Controle',urgence:'Urgence',telemedecine:'Telemedecine',autre:'Autre'};
+  list.innerHTML=filtered.map(r=>{
+    const d=r.dateHeure?new Date(r.dateHeure):null;
+    const dateStr=d?d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+    const isToday=r.dateHeure&&r.dateHeure.startsWith(today);
+    const isPast=r.dateHeure&&r.dateHeure<today;
+    return`<div class="rdv-card ${isToday?'today':''} ${isPast?'past':''}">
+      <div class="rdv-title">${r.titre||'Rendez-vous'}</div>
+      <div class="rdv-info">
+        <span>&#128197; ${dateStr}</span>
+        ${r.lieu?'<span>&#128205; '+r.lieu+'</span>':''}
+        ${r.dureeMinutes?'<span>&#9200; '+r.dureeMinutes+' min</span>':''}
+      </div>
+      <div class="rdv-type">${typeLabels[r.type]||r.type||''}</div>
+    </div>`;
+  }).join('');
+}
+window.renderRdvs=renderRdvs;
+
+function filterRdv(filter,el){
+  rdvFilter=filter;
+  document.querySelectorAll('.rdv-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderRdvs(window._rdvs||[]);
+}
+window.filterRdv=filterRdv;
+
+function openRdvModal(){
+  document.getElementById('rdvModal').classList.add('active');
+  document.getElementById('newRdvTitle').value='';
+  document.getElementById('newRdvDate').value='';
+  document.getElementById('newRdvLocation').value='';
+  document.getElementById('newRdvNotes').value='';
+}
+window.openRdvModal=openRdvModal;
+
+async function saveRdv(){
+  const titre=document.getElementById('newRdvTitle').value.trim();
+  const dateHeure=document.getElementById('newRdvDate').value;
+  if(!titre||!dateHeure){alert('Remplissez le titre et la date');return}
+  try{
+    await window.saveRdvToDb({
+      titre,dateHeure,
+      lieu:document.getElementById('newRdvLocation').value.trim(),
+      type:document.getElementById('newRdvType').value,
+      dureeMinutes:parseInt(document.getElementById('newRdvDuration').value)||30,
+      notes:document.getElementById('newRdvNotes').value.trim(),
+      estConfirme:false
+    });
+    closeModal('rdvModal');
+  }catch(e){console.error('saveRdv:',e);alert('Erreur: '+e.message)}
+}
+window.saveRdv=saveRdv;
+
+// ══════════ JOURNAL ══════════
+let journalSelections={mood:null,stress:null,sleep:null};
+
+function selectChip(el,type){
+  const parent=el.parentElement;
+  parent.querySelectorAll('.emoji-chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  journalSelections[type]=el.textContent.trim();
+}
+window.selectChip=selectChip;
+
+document.getElementById('journalActivity').addEventListener('change',function(){
+  document.getElementById('journalActivityMinWrap').style.display=this.checked?'block':'none';
+});
+
+function renderJournal(entries){
+  const todayEmojis=document.getElementById('journalTodayEmojis');
+  const history=document.getElementById('journalHistory');
+  const today=new Date().toISOString().split('T')[0];
+  const todayEntry=entries.find(e=>e.date===today);
+  if(todayEntry){
+    todayEmojis.textContent=[todayEntry.humeur,todayEntry.stress,todayEntry.sommeil].filter(Boolean).join(' ');
+  }else{
+    todayEmojis.textContent='Pas encore renseigne';
+  }
+  history.innerHTML=entries.slice(0,20).map(e=>{
+    const dateStr=e.date?new Date(e.date+'T00:00').toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'}):'';
+    return`<div class="jh-item">
+      <div class="jh-date">${dateStr}</div>
+      <div class="jh-emojis">${[e.humeur,e.stress,e.sommeil].filter(Boolean).join(' ')}</div>
+      ${e.notes?'<div style="font-size:12px;color:var(--text3);margin-top:4px">'+e.notes+'</div>':''}
+    </div>`;
+  }).join('');
+  if(entries.length===0)history.innerHTML='<p style="text-align:center;color:var(--text3);padding:16px">Aucune entree</p>';
+}
+window.renderJournal=renderJournal;
+
+async function saveJournal(){
+  const data={
+    humeur:journalSelections.mood||'',
+    stress:journalSelections.stress||'',
+    sommeil:journalSelections.sleep||'',
+    heuresSommeil:parseFloat(document.getElementById('journalSleepHours').value)||0,
+    activitePhysique:document.getElementById('journalActivity').checked,
+    minutesActivite:parseInt(document.getElementById('journalActivityMin').value)||0,
+    notes:document.getElementById('journalNotes').value.trim()
+  };
+  if(!data.humeur){alert('Selectionnez votre humeur');return}
+  await window.saveJournalToDb(data);
+  alert('Journal enregistre !');
+}
+window.saveJournal=saveJournal;
+
+// ══════════ PEDOMETER ══════════
+let pedoTracking=false;
+let pedoSteps=0;
+let pedoStartTime=null;
+let pedoInterval=null;
+
+function togglePedometer(){
+  const btn=document.getElementById('pedoBtn');
+  if(pedoTracking){
+    pedoTracking=false;
+    btn.className='pedo-btn start';
+    btn.innerHTML='&#128694; Demarrer le suivi';
+    if(pedoInterval)clearInterval(pedoInterval);
+  }else{
+    pedoTracking=true;
+    pedoSteps=0;
+    pedoStartTime=Date.now();
+    btn.className='pedo-btn stop';
+    btn.innerHTML='&#9209; Arreter le suivi';
+    // Try DeviceMotion API
+    if(window.DeviceMotionEvent&&typeof DeviceMotionEvent.requestPermission==='function'){
+      DeviceMotionEvent.requestPermission().then(p=>{if(p==='granted')startMotionTracking()}).catch(()=>simulatePedo());
+    }else if(window.DeviceMotionEvent){
+      startMotionTracking();
+    }else{
+      simulatePedo();
+    }
+  }
+}
+window.togglePedometer=togglePedometer;
+
+function startMotionTracking(){
+  let lastMag=0;let threshold=12;
+  window.addEventListener('devicemotion',function pedoHandler(e){
+    if(!pedoTracking){window.removeEventListener('devicemotion',pedoHandler);return}
+    const a=e.accelerationIncludingGravity;
+    if(!a)return;
+    const mag=Math.sqrt(a.x*a.x+a.y*a.y+a.z*a.z);
+    if(Math.abs(mag-lastMag)>threshold){pedoSteps++;updatePedoUI()}
+    lastMag=mag;
+  });
+}
+
+function simulatePedo(){
+  // Fallback: simulate steps for demo (1 step every 0.7s)
+  pedoInterval=setInterval(()=>{
+    if(!pedoTracking)return;
+    pedoSteps+=Math.floor(Math.random()*3)+1;
+    updatePedoUI();
+  },700);
+}
+
+function updatePedoUI(){
+  const goal=8000;
+  document.getElementById('pedoSteps').textContent=pedoSteps;
+  const dist=(pedoSteps*0.00075).toFixed(2);
+  const cal=Math.round(pedoSteps*0.04);
+  const mins=pedoStartTime?Math.round((Date.now()-pedoStartTime)/60000):0;
+  document.getElementById('pedoDist').textContent=dist;
+  document.getElementById('pedoCal').textContent=cal;
+  document.getElementById('pedoTime').textContent=mins;
+  drawPedoCircle(pedoSteps/goal);
+}
+
+function drawPedoCircle(progress){
+  const canvas=document.getElementById('pedoCanvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=200*dpr;canvas.height=200*dpr;
+  ctx.scale(dpr,dpr);
+  const cx=100,cy=100,r=85;
+  ctx.clearRect(0,0,200,200);
+  // Background circle
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.strokeStyle='rgba(255,255,255,.06)';ctx.lineWidth=10;ctx.stroke();
+  // Progress arc
+  const startAngle=-Math.PI/2;
+  const endAngle=startAngle+(Math.min(progress,1)*Math.PI*2);
+  ctx.beginPath();ctx.arc(cx,cy,r,startAngle,endAngle);
+  const grad=ctx.createLinearGradient(0,0,200,200);
+  grad.addColorStop(0,'#00D2FF');grad.addColorStop(1,'#26A69A');
+  ctx.strokeStyle=grad;ctx.lineWidth=10;ctx.lineCap='round';ctx.stroke();
+}
+drawPedoCircle(0);
+
+// ══════════ PREDICTIVE ══════════
+function generatePredictions(){
+  const readings=window._glucoseData||[];
+  if(readings.length<3){
+    document.getElementById('predCurrent').textContent='--';
+    document.getElementById('predRisk').textContent='Donnees insuffisantes';
+    document.getElementById('predTableBody').innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--text3)">Ajoutez au moins 3 mesures</td></tr>';
+    return;
+  }
+  const latest=readings[0].value;
+  document.getElementById('predCurrent').textContent=latest;
+  // Simple prediction based on trend
+  const vals=readings.slice(0,6).map(r=>r.value);
+  const trend=(vals[0]-vals[vals.length-1])/vals.length;
+  const predictions=[];
+  for(let h=1;h<=6;h++){
+    const predicted=Math.round(latest+trend*h+((Math.random()-0.5)*15));
+    const confidence=Math.max(50,95-h*8);
+    predictions.push({hour:h,value:Math.max(40,Math.min(400,predicted)),confidence});
+  }
+  // Risk level
+  const maxPred=Math.max(...predictions.map(p=>p.value));
+  const minPred=Math.min(...predictions.map(p=>p.value));
+  let risk='normal',riskText='Normal';
+  if(minPred<55||maxPred>300){risk='high';riskText='Eleve'}
+  else if(minPred<70||maxPred>250){risk='moderate';riskText='Modere'}
+  else if(maxPred>180){risk='normal';riskText='Normal'}
+  else{risk='low';riskText='Faible'}
+  const riskEl=document.getElementById('predRisk');
+  riskEl.textContent='Risque: '+riskText;
+  riskEl.className='pred-risk '+risk;
+  // Table
+  document.getElementById('predTableBody').innerHTML=predictions.map(p=>{
+    const color=p.value<70?'var(--red)':p.value>180?'var(--orange)':'var(--green)';
+    return`<tr><td>+${p.hour}h</td><td style="color:${color};font-weight:600">${p.value} mg/dL</td><td>${p.confidence}%</td></tr>`;
+  }).join('');
+  // Draw chart
+  drawPredChart(readings.slice(0,8).reverse(),predictions);
+}
+
+function drawPredChart(historical,predictions){
+  const canvas=document.getElementById('predCanvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
+  const rect=canvas.parentElement.getBoundingClientRect();
+  canvas.width=rect.width*dpr;canvas.height=220*dpr;
+  canvas.style.width=rect.width+'px';canvas.style.height='220px';
+  ctx.scale(dpr,dpr);
+  const W=rect.width,H=220;
+  ctx.clearRect(0,0,W,H);
+  const allVals=[...historical.map(h=>h.value),...predictions.map(p=>p.value)];
+  const minV=Math.min(...allVals,60);const maxV=Math.max(...allVals,200);
+  const pad={t:20,b:30,l:10,r:10};
+  const cW=W-pad.l-pad.r,cH=H-pad.t-pad.b;
+  const total=historical.length+predictions.length;
+  // Target zone
+  const y70=pad.t+cH*(1-(70-minV)/(maxV-minV));
+  const y180=pad.t+cH*(1-(180-minV)/(maxV-minV));
+  ctx.fillStyle='rgba(76,175,80,.06)';ctx.fillRect(pad.l,y180,cW,y70-y180);
+  ctx.strokeStyle='rgba(76,175,80,.15)';ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(pad.l,y70);ctx.lineTo(W-pad.r,y70);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(pad.l,y180);ctx.lineTo(W-pad.r,y180);ctx.stroke();
+  ctx.setLineDash([]);
+  // Historical line
+  ctx.beginPath();
+  historical.forEach((d,i)=>{
+    const x=pad.l+i*(cW/(total-1));
+    const y=pad.t+cH*(1-(d.value-minV)/(maxV-minV));
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.strokeStyle='#00D2FF';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
+  // Predicted line (dashed)
+  const startIdx=historical.length-1;
+  ctx.beginPath();
+  const lastHist=historical[historical.length-1];
+  const lx=pad.l+startIdx*(cW/(total-1));
+  const ly=pad.t+cH*(1-(lastHist.value-minV)/(maxV-minV));
+  ctx.moveTo(lx,ly);
+  predictions.forEach((p,i)=>{
+    const x=pad.l+(startIdx+1+i)*(cW/(total-1));
+    const y=pad.t+cH*(1-(p.value-minV)/(maxV-minV));
+    ctx.lineTo(x,y);
+  });
+  ctx.strokeStyle='#7C4DFF';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.stroke();
+  ctx.setLineDash([]);
+  // Dots
+  historical.forEach((d,i)=>{
+    const x=pad.l+i*(cW/(total-1));
+    const y=pad.t+cH*(1-(d.value-minV)/(maxV-minV));
+    ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='#00D2FF';ctx.fill();
+  });
+  predictions.forEach((p,i)=>{
+    const x=pad.l+(startIdx+1+i)*(cW/(total-1));
+    const y=pad.t+cH*(1-(p.value-minV)/(maxV-minV));
+    ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='rgba(124,77,255,'+(p.confidence/100)+')';ctx.fill();
+  });
+  // Labels
+  ctx.fillStyle='var(--text3)';ctx.font='10px sans-serif';ctx.textAlign='center';
+  ctx.fillText('Historique',pad.l+cW*0.3,H-5);
+  ctx.fillText('Predictions',pad.l+cW*0.75,H-5);
+}
+
+async function requestRollyPrediction(){
+  const readings=window._glucoseData||[];
+  if(readings.length<2){alert('Pas assez de donnees glycemiques');return}
+  const vals=readings.slice(0,10).map(r=>r.value+' mg/dL').join(', ');
+  const prompt=`Voici les dernieres glycemies du patient: ${vals}. Analyse les tendances, identifie les risques potentiels (hypo/hyperglycemie) et donne des recommandations pratiques. Formate ta reponse avec des titres et des listes.`;
+  navigate('chatbot');
+  document.getElementById('chatInput').value=prompt;
+  sendMessage();
+}
+window.requestRollyPrediction=requestRollyPrediction;
+
+// Load predictions when navigating to predictive screen
+const origNavigate=window.navigate;
+window.navigate=function(id){
+  origNavigate(id);
+  if(id==='predictive')generatePredictions();
+  if(id==='chatbot')loadChatHistory();
+  if(id==='medicaments'&&window.loadMedicaments)window.loadMedicaments();
+  if(id==='rendezvous'&&window.loadRendezVous)window.loadRendezVous();
+  if(id==='journal'&&window.loadJournal)window.loadJournal();
+  if(id==='messagerie'&&window.loadConversations)window.loadConversations();
+  if(id==='repas'&&window.loadRepasHistory)window.loadRepasHistory();
+  if(id==='datasharing'&&window.loadConsents)window.loadConsents();
+  if(id==='validations'&&window.loadValidations)window.loadValidations();
+  if(id==='messagerie'&&window.loadDoctors)window.loadDoctors();
+  setTimeout(initRollyIcons,50);
+};
+
+// ══════════ MESSAGERIE ══════════
+let currentConvId=null;
+function renderConversations(convs){
+  const list=document.getElementById('convList');
+  const empty=document.getElementById('convEmpty');
+  if(!convs||convs.length===0){list.innerHTML='';empty.style.display='block';return}
+  empty.style.display='none';
+  const colors=['#00D2FF','#7C4DFF','#26A69A','#FF9800','#FF5252'];
+  list.innerHTML=convs.map((c,i)=>{
+    const name=c.medecinNom||c.patientNom||'Conversation';
+    const initial=name.charAt(0).toUpperCase();
+    const color=colors[i%colors.length];
+    const timeStr=c.dernierMessageAt?.toDate?c.dernierMessageAt.toDate().toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+    return`<div class="conv-card" onclick="openConversation('${c.id}','${name.replace(/'/g,"\\'")}')">
+      <div class="conv-avatar" style="background:${color}20;color:${color}">${initial}</div>
+      <div class="conv-info"><h4>${name}</h4><p>${c.dernierMessage||''}</p></div>
+      <div class="conv-meta"><span class="conv-time">${timeStr}</span></div>
+    </div>`;
+  }).join('');
+}
+window.renderConversations=renderConversations;
+
+function openConversation(convId,name){
+  currentConvId=convId;
+  document.getElementById('convDetailName').textContent=name;
+  document.getElementById('convDetailAvatar').textContent=name.charAt(0).toUpperCase();
+  window.loadMessages(convId);
+  navigate('conversation');
+}
+window.openConversation=openConversation;
+
+function renderMessages(msgs){
+  const container=document.getElementById('convMessages');
+  const uid=window._user?.uid;
+  container.innerHTML=msgs.map(m=>{
+    const isMe=m.envoyeurId===uid;
+    return`<div class="chat-msg ${isMe?'user':'ai'}">${m.contenu}</div>`;
+  }).join('');
+  container.scrollTop=container.scrollHeight;
+}
+window.renderMessages=renderMessages;
+
+async function sendConvMessage(){
+  const input=document.getElementById('convInput');
+  const text=input.value.trim();
+  if(!text||!currentConvId)return;
+  input.value='';
+  await window.sendMsgToDb(currentConvId,text);
+}
+window.sendConvMessage=sendConvMessage;
+
+function openNewConvModal(){
+  document.getElementById('newConvModal').classList.add('active');
+  document.getElementById('newConvName').value='';
+  document.getElementById('newConvMsg').value='';
+}
+window.openNewConvModal=openNewConvModal;
+
+async function createConversation(){
+  const name=document.getElementById('newConvName').value.trim();
+  const msg=document.getElementById('newConvMsg').value.trim();
+  if(!name||!msg){alert('Remplissez tous les champs');return}
+  const convId=await window.createConvInDb(name,msg);
+  closeModal('newConvModal');
+  openConversation(convId,name);
+}
+window.createConversation=createConversation;
+
+// ══════════ REPAS ANALYSE ══════════
+let repasViewMode='analyse';
+
+function toggleRepasView(){
+  if(repasViewMode==='analyse'){
+    repasViewMode='history';
+    document.getElementById('repasAnalyseView').classList.add('hidden');
+    document.getElementById('repasHistoryView').classList.remove('hidden');
+  }else{
+    repasViewMode='analyse';
+    document.getElementById('repasAnalyseView').classList.remove('hidden');
+    document.getElementById('repasHistoryView').classList.add('hidden');
+  }
+}
+window.toggleRepasView=toggleRepasView;
+
+async function analyzeRepas(){
+  const desc=document.getElementById('repasDesc').value.trim();
+  if(!desc){alert('Decrivez votre repas');return}
+  const resultEl=document.getElementById('repasResult');
+  resultEl.classList.remove('hidden');
+  resultEl.innerHTML='<div style="text-align:center;padding:20px"><div class="chat-typing" style="display:inline-flex"><span></span><span></span><span></span></div><p style="color:var(--text3);margin-top:8px;font-size:13px">ROLLY analyse votre repas...</p></div>';
+
+  const prompt=`Analyse nutritionnelle de ce repas pour un patient diabetique: "${desc}".
+Reponds en JSON strict avec ces champs: {"nomRepas":"nom court","glucides":nombre,"proteines":nombre,"lipides":nombre,"calories":nombre,"indexGlycemique":nombre,"categorieIG":"bas|moyen|eleve","fibres":nombre,"scoreDiabete":nombre de 0 a 100 (100=ideal),"impactGlycemique":"description courte","recommandations":["conseil1","conseil2"],"alternatives":["alternative1","alternative2"]}. JSON uniquement, pas de markdown.`;
+
+  try{
+    const raw=await window.callGemini(prompt);
+    // Extract JSON from response
+    let json;
+    try{
+      const match=raw.match(/\{[\s\S]*\}/);
+      json=JSON.parse(match?match[0]:raw);
+    }catch{
+      resultEl.innerHTML='<div class="repas-result"><p style="color:var(--text2)">'+formatMarkdown(raw)+'</p></div>';
+      return;
+    }
+    window._lastRepasAnalysis=json;
+    const scoreColor=json.scoreDiabete>=70?'var(--green)':json.scoreDiabete>=40?'var(--orange)':'var(--red)';
+    const igColor=json.categorieIG==='bas'?'var(--green)':json.categorieIG==='moyen'?'var(--orange)':'var(--red)';
+    resultEl.innerHTML=`
+      <div class="repas-result">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h4 style="font-size:16px">${json.nomRepas||'Repas'}</h4>
+          <span class="repas-score" style="background:${scoreColor}20;color:${scoreColor}">${json.scoreDiabete||0}/100</span>
+        </div>
+        <div class="repas-nutrients">
+          <div class="repas-nutrient"><div class="rn-val">${json.glucides||0}g</div><div class="rn-label">Glucides</div></div>
+          <div class="repas-nutrient"><div class="rn-val">${json.proteines||0}g</div><div class="rn-label">Proteines</div></div>
+          <div class="repas-nutrient"><div class="rn-val">${json.lipides||0}g</div><div class="rn-label">Lipides</div></div>
+          <div class="repas-nutrient"><div class="rn-val">${json.calories||0}</div><div class="rn-label">kcal</div></div>
+          <div class="repas-nutrient" style="border:1px solid ${igColor}30"><div class="rn-val" style="color:${igColor}">${json.indexGlycemique||0}</div><div class="rn-label">IG (${json.categorieIG||'?'})</div></div>
+          <div class="repas-nutrient"><div class="rn-val">${json.fibres||0}g</div><div class="rn-label">Fibres</div></div>
+        </div>
+        ${json.impactGlycemique?'<div style="margin-top:12px;padding:10px;background:var(--bg);border-radius:10px;font-size:13px;color:var(--text2)">&#128200; '+json.impactGlycemique+'</div>':''}
+        ${json.recommandations?'<div style="margin-top:12px"><h5 style="font-size:13px;color:var(--cyan);margin-bottom:6px">Recommandations</h5>'+json.recommandations.map(r=>'<div style="font-size:13px;color:var(--text2);margin-bottom:4px">&#8226; '+r+'</div>').join('')+'</div>':''}
+        <button class="btn btn-cyan mt-16" style="max-width:100%" onclick="saveRepasAnalysis()">&#128190; Sauvegarder</button>
+      </div>`;
+  }catch(e){
+    resultEl.innerHTML='<p style="color:var(--red);text-align:center;padding:16px">Erreur d\'analyse: '+e.message+'</p>';
+  }
+}
+window.analyzeRepas=analyzeRepas;
+
+async function saveRepasAnalysis(){
+  const json=window._lastRepasAnalysis;
+  if(!json){alert('Aucune analyse a sauvegarder');return}
+  await window.saveRepasToDb(json);
+  alert('Repas sauvegarde !');
+}
+window.saveRepasAnalysis=saveRepasAnalysis;
+
+function renderRepasHistory(meals){
+  const list=document.getElementById('repasHistoryList');
+  if(!meals||meals.length===0){list.innerHTML='<p style="text-align:center;color:var(--text3);padding:24px">Aucun repas enregistre</p>';return}
+  list.innerHTML=meals.map(m=>{
+    const scoreColor=(m.scoreDiabete||0)>=70?'var(--green)':(m.scoreDiabete||0)>=40?'var(--orange)':'var(--red)';
+    const date=m.timestamp?.toDate?m.timestamp.toDate().toLocaleDateString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+    return`<div class="rh-item">
+      <div>
+        <div style="font-weight:600">${m.nomRepas||'Repas'}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">${date} - ${m.glucides||0}g glucides - IG ${m.indexGlycemique||0} - ${m.calories||0} kcal</div>
+      </div>
+      <span class="repas-score" style="background:${scoreColor}20;color:${scoreColor};font-size:12px">${m.scoreDiabete||0}</span>
+    </div>`;
+  }).join('');
+}
+window.renderRepasHistory=renderRepasHistory;
+
+// ══════════ DATA SHARING ══════════
+function renderConsents(consents){
+  const list=document.getElementById('consentList');
+  const empty=document.getElementById('consentEmpty');
+  if(!consents||consents.length===0){list.innerHTML='';empty.style.display='block';return}
+  empty.style.display='none';
+  list.innerHTML=consents.map(c=>{
+    return`<div class="consent-card">
+      <div class="cc-top"><span class="cc-name">${c.medecinNom||'Medecin'}</span><span class="cc-status">&#9989; Actif</span></div>
+      <div class="consent-badges">
+        ${c.shareGlucose?'<span class="consent-badge">&#129656; Glycemie</span>':''}
+        ${c.shareHbA1c?'<span class="consent-badge">&#128200; HbA1c</span>':''}
+        ${c.shareMedications?'<span class="consent-badge">&#128138; Medicaments</span>':''}
+      </div>
+      <button class="consent-revoke" onclick="if(confirm('Revoquer l\\'acces de ${c.medecinNom||'ce medecin'} ?'))revokeConsentInDb('${c.id}')">Revoquer l'acces</button>
+    </div>`;
+  }).join('');
+}
+window.renderConsents=renderConsents;
+
+function openShareModal(){
+  document.getElementById('shareModal').classList.add('active');
+  document.getElementById('shareDoctorName').value='';
+}
+window.openShareModal=openShareModal;
+
+async function createConsent(){
+  const name=document.getElementById('shareDoctorName').value.trim();
+  if(!name){alert('Entrez le nom du medecin');return}
+  const glucose=document.getElementById('shareGlucose').checked;
+  const hba1c=document.getElementById('shareHbA1c').checked;
+  const meds=document.getElementById('shareMeds').checked;
+  await window.createConsentInDb(name,glucose,hba1c,meds);
+  closeModal('shareModal');
+}
+window.createConsent=createConsent;
+
+async function exportData(format){
+  const readings=window._glucoseData||[];
+  const meds=window._meds||[];
+  if(readings.length===0){alert('Aucune donnee a exporter');return}
+  let content='';
+  if(format==='csv'){
+    content='Date,Valeur (mg/dL),Contexte,Note\n';
+    readings.forEach(r=>{
+      content+=`${r.createdAt||''},${r.value},${r.context||''},${r.note||''}\n`;
+    });
+    content+='\nMedicaments\nNom,Dosage,Frequence,Actif\n';
+    meds.forEach(m=>{
+      content+=`${m.nom||''},${m.dosage||''},${m.frequence||''},${m.estActif!==false?'Oui':'Non'}\n`;
+    });
+  }else{
+    content='=== DiaSmart - Export Donnees ===\n\n';
+    content+='GLYCEMIES:\n';
+    readings.forEach(r=>{
+      content+=`${r.createdAt||''}: ${r.value} mg/dL (${r.context||''}) ${r.note||''}\n`;
+    });
+    content+='\nMEDICAMENTS:\n';
+    meds.forEach(m=>{
+      content+=`${m.nom} ${m.dosage} - ${m.frequence} [${m.estActif!==false?'Actif':'Pause'}]\n`;
+    });
+  }
+  // Download
+  const blob=new Blob([content],{type:format==='csv'?'text/csv':'text/plain'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='diasmart_export.'+(format==='csv'?'csv':'txt');
+  a.click();URL.revokeObjectURL(url);
+}
+window.exportData=exportData;
+
+// ══════════ DOCTOR LIST & VALIDATION ══════════
+function renderDoctorList(doctors){
+  // Messagerie doctor list
+  const listMsg=document.getElementById('doctorListMsg');
+  const noDoc=document.getElementById('noDoctorsMsg');
+  if(!doctors||doctors.length===0){
+    if(listMsg)listMsg.innerHTML='';
+    if(noDoc)noDoc.style.display='block';
+  }else{
+    if(noDoc)noDoc.style.display='none';
+    const colors=['#00D2FF','#7C4DFF','#26A69A','#FF9800','#FF5252'];
+    if(listMsg){
+      listMsg.innerHTML=doctors.map((d,i)=>{
+        const name=d.displayName||d.name||d.email||'Medecin';
+        const spec=d.specialite||'Medecin generaliste';
+        const color=colors[i%colors.length];
+        return`<div class="doctor-item" onclick="startConvWithDoctor('${d.uid}','${name.replace(/'/g,"\\'")}')">
+          <div class="di-avatar" style="background:${color}20;color:${color}">${name.charAt(0).toUpperCase()}</div>
+          <div><div class="di-name">Dr. ${name}</div><div class="di-spec">${spec}</div></div>
+        </div>`;
+      }).join('');
+    }
+  }
+  // Also update modal lists
+  renderDoctorSelectList(doctors);
+  renderValidationDoctorList(doctors);
+}
+window.renderDoctorList=renderDoctorList;
+
+function renderDoctorSelectList(doctors){
+  const list=document.getElementById('doctorSelectList');
+  if(!list)return;
+  if(!doctors||doctors.length===0){list.innerHTML='<p style="color:var(--text3);font-size:13px;padding:12px">Aucun medecin disponible</p>';return}
+  const colors=['#00D2FF','#7C4DFF','#26A69A','#FF9800','#FF5252'];
+  list.innerHTML=doctors.map((d,i)=>{
+    const name=d.displayName||d.name||d.email||'Medecin';
+    const spec=d.specialite||'Medecin generaliste';
+    const color=colors[i%colors.length];
+    return`<div class="doctor-item" data-uid="${d.uid}" data-name="${name}" onclick="selectDoctor(this,'conv')">
+      <div class="di-avatar" style="background:${color}20;color:${color}">${name.charAt(0).toUpperCase()}</div>
+      <div><div class="di-name">Dr. ${name}</div><div class="di-spec">${spec}</div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderValidationDoctorList(doctors){
+  const list=document.getElementById('validationDoctorList');
+  if(!list)return;
+  if(!doctors||doctors.length===0){list.innerHTML='<p style="color:var(--text3);font-size:13px;padding:12px">Aucun medecin disponible</p>';return}
+  const colors=['#00D2FF','#7C4DFF','#26A69A','#FF9800','#FF5252'];
+  list.innerHTML=doctors.map((d,i)=>{
+    const name=d.displayName||d.name||d.email||'Medecin';
+    const spec=d.specialite||'Medecin generaliste';
+    const color=colors[i%colors.length];
+    return`<div class="doctor-item" data-uid="${d.uid}" data-name="${name}" onclick="selectDoctor(this,'validation')">
+      <div class="di-avatar" style="background:${color}20;color:${color}">${name.charAt(0).toUpperCase()}</div>
+      <div><div class="di-name">Dr. ${name}</div><div class="di-spec">${spec}</div></div>
+    </div>`;
+  }).join('');
+}
+
+function selectDoctor(el,type){
+  // Deselect others
+  el.parentElement.querySelectorAll('.doctor-item').forEach(d=>d.classList.remove('selected'));
+  el.classList.add('selected');
+  if(type==='conv'){
+    document.getElementById('selectedDoctorUid').value=el.dataset.uid;
+    document.getElementById('selectedDoctorName').value=el.dataset.name;
+  }else{
+    document.getElementById('validationDoctorUid').value=el.dataset.uid;
+    document.getElementById('validationDoctorNameHidden').value=el.dataset.name;
+  }
+}
+window.selectDoctor=selectDoctor;
+
+function startConvWithDoctor(uid,name){
+  // Check if conversation already exists
+  const convs=window._conversations||[];
+  const existing=convs.find(c=>c.participants&&c.participants.includes(uid));
+  if(existing){
+    openConversation(existing.id,name);
+    return;
+  }
+  // Open new conv modal pre-filled
+  document.getElementById('newConvModal').classList.add('active');
+  document.getElementById('selectedDoctorUid').value=uid;
+  document.getElementById('selectedDoctorName').value=name;
+  // Highlight selected doctor
+  const items=document.querySelectorAll('#doctorSelectList .doctor-item');
+  items.forEach(item=>{
+    item.classList.remove('selected');
+    if(item.dataset.uid===uid)item.classList.add('selected');
+  });
+}
+window.startConvWithDoctor=startConvWithDoctor;
+
+function openValidationDoctorModal(){
+  document.getElementById('validationDoctorModal').classList.add('active');
+  document.getElementById('validationDoctorUid').value='';
+  document.getElementById('validationDoctorNameHidden').value='';
+}
+window.openValidationDoctorModal=openValidationDoctorModal;
+
+async function submitForValidation(){
+  const uid=document.getElementById('validationDoctorUid').value;
+  const name=document.getElementById('validationDoctorNameHidden').value;
+  if(!uid||!name){alert('Selectionnez un medecin');return}
+  await window.saveValidation(_lastRollyQuestion,_lastRollyResponse,uid,name);
+  closeModal('validationDoctorModal');
+  // Show confirmation in chat
+  const msgs=document.getElementById('chatMessages');
+  const conf=document.createElement('div');
+  conf.className='validation-banner';
+  conf.innerHTML=`<span style="color:var(--green)">&#9989; Reponse envoyee a <strong>Dr. ${name}</strong> pour validation.</span><br><span style="font-size:11px;color:var(--text3)">Vous serez notifie quand le medecin aura valide.</span>`;
+  msgs.appendChild(conf);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+window.submitForValidation=submitForValidation;
+
+function skipValidation(){
+  closeModal('validationDoctorModal');
+}
+window.skipValidation=skipValidation;
+
+// Update createConversation to use selected doctor
+const _origCreateConversation=window.createConversation;
+window.createConversation=async function(){
+  const uid=document.getElementById('selectedDoctorUid').value;
+  const name=document.getElementById('selectedDoctorName').value;
+  const msg=document.getElementById('newConvMsg').value.trim();
+  if(!name){alert('Selectionnez un medecin');return}
+  if(!msg){alert('Ecrivez un message');return}
+  // Create conversation with doctor uid in participants
+  const curUser=window._auth?.currentUser;
+  if(!curUser)return;
+  const user=curUser;
+  const f=window._fbFuncs;
+  const convRef=await f.addDoc(f.collection(window._db,'conversations'),{
+    participants:[user.uid,uid],
+    participantNames:{[user.uid]:user.displayName||'Moi',[uid]:name},
+    medecinNom:name,
+    medecinUid:uid,
+    patientNom:user.displayName||'Patient',
+    patientUid:user.uid,
+    dernierMessage:msg,
+    dernierMessageAt:f.serverTimestamp(),
+    createdAt:f.serverTimestamp()
+  });
+  await f.addDoc(f.collection(window._db,'conversations',convRef.id,'messages'),{
+    contenu:msg,envoyeurId:user.uid,envoyeurNom:user.displayName||'Moi',timestamp:f.serverTimestamp()
+  });
+  closeModal('newConvModal');
+  openConversation(convRef.id,name);
+  window.loadConversations();
+};
+
+// ══════════ VALIDATIONS SCREEN (MEDECIN) ══════════
+function renderValidations(vals){
+  const list=document.getElementById('validationList');
+  const empty=document.getElementById('validationEmpty');
+  if(!list)return;
+  if(!vals||vals.length===0){list.innerHTML='';if(empty)empty.style.display='block';return}
+  if(empty)empty.style.display='none';
+  const role=window._userRole||'patient';
+  list.innerHTML=vals.map(v=>{
+    const date=v.createdAt?.toDate?v.createdAt.toDate().toLocaleDateString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+    const statusLabel={pending:'En attente',validated:'Valide',rejected:'Rejete'}[v.status]||v.status;
+    const statusClass=v.status||'pending';
+    const isDoctor=role==='medecin';
+    return`<div class="validation-card">
+      <div class="vc-header">
+        <span class="vc-patient">${isDoctor?v.patientNom:'Dr. '+v.medecinNom}</span>
+        <span class="vc-status ${statusClass}">${statusLabel}</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">${date}</div>
+      <div class="vc-question"><strong>Question :</strong> ${(v.question||'').substring(0,200)}</div>
+      <div class="vc-response"><strong><span class="rolly-nav-icon"></span> ROLLY :</strong><br>${(v.rollyResponse||'').substring(0,500)}${(v.rollyResponse||'').length>500?'...':''}</div>
+      ${v.medecinComment?'<div style="font-size:13px;color:var(--text2);padding:8px;background:rgba(76,175,80,.06);border-radius:8px;margin-bottom:8px"><strong>Commentaire medecin :</strong> '+v.medecinComment+'</div>':''}
+      ${isDoctor&&v.status==='pending'?`
+        <div class="input-group" style="margin-bottom:8px"><input type="text" id="comment_${v.id}" placeholder="Commentaire (optionnel)" style="padding-left:12px"></div>
+        <div class="vc-actions">
+          <button class="vc-approve" onclick="handleValidation('${v.id}',true)">&#9989; Valider</button>
+          <button class="vc-reject" onclick="handleValidation('${v.id}',false)">&#10060; Rejeter</button>
+        </div>
+      `:''}
+    </div>`;
+  }).join('');
+}
+window.renderValidations=renderValidations;
+
+async function handleValidation(valId,approved){
+  const commentEl=document.getElementById('comment_'+valId);
+  const comment=commentEl?commentEl.value.trim():'';
+  await window.validateResponse(valId,approved,comment);
+  alert(approved?'Reponse validee !':'Reponse rejetee.');
+}
+window.handleValidation=handleValidation;
+</script>
+</body>
+</html>

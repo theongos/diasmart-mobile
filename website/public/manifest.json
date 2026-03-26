@@ -1,0 +1,28 @@
+{
+  "name": "DiaSmart - Diabetologie Intelligente",
+  "short_name": "DiaSmart",
+  "description": "Application de gestion du diabete avec assistant IA ROLLY",
+  "start_url": "/app.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#001A3C",
+  "theme_color": "#00D2FF",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "diasmart-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "medical"],
+  "screenshots": [
+    {
+      "src": "screen-dashboard.jpg",
+      "sizes": "1080x1920",
+      "type": "image/jpeg",
+      "form_factor": "narrow"
+    }
+  ]
+}

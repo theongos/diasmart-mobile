@@ -61,3 +61,12 @@ memory/
 
 # Gradle wrapper script (Unix)
 gradlew
+
+# Large binary files
+*.zip
+*.bin
+website/public/diasmart.zip
+website/public/DiaSmart.bin
+website/DiaSmart.apk
+website/nul
+website/.firebaserc
