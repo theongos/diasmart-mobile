@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.diabeto.ui.theme.DiabetoTheme
+import com.diabeto.ui.theme.Primary
 
 /**
  * Full-screen incoming call activity.
@@ -120,7 +121,7 @@ fun IncomingCallScreen(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = if (isVideo) "Appel video entrant" else "Appel audio entrant",
-                    color = Color(0xFF00D2FF),
+                    color = Primary,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium
                 )
@@ -143,13 +144,13 @@ fun IncomingCallScreen(
                     Surface(
                         modifier = Modifier.size(140.dp),
                         shape = CircleShape,
-                        color = Color(0xFF00D2FF).copy(alpha = 0.1f)
+                        color = Primary.copy(alpha = 0.1f)
                     ) {}
                     // Inner circle with initial
                     Surface(
                         modifier = Modifier.size(110.dp),
                         shape = CircleShape,
-                        color = Color(0xFF00D2FF).copy(alpha = 0.2f)
+                        color = Primary.copy(alpha = 0.2f)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Text(

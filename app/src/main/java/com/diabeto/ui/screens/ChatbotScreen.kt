@@ -71,7 +71,7 @@ fun ChatbotScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shadowElevation = 2.dp,
-                color = Color(0xFF1A1A2E)
+                color = OnBackground
             ) {
                 Row(
                     modifier = Modifier
@@ -105,14 +105,14 @@ fun ChatbotScreen(
                     }
                     // New session button
                     IconButton(onClick = { viewModel.createNewSession() }) {
-                        Icon(Icons.Default.Add, "Nouvelle discussion", tint = Color(0xFF00D2FF))
+                        Icon(Icons.Default.Add, "Nouvelle discussion", tint = Primary)
                     }
                     // Badge quota
                     Surface(
                         shape = RoundedCornerShape(16.dp),
                         color = if (uiState.quotaStatus.remaining <= 2)
                             Color(0xFFFF5252).copy(alpha = 0.2f)
-                        else Color(0xFF00D2FF).copy(alpha = 0.15f)
+                        else Primary.copy(alpha = 0.15f)
                     ) {
                         Text(
                             "${uiState.quotaStatus.remaining}/${uiState.quotaStatus.limit}",
@@ -120,7 +120,7 @@ fun ChatbotScreen(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = if (uiState.quotaStatus.remaining <= 2)
-                                Color(0xFFFF5252) else Color(0xFF00D2FF)
+                                Color(0xFFFF5252) else Primary
                         )
                     }
                     // Menu options
@@ -216,7 +216,7 @@ fun ChatbotScreen(
                         Button(
                             onClick = viewModel::dismissAnalyse,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF00D2FF)
+                                containerColor = Primary
                             ),
                             shape = RoundedCornerShape(20.dp)
                         ) { Text("Fermer", color = Color(0xFF0D0D1A)) }
@@ -242,7 +242,7 @@ fun ChatbotScreen(
                                 Text(
                                     "Collaboration IA-Médecin",
                                     fontSize = 11.sp,
-                                    color = Color(0xFF7C4DFF)
+                                    color = Primary
                                 )
                             }
                         }
@@ -260,7 +260,7 @@ fun ChatbotScreen(
                                 "Choisissez un médecin :",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
-                                color = Color(0xFF00D2FF)
+                                color = Primary
                             )
                             Spacer(Modifier.height(8.dp))
                             LazyColumn(modifier = Modifier.heightIn(max = 250.dp)) {
@@ -281,14 +281,14 @@ fun ChatbotScreen(
                                         ) {
                                             Surface(
                                                 shape = CircleShape,
-                                                color = Color(0xFF00D2FF).copy(alpha = 0.15f),
+                                                color = Primary.copy(alpha = 0.15f),
                                                 modifier = Modifier.size(40.dp)
                                             ) {
                                                 Box(contentAlignment = Alignment.Center) {
                                                     Text(
                                                         medecin.nomComplet.take(1).uppercase(),
                                                         fontWeight = FontWeight.Bold,
-                                                        color = Color(0xFF00D2FF)
+                                                        color = Primary
                                                     )
                                                 }
                                             }
@@ -335,7 +335,7 @@ fun ChatbotScreen(
                         CircularProgressIndicator(
                             modifier = Modifier.size(16.dp),
                             strokeWidth = 2.dp,
-                            color = Color(0xFF00D2FF)
+                            color = Primary
                         )
                         Text(
                             "Chargement de l'historique...",
@@ -352,14 +352,14 @@ fun ChatbotScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 4.dp),
-                    color = Color(0xFF00D2FF).copy(alpha = 0.08f),
+                    color = Primary.copy(alpha = 0.08f),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
                         "📜 ${uiState.messageCount} messages enregistrés — ROLLY se souvient de vos échanges",
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         fontSize = 11.sp,
-                        color = Color(0xFF00D2FF).copy(alpha = 0.7f),
+                        color = Primary.copy(alpha = 0.7f),
                         textAlign = TextAlign.Center
                     )
                 }
@@ -444,7 +444,7 @@ fun ChatbotScreen(
 
             // Zone de saisie style Gemini
             Surface(
-                color = Color(0xFF1A1A2E),
+                color = OnBackground,
                 shadowElevation = 8.dp
             ) {
                 Row(
@@ -471,13 +471,13 @@ fun ChatbotScreen(
                         keyboardActions = KeyboardActions(onSend = { viewModel.envoyerMessage() }),
                         shape = RoundedCornerShape(24.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF00D2FF),
+                            focusedBorderColor = Primary,
                             unfocusedBorderColor = Color.White.copy(alpha = 0.15f),
                             focusedContainerColor = Color(0xFF141428),
                             unfocusedContainerColor = Color(0xFF141428),
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
-                            cursorColor = Color(0xFF00D2FF)
+                            cursorColor = Primary
                         )
                     )
                     FloatingActionButton(
@@ -486,7 +486,7 @@ fun ChatbotScreen(
                         shape = CircleShape,
                         containerColor = when {
                             uiState.quotaStatus.isExceeded -> Color(0xFFFF5252).copy(alpha = 0.4f)
-                            uiState.inputText.isNotBlank() -> Color(0xFF00D2FF)
+                            uiState.inputText.isNotBlank() -> Primary
                             else -> Color.White.copy(alpha = 0.15f)
                         },
                         elevation = FloatingActionButtonDefaults.elevation(0.dp)
@@ -542,13 +542,13 @@ private fun RollyMessageBubble(message: ChatbotMessage) {
         ) {
             Surface(
                 shape = RoundedCornerShape(20.dp, 6.dp, 20.dp, 20.dp),
-                color = Color(0xFF00D2FF).copy(alpha = 0.15f),
+                color = Primary.copy(alpha = 0.15f),
                 modifier = Modifier.widthIn(max = 300.dp)
             ) {
                 Text(
                     text = message.contenu,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                    color = Color(0xFF80DEEA),
+                    color = PrimaryContainer,
                     fontSize = 14.sp,
                     lineHeight = 21.sp
                 )
@@ -556,11 +556,11 @@ private fun RollyMessageBubble(message: ChatbotMessage) {
             Spacer(Modifier.width(8.dp))
             Surface(
                 shape = CircleShape,
-                color = Color(0xFF00D2FF).copy(alpha = 0.2f),
+                color = Primary.copy(alpha = 0.2f),
                 modifier = Modifier.size(32.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(Icons.Default.Person, null, tint = Color(0xFF00D2FF), modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.Person, null, tint = Primary, modifier = Modifier.size(18.dp))
                 }
             }
         }
@@ -603,9 +603,9 @@ fun RichMarkdownText(
     textColor: Color = Color.White.copy(alpha = 0.9f)
 ) {
     val lines = text.split("\n")
-    val headerColor = Color(0xFF00D2FF)
+    val headerColor = Primary
     val boldColor = Color.White
-    val bulletColor = Color(0xFF4DD0E1)
+    val bulletColor = PrimaryContainer
     val tableHeaderBg = Color(0xFF1E3A5F)
     val tableBorderColor = Color.White.copy(alpha = 0.15f)
 
@@ -906,7 +906,7 @@ private fun MarkdownTable(
                                 .padding(horizontal = 4.dp),
                             fontSize = if (isHeader) 11.sp else 12.sp,
                             fontWeight = if (isHeader) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isHeader) Color(0xFF80DEEA) else textColor.copy(alpha = 0.85f),
+                            color = if (isHeader) PrimaryContainer else textColor.copy(alpha = 0.85f),
                             lineHeight = 16.sp
                         )
                     }
@@ -952,7 +952,7 @@ private fun LoadingDots() {
                 modifier = Modifier
                     .size(10.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF00D2FF).copy(alpha = anim.value))
+                    .background(Primary.copy(alpha = anim.value))
             )
         }
     }
@@ -968,9 +968,9 @@ private fun RollyAnalyseChip(label: String, onClick: () -> Unit, enabled: Boolea
         onClick = onClick,
         enabled = enabled,
         shape = RoundedCornerShape(20.dp),
-        color = Color(0xFF00D2FF).copy(alpha = if (enabled) 0.12f else 0.05f),
+        color = Primary.copy(alpha = if (enabled) 0.12f else 0.05f),
         border = androidx.compose.foundation.BorderStroke(
-            1.dp, Color(0xFF00D2FF).copy(alpha = if (enabled) 0.3f else 0.1f)
+            1.dp, Primary.copy(alpha = if (enabled) 0.3f else 0.1f)
         )
     ) {
         Text(
@@ -978,7 +978,7 @@ private fun RollyAnalyseChip(label: String, onClick: () -> Unit, enabled: Boolea
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
-            color = if (enabled) Color(0xFF80DEEA) else Color.White.copy(alpha = 0.3f)
+            color = if (enabled) PrimaryContainer else Color.White.copy(alpha = 0.3f)
         )
     }
 }
@@ -1043,8 +1043,8 @@ private fun SessionDrawer(
                 Surface(
                     onClick = onNewSession,
                     shape = RoundedCornerShape(12.dp),
-                    color = Color(0xFF00D2FF).copy(alpha = 0.1f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF00D2FF).copy(alpha = 0.3f)),
+                    color = Primary.copy(alpha = 0.1f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Primary.copy(alpha = 0.3f)),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp, vertical = 4.dp)
@@ -1054,8 +1054,8 @@ private fun SessionDrawer(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(Icons.Default.Add, null, tint = Color(0xFF00D2FF), modifier = Modifier.size(18.dp))
-                        Text("Nouvelle discussion", color = Color(0xFF00D2FF), fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                        Icon(Icons.Default.Add, null, tint = Primary, modifier = Modifier.size(18.dp))
+                        Text("Nouvelle discussion", color = Primary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
                     }
                 }
 
@@ -1137,8 +1137,8 @@ private fun SessionItem(
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(10.dp),
-        color = if (isActive) Color(0xFF00D2FF).copy(alpha = 0.1f) else Color.Transparent,
-        border = if (isActive) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF00D2FF).copy(alpha = 0.2f)) else null,
+        color = if (isActive) Primary.copy(alpha = 0.1f) else Color.Transparent,
+        border = if (isActive) androidx.compose.foundation.BorderStroke(1.dp, Primary.copy(alpha = 0.2f)) else null,
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 2.dp)

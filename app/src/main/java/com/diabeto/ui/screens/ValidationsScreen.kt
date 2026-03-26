@@ -53,7 +53,7 @@ fun ValidationsScreen(
                             Text(
                                 "Collaboration IA-Médecin",
                                 fontSize = 11.sp,
-                                color = Color(0xFF7C4DFF)
+                                color = Primary
                             )
                         }
                     }
@@ -64,7 +64,7 @@ fun ValidationsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF1A1A2E)
+                    containerColor = OnBackground
                 )
             )
         },
@@ -78,7 +78,7 @@ fun ValidationsScreen(
         ) {
             // Info banner
             Surface(
-                color = Color(0xFF7C4DFF).copy(alpha = 0.08f),
+                color = Primary.copy(alpha = 0.08f),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
@@ -213,14 +213,14 @@ private fun ValidationCard(
             // ROLLY response
             Surface(
                 shape = RoundedCornerShape(10.dp),
-                color = Color(0xFF7C4DFF).copy(alpha = 0.06f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF7C4DFF).copy(alpha = 0.15f))
+                color = Primary.copy(alpha = 0.06f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Primary.copy(alpha = 0.15f))
             ) {
                 Column(modifier = Modifier.padding(10.dp).heightIn(max = 150.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("🤖", fontSize = 14.sp)
                         Spacer(Modifier.width(6.dp))
-                        Text("ROLLY :", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color(0xFF7C4DFF))
+                        Text("ROLLY :", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Primary)
                     }
                     Spacer(Modifier.height(4.dp))
                     Text(

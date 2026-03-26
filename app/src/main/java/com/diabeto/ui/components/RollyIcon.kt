@@ -21,14 +21,15 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.diabeto.ui.theme.*
 
-// Couleurs de l'icône ROLLY
-private val RollyBgDark = Color(0xFF001A3C)
-private val RollyBgMid = Color(0xFF003366)
-private val RollyCyan = Color(0xFF00D2FF)
-private val RollyTeal = Color(0xFF0B8FAC)
-private val RollyGlow = Color(0xFF4DD0E1)
-private val RollyWhite = Color(0xFFE0F7FA)
+// Couleurs de l'icône ROLLY — palette DayLife
+private val RollyBgDark = Color(0xFF0D0B2E)
+private val RollyBgMid = Color(0xFF1A1452)
+private val RollyCyan = Primary
+private val RollyTeal = HeaderGradientStart
+private val RollyGlow = PrimaryContainer
+private val RollyWhite = Color(0xFFEDE8FF)
 
 /**
  * Icône ROLLY personnalisée — design médical futuriste

@@ -10,6 +10,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -95,7 +96,12 @@ fun GlucoseTrackingScreen(
                         RollyIconInline(size = 24.dp, tint = Primary)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Surface)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Background,
+                    titleContentColor = TextPrimary,
+                    navigationIconContentColor = TextPrimary,
+                    actionIconContentColor = TextSecondary
+                )
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -108,7 +114,8 @@ fun GlucoseTrackingScreen(
                     GlucoseTab.HBA1C -> 1
                     GlucoseTab.SUIVI -> 2
                 },
-                containerColor = Surface
+                containerColor = Background,
+                contentColor = Primary
             ) {
                 Tab(
                     selected = uiState.activeTab == GlucoseTab.GLYCEMIE,
@@ -225,9 +232,9 @@ private fun GlycemieContent(uiState: GlucoseUiState, viewModel: GlucoseViewModel
 private fun HbA1cContent(uiState: GlucoseUiState, viewModel: GlucoseViewModel) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
-            Card(Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(4.dp), colors = CardDefaults.cardColors(Color.White)) {
+            Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), elevation = CardDefaults.cardElevation(2.dp), colors = CardDefaults.cardColors(Surface)) {
                 Column(Modifier.padding(20.dp)) {
-                    Text("Hémoglobine Glyquée (HbA1c)", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("Hémoglobine Glyquée (HbA1c)", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextPrimary)
                     Text("Reflète la glycémie moyenne des 2-3 derniers mois", style = MaterialTheme.typography.bodySmall, color = OnSurfaceVariant)
                     Spacer(Modifier.height(16.dp))
                     Row(Modifier.fillMaxWidth(), Arrangement.SpaceEvenly) {
@@ -272,11 +279,12 @@ private fun SuiviContent(uiState: GlucoseUiState, viewModel: GlucoseViewModel) {
         item {
             Card(
                 Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(4.dp),
-                colors = CardDefaults.cardColors(Color.White)
+                shape = RoundedCornerShape(20.dp),
+                elevation = CardDefaults.cardElevation(2.dp),
+                colors = CardDefaults.cardColors(Surface)
             ) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("Progression globale", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("Progression globale", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextPrimary)
                     Text("Glycémie moyenne & HbA1c", style = MaterialTheme.typography.bodySmall, color = OnSurfaceVariant)
                     Spacer(Modifier.height(12.dp))
 
@@ -337,11 +345,12 @@ private fun SuiviContent(uiState: GlucoseUiState, viewModel: GlucoseViewModel) {
         item {
             Card(
                 Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(4.dp),
-                colors = CardDefaults.cardColors(Color.White)
+                shape = RoundedCornerShape(20.dp),
+                elevation = CardDefaults.cardElevation(2.dp),
+                colors = CardDefaults.cardColors(Surface)
             ) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("Diagramme de suivi", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("Diagramme de suivi", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary)
                     Text("Glycémie journalière + HbA1c", style = MaterialTheme.typography.bodySmall, color = OnSurfaceVariant)
                     Spacer(Modifier.height(12.dp))
 
@@ -370,7 +379,7 @@ private fun SuiviContent(uiState: GlucoseUiState, viewModel: GlucoseViewModel) {
                     // Légende
                     Row(Modifier.fillMaxWidth(), Arrangement.SpaceEvenly) {
                         ChartLegendItem(Primary, "Glycémie moy. (mg/dL)")
-                        ChartLegendItem(Color(0xFFE53935), "HbA1c (%)")
+                        ChartLegendItem(Secondary, "HbA1c (%)")
                     }
                     Spacer(Modifier.height(4.dp))
                     Row(Modifier.fillMaxWidth(), Arrangement.SpaceEvenly) {
@@ -399,7 +408,7 @@ private fun SuiviContent(uiState: GlucoseUiState, viewModel: GlucoseViewModel) {
                     onClick = { viewModel.showAddHbA1cDialog() },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935))
+                    colors = ButtonDefaults.buttonColors(containerColor = Secondary)
                 ) {
                     Icon(Icons.Default.Add, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(4.dp))
@@ -453,7 +462,7 @@ private fun DualCurveChart(
     modifier: Modifier = Modifier
 ) {
     val glucoseColor = Primary
-    val hba1cColor = Color(0xFFE53935)
+    val hba1cColor = Secondary
     val targetZoneColor = GlucoseNormal.copy(alpha = 0.15f)
     val gridColor = Outline.copy(alpha = 0.3f)
 
@@ -501,7 +510,7 @@ private fun DualCurveChart(
 
         // Étiquettes axes avec drawContext.canvas.nativeCanvas
         val textPaint = android.graphics.Paint().apply {
-            color = android.graphics.Color.parseColor("#607D8B")
+            color = android.graphics.Color.parseColor("#6E6B7B")
             textSize = 22f
             isAntiAlias = true
         }
@@ -515,7 +524,7 @@ private fun DualCurveChart(
 
         // Labels axe droit (HbA1c)
         textPaint.textAlign = android.graphics.Paint.Align.LEFT
-        textPaint.color = android.graphics.Color.parseColor("#E53935")
+        textPaint.color = android.graphics.Color.parseColor("#FF6B8A")
         listOf(5, 7, 9, 12).forEach { v ->
             val y = topPad + chartH * (1 - (v.toFloat() - hMin) / (hMax - hMin))
             drawContext.canvas.nativeCanvas.drawText("$v%", w - rightPad + 6f, y + 7f, textPaint)
@@ -523,7 +532,7 @@ private fun DualCurveChart(
 
         // Labels axe X (dates)
         textPaint.textAlign = android.graphics.Paint.Align.CENTER
-        textPaint.color = android.graphics.Color.parseColor("#607D8B")
+        textPaint.color = android.graphics.Color.parseColor("#6E6B7B")
         textPaint.textSize = 20f
         val dateFmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM")
         val step = (dailyAverages.size / 5).coerceAtLeast(1)

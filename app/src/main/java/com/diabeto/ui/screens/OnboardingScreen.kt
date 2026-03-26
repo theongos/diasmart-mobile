@@ -25,13 +25,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.diabeto.ui.theme.*
 import kotlinx.coroutines.launch
 
-private val DarkBg = Color(0xFF001A3C)
-private val DarkBg2 = Color(0xFF00264D)
-private val Cyan = Color(0xFF00D2FF)
-private val Teal = Color(0xFF0B8FAC)
-private val Mint = Color(0xFF26A69A)
+private val DarkBg = Color(0xFF0D0B2E)
+private val DarkBg2 = Color(0xFF1A1452)
+private val Cyan = Primary
+private val Teal = HeaderGradientStart
+private val Mint = Tertiary
 
 data class OnboardingPage(
     val icon: String,
@@ -64,7 +65,7 @@ private val pages = listOf(
             "\u26A0\uFE0F  Alertes intelligentes",
             "\uD83D\uDCCB  Rapports detailles"
         ),
-        accentColor = Color(0xFF7C4DFF)
+        accentColor = Primary
     ),
     OnboardingPage(
         icon = "\uD83D\uDC65",  // 👥

@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.diabeto.ui.theme.Primary
 import kotlinx.coroutines.delay
 import org.webrtc.EglBase
 import org.webrtc.RendererCommon
@@ -234,7 +235,7 @@ private fun AudioCallContent(
                     else -> ""
                 },
                 color = if (callInfo.state == CallManager.CallState.CONNECTED)
-                    Color(0xFF00D2FF) else Color.White.copy(alpha = 0.6f),
+                    Primary else Color.White.copy(alpha = 0.6f),
                 fontSize = 16.sp
             )
 
@@ -243,7 +244,7 @@ private fun AudioCallContent(
                 Surface(
                     modifier = Modifier.size(120.dp),
                     shape = CircleShape,
-                    color = Color(0xFF00D2FF).copy(
+                    color = Primary.copy(
                         alpha = if (callInfo.state == CallManager.CallState.CONNECTED) 0.2f else pulseAlpha
                     )
                 ) {

@@ -47,7 +47,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 
-// Web Client ID pour Google Sign-In (oauth_client type 3 dans google-services.json)
 private const val WEB_CLIENT_ID = "630181163819-78j1ha7vo07ldokvqo30cntt3tlanjv2.apps.googleusercontent.com"
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,160 +60,137 @@ fun LoginScreen(
     var showPassword by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    // ── Google Sign-In launcher ─────────────────────────────────────
     val googleSignInLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
         try {
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             val account = task.getResult(ApiException::class.java)
-            account?.idToken?.let { idToken ->
-                viewModel.signInWithGoogle(idToken)
-            }
-        } catch (_: ApiException) {
-            // L'utilisateur a annulé
-        }
+            account?.idToken?.let { viewModel.signInWithGoogle(it) }
+        } catch (_: ApiException) {}
     }
 
-    // Animation gradient
+    // Animation gradient douce
     val infiniteTransition = rememberInfiniteTransition(label = "bg")
     val animOffset by infiniteTransition.animateFloat(
         initialValue = 0f,
-        targetValue = 1000f,
+        targetValue = 800f,
         animationSpec = infiniteRepeatable(
-            animation = tween(8000, easing = LinearEasing),
+            animation = tween(12000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "gradientAnim"
     )
 
-    LaunchedEffect(uiState.isLoggedIn) {
-        if (uiState.isLoggedIn) onLoginSuccess()
-    }
-
+    LaunchedEffect(uiState.isLoggedIn) { if (uiState.isLoggedIn) onLoginSuccess() }
     LaunchedEffect(uiState.error) {
-        uiState.error?.let {
-            snackbarHostState.showSnackbar(it)
-            viewModel.clearError()
-        }
+        uiState.error?.let { snackbarHostState.showSnackbar(it); viewModel.clearError() }
     }
-
     LaunchedEffect(uiState.resetEmailSent) {
-        if (uiState.resetEmailSent) {
-            snackbarHostState.showSnackbar("Email de réinitialisation envoyé !")
-        }
+        if (uiState.resetEmailSent) snackbarHostState.showSnackbar("Email de réinitialisation envoyé !")
     }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Color.Transparent
     ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            // ══════════════════════════════════════════════════════════
-            //  FOND DEGRADE ANIME + FLOU
-            // ══════════════════════════════════════════════════════════
+        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+            // ═══════════════════════════════════════════════════
+            //  FOND GRADIENT ANIME — Palette DayLife (indigo/violet)
+            // ═══════════════════════════════════════════════════
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
                         Brush.linearGradient(
                             colors = listOf(
-                                Color(0xFF00D2FF),
-                                Color(0xFF0B8FAC),
-                                Color(0xFF005F73),
-                                Color(0xFF0B8FAC),
-                                Color(0xFF00D2FF)
+                                Color(0xFF7C6AFF),
+                                Color(0xFF5B4CFF),
+                                Color(0xFF4834D4),
+                                Color(0xFF5B4CFF),
+                                Color(0xFF7C6AFF)
                             ),
                             start = Offset(animOffset, 0f),
-                            end = Offset(animOffset + 800f, 1200f)
+                            end = Offset(animOffset + 600f, 1200f)
                         )
                     )
             )
 
-            // Cercles décoratifs flous
+            // Cercles décoratifs
             Box(
                 modifier = Modifier
-                    .size(300.dp)
-                    .offset(x = (-80).dp, y = (-60).dp)
-                    .blur(60.dp)
-                    .background(Color(0xFF00D2FF).copy(alpha = 0.4f), CircleShape)
+                    .size(280.dp)
+                    .offset(x = (-70).dp, y = (-50).dp)
+                    .blur(70.dp)
+                    .background(Color(0xFF9D91FF).copy(alpha = 0.4f), CircleShape)
             )
             Box(
                 modifier = Modifier
-                    .size(250.dp)
+                    .size(220.dp)
                     .align(Alignment.BottomEnd)
-                    .offset(x = 80.dp, y = 80.dp)
-                    .blur(50.dp)
-                    .background(Color(0xFF005F73).copy(alpha = 0.5f), CircleShape)
+                    .offset(x = 70.dp, y = 70.dp)
+                    .blur(60.dp)
+                    .background(Color(0xFFFF6B8A).copy(alpha = 0.25f), CircleShape)
             )
             Box(
                 modifier = Modifier
-                    .size(150.dp)
-                    .align(Alignment.CenterStart)
-                    .offset(x = (-30).dp)
+                    .size(130.dp)
+                    .align(Alignment.CenterEnd)
+                    .offset(x = 50.dp)
                     .blur(40.dp)
-                    .background(Color(0xFF26A69A).copy(alpha = 0.3f), CircleShape)
+                    .background(Color(0xFF00C9A7).copy(alpha = 0.2f), CircleShape)
             )
 
-            // ══════════════════════════════════════════════════════════
+            // ═══════════════════════════════════════════════════
             //  CONTENU PRINCIPAL
-            // ══════════════════════════════════════════════════════════
+            // ═══════════════════════════════════════════════════
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.height(60.dp))
+                Spacer(modifier = Modifier.height(72.dp))
 
                 // Logo
                 Image(
                     painter = painterResource(id = R.drawable.ic_diasmart_logo),
                     contentDescription = "DiaSmart Logo",
                     modifier = Modifier
-                        .size(100.dp)
-                        .shadow(16.dp, CircleShape)
+                        .size(88.dp)
+                        .shadow(20.dp, CircleShape)
                         .clip(CircleShape)
-                        .border(3.dp, Color.White.copy(alpha = 0.6f), CircleShape),
+                        .border(3.dp, Color.White.copy(alpha = 0.5f), CircleShape),
                     contentScale = ContentScale.Crop
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
                 Text(
                     text = if (uiState.showRegister) "Bienvenue !" else "Bonjour !",
-                    fontSize = 28.sp,
+                    fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
                 Text(
                     text = if (uiState.showRegister) "Créez votre compte DiaSmart" else "Connectez-vous à DiaSmart",
-                    fontSize = 14.sp,
-                    color = Color.White.copy(alpha = 0.85f),
+                    fontSize = 13.sp,
+                    color = Color.White.copy(alpha = 0.8f),
                     textAlign = TextAlign.Center
                 )
 
                 Spacer(modifier = Modifier.height(28.dp))
 
-                // ══════════════════════════════════════════════════════
-                //  CARTE FORMULAIRE BLANCHE
-                // ══════════════════════════════════════════════════════
+                // ═══════════════════════════════════════════════════
+                //  CARTE FORMULAIRE — Coins arrondis, ombre douce
+                // ═══════════════════════════════════════════════════
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
-                        .shadow(
-                            elevation = 20.dp,
-                            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp, bottomStart = 28.dp, bottomEnd = 28.dp),
-                            ambientColor = Color.Black.copy(alpha = 0.15f)
-                        ),
-                    shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp, bottomStart = 28.dp, bottomEnd = 28.dp),
+                        .padding(horizontal = 24.dp),
+                    shape = RoundedCornerShape(28.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
                 ) {
                     Column(
                         modifier = Modifier
@@ -227,105 +203,59 @@ fun LoginScreen(
                             text = if (uiState.showRegister) "Inscription" else "Connexion",
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1A1A2E)
+                            color = TextPrimary
                         )
 
-                        // ── Toggle Email / Téléphone (connexion seulement) ──
+                        // ── Toggle Email / Téléphone ──
                         if (!uiState.showRegister) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(Color(0xFFF0F0F0))
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(SurfaceVariant)
                                     .padding(3.dp),
                                 horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
-                                LoginModeTab(
-                                    label = "Email",
-                                    icon = Icons.Outlined.Email,
-                                    isSelected = uiState.loginMode == LoginMode.EMAIL,
-                                    onClick = { viewModel.setLoginMode(LoginMode.EMAIL) },
-                                    modifier = Modifier.weight(1f)
-                                )
-                                LoginModeTab(
-                                    label = "Téléphone",
-                                    icon = Icons.Outlined.Phone,
-                                    isSelected = uiState.loginMode == LoginMode.PHONE,
-                                    onClick = { viewModel.setLoginMode(LoginMode.PHONE) },
-                                    modifier = Modifier.weight(1f)
-                                )
+                                LoginModeTab("Email", Icons.Outlined.Email, uiState.loginMode == LoginMode.EMAIL, { viewModel.setLoginMode(LoginMode.EMAIL) }, Modifier.weight(1f))
+                                LoginModeTab("Téléphone", Icons.Outlined.Phone, uiState.loginMode == LoginMode.PHONE, { viewModel.setLoginMode(LoginMode.PHONE) }, Modifier.weight(1f))
                             }
                         }
 
-                        // ── Champs inscription ──────────────────────────
+                        // ── Champs inscription ──
                         AnimatedVisibility(
                             visible = uiState.showRegister,
                             enter = fadeIn() + expandVertically(),
                             exit = fadeOut() + shrinkVertically()
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    DiaSmartTextField(
-                                        value = uiState.prenom,
-                                        onValueChange = viewModel::onPrenomChange,
-                                        label = "Prénom",
-                                        icon = Icons.Outlined.Person,
-                                        modifier = Modifier.weight(1f),
-                                        imeAction = ImeAction.Next
-                                    )
-                                    DiaSmartTextField(
-                                        value = uiState.nom,
-                                        onValueChange = viewModel::onNomChange,
-                                        label = "Nom",
-                                        icon = Icons.Outlined.Badge,
-                                        modifier = Modifier.weight(1f),
-                                        imeAction = ImeAction.Next
-                                    )
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    DiaSmartTextField(uiState.prenom, viewModel::onPrenomChange, "Prénom", Icons.Outlined.Person, Modifier.weight(1f), imeAction = ImeAction.Next)
+                                    DiaSmartTextField(uiState.nom, viewModel::onNomChange, "Nom", Icons.Outlined.Badge, Modifier.weight(1f), imeAction = ImeAction.Next)
                                 }
-                                Text(
-                                    "Je suis :",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Color(0xFF444444)
-                                )
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
+                                Text("Je suis :", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = TextSecondary)
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                     UserRole.entries.forEach { role ->
                                         val isSelected = uiState.selectedRole == role
                                         Surface(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .selectable(
-                                                    selected = isSelected,
-                                                    onClick = { viewModel.onRoleChange(role) },
-                                                    role = Role.RadioButton
-                                                ),
-                                            shape = RoundedCornerShape(12.dp),
-                                            color = if (isSelected) Primary.copy(alpha = 0.12f) else Color(0xFFF5F5F5),
-                                            border = if (isSelected) BorderStroke(2.dp, Primary) else BorderStroke(1.dp, Color(0xFFE0E0E0))
+                                            modifier = Modifier.weight(1f).selectable(selected = isSelected, onClick = { viewModel.onRoleChange(role) }, role = Role.RadioButton),
+                                            shape = RoundedCornerShape(14.dp),
+                                            color = if (isSelected) PrimaryContainer else SurfaceVariant,
+                                            border = if (isSelected) BorderStroke(2.dp, Primary) else BorderStroke(1.dp, Outline)
                                         ) {
                                             Row(
-                                                modifier = Modifier.padding(12.dp),
+                                                modifier = Modifier.padding(14.dp),
                                                 verticalAlignment = Alignment.CenterVertically,
                                                 horizontalArrangement = Arrangement.Center
                                             ) {
                                                 Icon(
-                                                    imageVector = if (role == UserRole.PATIENT) Icons.Outlined.PersonOutline else Icons.Outlined.LocalHospital,
-                                                    contentDescription = null,
-                                                    tint = if (isSelected) Primary else Color(0xFF888888),
-                                                    modifier = Modifier.size(18.dp)
+                                                    if (role == UserRole.PATIENT) Icons.Outlined.PersonOutline else Icons.Outlined.LocalHospital,
+                                                    null, tint = if (isSelected) Primary else TextTertiary, modifier = Modifier.size(18.dp)
                                                 )
-                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Spacer(Modifier.width(6.dp))
                                                 Text(
-                                                    text = if (role == UserRole.PATIENT) "Patient" else "Médecin",
+                                                    if (role == UserRole.PATIENT) "Patient" else "Médecin",
                                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                                    color = if (isSelected) Primary else Color(0xFF555555),
-                                                    fontSize = 13.sp
+                                                    color = if (isSelected) Primary else TextSecondary, fontSize = 13.sp
                                                 )
                                             }
                                         }
@@ -336,86 +266,35 @@ fun LoginScreen(
 
                         Spacer(modifier = Modifier.height(2.dp))
 
-                        // ── MODE EMAIL ──────────────────────────────────
+                        // ── MODE EMAIL ──
                         AnimatedVisibility(
                             visible = uiState.loginMode == LoginMode.EMAIL || uiState.showRegister,
                             enter = fadeIn() + expandVertically(),
                             exit = fadeOut() + shrinkVertically()
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                                DiaSmartTextField(
-                                    value = uiState.email,
-                                    onValueChange = viewModel::onEmailChange,
-                                    label = "Email",
-                                    icon = Icons.Outlined.Email,
-                                    keyboardType = KeyboardType.Email,
-                                    imeAction = ImeAction.Next
-                                )
-                                DiaSmartTextField(
-                                    value = uiState.password,
-                                    onValueChange = viewModel::onPasswordChange,
-                                    label = "Mot de passe",
-                                    icon = Icons.Outlined.Lock,
-                                    keyboardType = KeyboardType.Password,
-                                    imeAction = ImeAction.Done,
-                                    isPassword = true,
-                                    showPassword = showPassword,
-                                    onTogglePassword = { showPassword = !showPassword }
-                                )
+                                DiaSmartTextField(uiState.email, viewModel::onEmailChange, "Email", Icons.Outlined.Email, keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
+                                DiaSmartTextField(uiState.password, viewModel::onPasswordChange, "Mot de passe", Icons.Outlined.Lock, keyboardType = KeyboardType.Password, imeAction = ImeAction.Done, isPassword = true, showPassword = showPassword, onTogglePassword = { showPassword = !showPassword })
                                 if (!uiState.showRegister) {
-                                    TextButton(
-                                        onClick = viewModel::resetPassword,
-                                        modifier = Modifier.align(Alignment.End)
-                                    ) {
-                                        Text(
-                                            "Mot de passe oublié ?",
-                                            fontSize = 12.sp,
-                                            color = Primary,
-                                            fontWeight = FontWeight.Medium
-                                        )
+                                    TextButton(onClick = viewModel::resetPassword, modifier = Modifier.align(Alignment.End)) {
+                                        Text("Mot de passe oublié ?", fontSize = 12.sp, color = Primary, fontWeight = FontWeight.Medium)
                                     }
                                 }
                             }
                         }
 
-                        // ── MODE TELEPHONE ──────────────────────────────
+                        // ── MODE TELEPHONE ──
                         AnimatedVisibility(
                             visible = uiState.loginMode == LoginMode.PHONE && !uiState.showRegister,
                             enter = fadeIn() + expandVertically(),
                             exit = fadeOut() + shrinkVertically()
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                                DiaSmartTextField(
-                                    value = uiState.phoneNumber,
-                                    onValueChange = viewModel::onPhoneNumberChange,
-                                    label = "Numéro de téléphone",
-                                    icon = Icons.Outlined.Phone,
-                                    keyboardType = KeyboardType.Phone,
-                                    imeAction = ImeAction.Done,
-                                    placeholder = "0555 12 34 56"
-                                )
-                                AnimatedVisibility(
-                                    visible = uiState.isCodeSent,
-                                    enter = fadeIn() + expandVertically()
-                                ) {
+                                DiaSmartTextField(uiState.phoneNumber, viewModel::onPhoneNumberChange, "Numéro de téléphone", Icons.Outlined.Phone, keyboardType = KeyboardType.Phone, imeAction = ImeAction.Done, placeholder = "0555 12 34 56")
+                                AnimatedVisibility(visible = uiState.isCodeSent, enter = fadeIn() + expandVertically()) {
                                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                        Text(
-                                            "Un code SMS a été envoyé",
-                                            fontSize = 13.sp,
-                                            color = Color(0xFF4CAF50),
-                                            fontWeight = FontWeight.Medium,
-                                            modifier = Modifier.fillMaxWidth(),
-                                            textAlign = TextAlign.Center
-                                        )
-                                        DiaSmartTextField(
-                                            value = uiState.smsCode,
-                                            onValueChange = viewModel::onSmsCodeChange,
-                                            label = "Code de vérification",
-                                            icon = Icons.Outlined.Sms,
-                                            keyboardType = KeyboardType.Number,
-                                            imeAction = ImeAction.Done,
-                                            placeholder = "123456"
-                                        )
+                                        Text("Un code SMS a été envoyé", fontSize = 13.sp, color = Success, fontWeight = FontWeight.Medium, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                                        DiaSmartTextField(uiState.smsCode, viewModel::onSmsCodeChange, "Code de vérification", Icons.Outlined.Sms, keyboardType = KeyboardType.Number, imeAction = ImeAction.Done, placeholder = "123456")
                                     }
                                 }
                             }
@@ -423,24 +302,19 @@ fun LoginScreen(
 
                         Spacer(modifier = Modifier.height(4.dp))
 
-                        // ── BOUTON PRINCIPAL GRADIENT ────────────────────
+                        // ── BOUTON PRINCIPAL GRADIENT ──
                         Button(
                             onClick = {
                                 when {
                                     uiState.showRegister -> viewModel.signUp()
                                     uiState.loginMode == LoginMode.PHONE -> {
-                                        if (uiState.isCodeSent) {
-                                            viewModel.verifyPhoneCode()
-                                        } else {
-                                            (context as? Activity)?.let { viewModel.sendPhoneVerification(it) }
-                                        }
+                                        if (uiState.isCodeSent) viewModel.verifyPhoneCode()
+                                        else (context as? Activity)?.let { viewModel.sendPhoneVerification(it) }
                                     }
                                     else -> viewModel.signIn()
                                 }
                             },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(54.dp),
+                            modifier = Modifier.fillMaxWidth().height(54.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                             contentPadding = PaddingValues(),
                             shape = RoundedCornerShape(16.dp),
@@ -450,154 +324,111 @@ fun LoginScreen(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .background(
-                                        brush = Brush.horizontalGradient(
-                                            colors = if (uiState.isLoading)
-                                                listOf(Color(0xFF90CAF9), Color(0xFF90CAF9))
+                                        Brush.horizontalGradient(
+                                            if (uiState.isLoading)
+                                                listOf(Color(0xFFB8B5C8), Color(0xFFB8B5C8))
                                             else
-                                                listOf(Color(0xFF00D2FF), Color(0xFF0B8FAC), Color(0xFF005F73))
+                                                listOf(Color(0xFF7C6AFF), Color(0xFF5B4CFF), Color(0xFF4834D4))
                                         ),
-                                        shape = RoundedCornerShape(16.dp)
+                                        RoundedCornerShape(16.dp)
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (uiState.isLoading) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(22.dp),
-                                        color = Color.White,
-                                        strokeWidth = 2.5.dp
-                                    )
+                                    CircularProgressIndicator(modifier = Modifier.size(22.dp), color = Color.White, strokeWidth = 2.5.dp)
                                 } else {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Center
-                                    ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(
-                                            imageVector = when {
+                                            when {
                                                 uiState.showRegister -> Icons.Default.PersonAdd
                                                 uiState.loginMode == LoginMode.PHONE && uiState.isCodeSent -> Icons.Default.VerifiedUser
                                                 uiState.loginMode == LoginMode.PHONE -> Icons.Default.Sms
                                                 else -> Icons.Default.Login
-                                            },
-                                            contentDescription = null,
-                                            tint = Color.White,
-                                            modifier = Modifier.size(20.dp)
+                                            }, null, tint = Color.White, modifier = Modifier.size(20.dp)
                                         )
-                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Spacer(Modifier.width(10.dp))
                                         Text(
-                                            text = when {
+                                            when {
                                                 uiState.showRegister -> "Créer mon compte"
                                                 uiState.loginMode == LoginMode.PHONE && uiState.isCodeSent -> "Vérifier le code"
                                                 uiState.loginMode == LoginMode.PHONE -> "Envoyer le code SMS"
                                                 else -> "Se connecter"
-                                            },
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 16.sp,
-                                            color = Color.White
+                                            }, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White
                                         )
                                     }
                                 }
                             }
                         }
 
-                        // ── SEPARATEUR ───────────────────────────────────
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE0E0E0))
-                            Text("  ou connectez-vous avec  ", color = Color(0xFF999999), fontSize = 11.sp)
-                            HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE0E0E0))
+                        // ── Séparateur ──
+                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            HorizontalDivider(modifier = Modifier.weight(1f), color = Outline)
+                            Text("  ou  ", color = TextTertiary, fontSize = 12.sp)
+                            HorizontalDivider(modifier = Modifier.weight(1f), color = Outline)
                         }
 
-                        // ── BOUTONS SOCIAL ───────────────────────────────
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Google
+                        // ── Boutons social ──
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                             OutlinedButton(
                                 onClick = {
                                     val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                                        .requestIdToken(WEB_CLIENT_ID)
-                                        .requestEmail()
-                                        .build()
+                                        .requestIdToken(WEB_CLIENT_ID).requestEmail().build()
                                     val client = GoogleSignIn.getClient(context, gso)
                                     client.signOut()
                                     googleSignInLauncher.launch(client.signInIntent)
                                 },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(50.dp),
+                                modifier = Modifier.weight(1f).height(50.dp),
                                 shape = RoundedCornerShape(14.dp),
-                                border = BorderStroke(1.dp, Color(0xFFE0E0E0)),
+                                border = BorderStroke(1.dp, Outline),
                                 colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White)
                             ) {
                                 Text("G", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF4285F4))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Google", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF555555))
+                                Spacer(Modifier.width(8.dp))
+                                Text("Google", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextSecondary)
                             }
-
-                            Spacer(modifier = Modifier.width(12.dp))
-
-                            // Téléphone raccourci
+                            Spacer(Modifier.width(12.dp))
                             OutlinedButton(
                                 onClick = {
                                     if (uiState.showRegister) viewModel.toggleRegister(false)
-                                    viewModel.setLoginMode(
-                                        if (uiState.loginMode == LoginMode.PHONE) LoginMode.EMAIL else LoginMode.PHONE
-                                    )
+                                    viewModel.setLoginMode(if (uiState.loginMode == LoginMode.PHONE) LoginMode.EMAIL else LoginMode.PHONE)
                                 },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(50.dp),
+                                modifier = Modifier.weight(1f).height(50.dp),
                                 shape = RoundedCornerShape(14.dp),
-                                border = BorderStroke(1.dp, Color(0xFFE0E0E0)),
+                                border = BorderStroke(1.dp, Outline),
                                 colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White)
                             ) {
-                                Icon(Icons.Default.Phone, contentDescription = null, tint = Color(0xFF4CAF50), modifier = Modifier.size(20.dp))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Téléphone", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF555555))
+                                Icon(Icons.Default.Phone, null, tint = Tertiary, modifier = Modifier.size(20.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text("Téléphone", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextSecondary)
                             }
                         }
 
                         Spacer(modifier = Modifier.height(4.dp))
 
-                        // ── Toggle Connexion / Inscription ──────────────
+                        // ── Toggle inscription / connexion ──
                         OutlinedButton(
                             onClick = { viewModel.toggleRegister(!uiState.showRegister) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp),
+                            modifier = Modifier.fillMaxWidth().height(50.dp),
                             shape = RoundedCornerShape(16.dp),
                             border = BorderStroke(
                                 width = 1.5.dp,
-                                brush = Brush.horizontalGradient(listOf(Color(0xFF00D2FF), Color(0xFF0B8FAC)))
+                                brush = Brush.horizontalGradient(listOf(Color(0xFF7C6AFF), Color(0xFF5B4CFF)))
                             ),
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = Primary)
                         ) {
                             Icon(
-                                imageVector = if (uiState.showRegister) Icons.Default.Login else Icons.Default.PersonAdd,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp),
-                                tint = Primary
+                                if (uiState.showRegister) Icons.Default.Login else Icons.Default.PersonAdd,
+                                null, modifier = Modifier.size(18.dp), tint = Primary
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(Modifier.width(8.dp))
                             Text(
-                                text = if (uiState.showRegister) "J'ai déjà un compte" else "Créer un compte",
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.sp
+                                if (uiState.showRegister) "J'ai déjà un compte" else "Créer un compte",
+                                fontWeight = FontWeight.SemiBold, fontSize = 14.sp
                             )
                         }
 
                         Spacer(modifier = Modifier.height(4.dp))
-
-                        Text(
-                            text = "DiaSmart — Gestion intelligente du diabète",
-                            fontSize = 11.sp,
-                            color = Color(0xFFAAAAAA),
-                            textAlign = TextAlign.Center
-                        )
+                        Text("DiaSmart — Gestion intelligente du diabète", fontSize = 11.sp, color = TextTertiary, textAlign = TextAlign.Center)
                     }
                 }
 
@@ -607,9 +438,9 @@ fun LoginScreen(
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 //  COMPOSANTS REUTILISABLES
-// ══════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 
 @Composable
 private fun LoginModeTab(
@@ -620,23 +451,19 @@ private fun LoginModeTab(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = modifier
-            .clip(RoundedCornerShape(10.dp))
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(10.dp),
+        modifier = modifier.clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
         color = if (isSelected) Color.White else Color.Transparent,
         shadowElevation = if (isSelected) 2.dp else 0.dp
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 10.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp), tint = if (isSelected) Primary else Color(0xFF888888))
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(label, fontSize = 13.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal, color = if (isSelected) Primary else Color(0xFF888888))
+            Icon(icon, null, modifier = Modifier.size(16.dp), tint = if (isSelected) Primary else TextTertiary)
+            Spacer(Modifier.width(6.dp))
+            Text(label, fontSize = 13.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal, color = if (isSelected) Primary else TextTertiary)
         }
     }
 }
@@ -659,40 +486,28 @@ private fun DiaSmartTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(label, fontSize = 13.sp) },
-        placeholder = if (placeholder != null) {
-            { Text(placeholder, fontSize = 13.sp, color = Color(0xFFBBBBBB)) }
-        } else null,
+        placeholder = if (placeholder != null) { { Text(placeholder, fontSize = 13.sp, color = TextTertiary) } } else null,
         modifier = modifier.fillMaxWidth(),
         singleLine = true,
         shape = RoundedCornerShape(14.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = Primary,
-            unfocusedBorderColor = Color(0xFFE0E0E0),
-            focusedContainerColor = Color(0xFFF8FFFE),
-            unfocusedContainerColor = Color(0xFFF5F5F5),
+            unfocusedBorderColor = Outline,
+            focusedContainerColor = PrimaryContainer.copy(alpha = 0.15f),
+            unfocusedContainerColor = SurfaceVariant,
             focusedLabelColor = Primary,
-            unfocusedLabelColor = Color(0xFF999999),
+            unfocusedLabelColor = TextTertiary,
             cursorColor = Primary
         ),
-        keyboardOptions = KeyboardOptions(
-            keyboardType = keyboardType,
-            imeAction = imeAction
-        ),
-        visualTransformation = if (isPassword && !showPassword)
-            PasswordVisualTransformation()
-        else
-            VisualTransformation.None,
-        leadingIcon = {
-            Icon(icon, contentDescription = null, tint = Color(0xFF888888), modifier = Modifier.size(20.dp))
-        },
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
+        visualTransformation = if (isPassword && !showPassword) PasswordVisualTransformation() else VisualTransformation.None,
+        leadingIcon = { Icon(icon, null, tint = TextTertiary, modifier = Modifier.size(20.dp)) },
         trailingIcon = if (isPassword) {
             {
                 IconButton(onClick = { onTogglePassword?.invoke() }) {
                     Icon(
-                        imageVector = if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = null,
-                        tint = Color(0xFF888888),
-                        modifier = Modifier.size(20.dp)
+                        if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        null, tint = TextTertiary, modifier = Modifier.size(20.dp)
                     )
                 }
             }

@@ -2,59 +2,91 @@ package com.diabeto.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+// ══════════════════════════════════════════════════════════════════
+//  DIASMART — Design System DayLife-inspired
+//  Palette: Deep indigo/purple primary, coral accents, warm neutrals
+// ══════════════════════════════════════════════════════════════════
+
 // Couleurs principales
-val Primary = Color(0xFF0B8FAC)
+val Primary = Color(0xFF5B4CFF)          // Indigo vibrant
 val OnPrimary = Color(0xFFFFFFFF)
-val PrimaryContainer = Color(0xFFB3E5FC)
-val OnPrimaryContainer = Color(0xFF01579B)
+val PrimaryContainer = Color(0xFFE8E5FF)  // Indigo très clair
+val OnPrimaryContainer = Color(0xFF1A0066)
 
-val Secondary = Color(0xFF5C6BC0)
+val Secondary = Color(0xFFFF6B8A)         // Coral/rose doux
 val OnSecondary = Color(0xFFFFFFFF)
-val SecondaryContainer = Color(0xFFE8EAF6)
-val OnSecondaryContainer = Color(0xFF283593)
+val SecondaryContainer = Color(0xFFFFE0E8)
+val OnSecondaryContainer = Color(0xFF5C0024)
 
-val Tertiary = Color(0xFF26A69A)
+val Tertiary = Color(0xFF00C9A7)          // Menthe/turquoise
 val OnTertiary = Color(0xFFFFFFFF)
-val TertiaryContainer = Color(0xFFB2DFDB)
-val OnTertiaryContainer = Color(0xFF00695C)
+val TertiaryContainer = Color(0xFFCCF5EC)
+val OnTertiaryContainer = Color(0xFF004D3D)
 
 // Couleurs sémantiques pour la glycémie
-val GlucoseLow = Color(0xFFE57373)        // Hypoglycémie < 70
-val GlucoseNormal = Color(0xFF81C784)     // Normal 70-180
-val GlucoseHigh = Color(0xFFFFB74D)       // Hyperglycémie 180-250
-val GlucoseSevere = Color(0xFFE53935)     // Sévère > 250 ou < 54
+val GlucoseLow = Color(0xFFFF6B8A)        // Rose — Hypoglycémie < 70
+val GlucoseNormal = Color(0xFF00C9A7)     // Turquoise — Normal 70-180
+val GlucoseHigh = Color(0xFFFFB547)       // Ambre doré — Hyperglycémie 180-250
+val GlucoseSevere = Color(0xFFFF4757)     // Rouge vif — Sévère > 250 ou < 54
 
 // Couleurs d'état
-val Success = Color(0xFF4CAF50)
-val Warning = Color(0xFFFF9800)
-val Error = Color(0xFFF44336)
-val Info = Color(0xFF2196F3)
+val Success = Color(0xFF00C9A7)
+val Warning = Color(0xFFFFB547)
+val Error = Color(0xFFFF4757)
+val Info = Color(0xFF5B4CFF)
 
-// Couleurs de fond
-val Background = Color(0xFFF5F7FA)
-val OnBackground = Color(0xFF2C3E50)
+// Couleurs de fond — tons chauds et doux
+val Background = Color(0xFFF8F7FC)         // Lavande très très clair
+val OnBackground = Color(0xFF1A1A2E)       // Bleu nuit profond
 val Surface = Color(0xFFFFFFFF)
-val OnSurface = Color(0xFF2C3E50)
-val SurfaceVariant = Color(0xFFECEFF1)
-val OnSurfaceVariant = Color(0xFF607D8B)
+val OnSurface = Color(0xFF1A1A2E)
+val SurfaceVariant = Color(0xFFF0EFF5)     // Gris lavande
+val OnSurfaceVariant = Color(0xFF6E6B7B)   // Gris moyen violet
 
 // Couleurs d'outline
-val Outline = Color(0xFFB0BEC5)
-val OutlineVariant = Color(0xFFECEFF1)
+val Outline = Color(0xFFD4D2E0)
+val OutlineVariant = Color(0xFFEDEBF5)
 
 // Couleurs pour les graphiques
 val ChartLine = Primary
 val ChartPointNormal = GlucoseNormal
 val ChartPointLow = GlucoseLow
 val ChartPointHigh = GlucoseHigh
-val ChartTargetZone = Color(0xFF81C784).copy(alpha = 0.2f)
+val ChartTargetZone = GlucoseNormal.copy(alpha = 0.15f)
+val ChartGradientTop = Primary.copy(alpha = 0.3f)
+val ChartGradientBottom = Primary.copy(alpha = 0.02f)
 
-// Gradient DiaSmart (cyan → teal → dark teal)
-val GradientStart = Color(0xFF00D2FF)
-val GradientMid = Color(0xFF0B8FAC)
-val GradientEnd = Color(0xFF005F73)
+// Gradients DiaSmart
+val GradientStart = Color(0xFF7C6AFF)      // Indigo clair
+val GradientMid = Color(0xFF5B4CFF)        // Indigo primaire
+val GradientEnd = Color(0xFF3D2FCC)         // Indigo profond
+
+// Gradient header doux (purple → bleu)
+val HeaderGradientStart = Color(0xFF6C5CE7)
+val HeaderGradientEnd = Color(0xFF4834D4)
+
+// Gradient accent (coral → rose)
+val AccentGradientStart = Color(0xFFFF6B8A)
+val AccentGradientEnd = Color(0xFFFF8E72)
+
+// Gradient turquoise
+val TealGradientStart = Color(0xFF00C9A7)
+val TealGradientEnd = Color(0xFF00B4D8)
+
+// Cartes de fonctionnalités — couleurs pastels douces
+val CardGlucose = Color(0xFFE8E5FF)        // Lavande
+val CardMedication = Color(0xFFFFE0E8)     // Rose pâle
+val CardAppointment = Color(0xFFCCF5EC)    // Menthe
+val CardInsulin = Color(0xFFFFF3D6)        // Doré pâle
+val CardActivity = Color(0xFFD6EFFF)       // Bleu ciel
+val CardNutrition = Color(0xFFFFEBCC)      // Pêche
 
 // Navigation bar
 val NavBarBackground = Color(0xFFFFFFFF)
-val NavBarSelected = Color(0xFF0B8FAC)
-val NavBarUnselected = Color(0xFF9E9E9E)
+val NavBarSelected = Color(0xFF5B4CFF)
+val NavBarUnselected = Color(0xFFB8B5C8)
+
+// Texte
+val TextPrimary = Color(0xFF1A1A2E)
+val TextSecondary = Color(0xFF6E6B7B)
+val TextTertiary = Color(0xFF9D9AAF)

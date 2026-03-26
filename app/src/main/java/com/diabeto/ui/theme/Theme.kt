@@ -6,6 +6,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -26,7 +27,7 @@ private val LightColorScheme = lightColorScheme(
     onTertiaryContainer = OnTertiaryContainer,
     error = Error,
     onError = OnPrimary,
-    errorContainer = Error.copy(alpha = 0.2f),
+    errorContainer = Error.copy(alpha = 0.12f),
     onErrorContainer = Error,
     background = Background,
     onBackground = OnBackground,
@@ -36,41 +37,41 @@ private val LightColorScheme = lightColorScheme(
     onSurfaceVariant = OnSurfaceVariant,
     outline = Outline,
     outlineVariant = OutlineVariant,
-    scrim = OnBackground.copy(alpha = 0.5f)
+    scrim = OnBackground.copy(alpha = 0.4f)
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = PrimaryContainer,
-    onPrimary = OnPrimaryContainer,
-    primaryContainer = Primary.copy(alpha = 0.7f),
-    onPrimaryContainer = PrimaryContainer,
-    secondary = SecondaryContainer,
-    onSecondary = OnSecondaryContainer,
-    secondaryContainer = Secondary.copy(alpha = 0.7f),
-    onSecondaryContainer = SecondaryContainer,
-    tertiary = TertiaryContainer,
-    onTertiary = OnTertiaryContainer,
-    tertiaryContainer = Tertiary.copy(alpha = 0.7f),
-    onTertiaryContainer = TertiaryContainer,
-    error = Error.copy(alpha = 0.8f),
-    onError = OnPrimary,
-    errorContainer = Error.copy(alpha = 0.3f),
-    onErrorContainer = Error,
-    background = OnBackground,
-    onBackground = Background,
-    surface = OnBackground.copy(alpha = 0.9f),
-    onSurface = Background,
-    surfaceVariant = OnSurfaceVariant,
-    onSurfaceVariant = SurfaceVariant,
-    outline = OutlineVariant,
-    outlineVariant = Outline,
-    scrim = Background.copy(alpha = 0.5f)
+    primary = Color(0xFF9D91FF),
+    onPrimary = Color(0xFF1A0066),
+    primaryContainer = Color(0xFF3D2FCC),
+    onPrimaryContainer = Color(0xFFE8E5FF),
+    secondary = Color(0xFFFFB3C6),
+    onSecondary = Color(0xFF5C0024),
+    secondaryContainer = Color(0xFF8A0038),
+    onSecondaryContainer = Color(0xFFFFE0E8),
+    tertiary = Color(0xFF66E3CE),
+    onTertiary = Color(0xFF004D3D),
+    tertiaryContainer = Color(0xFF006B5A),
+    onTertiaryContainer = Color(0xFFCCF5EC),
+    error = Color(0xFFFF8A95),
+    onError = Color(0xFF5C0011),
+    errorContainer = Color(0xFF8A001A),
+    onErrorContainer = Color(0xFFFFE0E4),
+    background = Color(0xFF141320),
+    onBackground = Color(0xFFE8E5FF),
+    surface = Color(0xFF1C1B2E),
+    onSurface = Color(0xFFE8E5FF),
+    surfaceVariant = Color(0xFF2A2940),
+    onSurfaceVariant = Color(0xFFB8B5C8),
+    outline = Color(0xFF4A4860),
+    outlineVariant = Color(0xFF2A2940),
+    scrim = Color.Black.copy(alpha = 0.6f)
 )
 
 @Composable
 fun DiabetoTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false, // Désactivé pour garder notre palette custom
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -81,12 +82,13 @@ fun DiabetoTheme(
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
-    
+
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
+            // Barre de statut transparente pour un look immersif
+            window.statusBarColor = Color.Transparent.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }
@@ -94,6 +96,7 @@ fun DiabetoTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        shapes = Shapes,
         content = content
     )
 }

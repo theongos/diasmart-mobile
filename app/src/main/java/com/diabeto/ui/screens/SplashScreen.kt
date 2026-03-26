@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.diabeto.R
+import com.diabeto.ui.theme.*
 import com.diabeto.util.AppUpdateChecker
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -190,10 +191,10 @@ fun SplashScreen(
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF001A3C),
-                        Color(0xFF003366),
-                        Color(0xFF00264D),
-                        Color(0xFF001A3C)
+                        Color(0xFF0D0B2E),
+                        Color(0xFF1A1452),
+                        Color(0xFF120F3D),
+                        Color(0xFF0D0B2E)
                     )
                 )
             ),
@@ -206,7 +207,7 @@ fun SplashScreen(
                 .offset(x = (-120).dp, y = (-200).dp)
                 .blur(80.dp)
                 .alpha(0.25f * logoAlpha)
-                .background(Color(0xFF00D2FF), CircleShape)
+                .background(GradientStart, CircleShape)
         )
         Box(
             modifier = Modifier
@@ -214,7 +215,7 @@ fun SplashScreen(
                 .offset(x = 130.dp, y = 250.dp)
                 .blur(70.dp)
                 .alpha(0.2f * logoAlpha)
-                .background(Color(0xFF0B8FAC), CircleShape)
+                .background(Primary, CircleShape)
         )
         Box(
             modifier = Modifier
@@ -222,7 +223,7 @@ fun SplashScreen(
                 .offset(x = 100.dp, y = (-150).dp)
                 .blur(60.dp)
                 .alpha(0.15f * logoAlpha)
-                .background(Color(0xFF26A69A), CircleShape)
+                .background(Secondary, CircleShape)
         )
         Box(
             modifier = Modifier
@@ -230,7 +231,7 @@ fun SplashScreen(
                 .offset(x = (-80).dp, y = 180.dp)
                 .blur(50.dp)
                 .alpha(0.18f * logoAlpha)
-                .background(Color(0xFF005F73), CircleShape)
+                .background(GradientEnd, CircleShape)
         )
 
         // ── Particules médicales flottantes ──
@@ -239,21 +240,21 @@ fun SplashScreen(
                 .size(8.dp)
                 .offset(x = (-60).dp, y = (particle1Y - 100).dp)
                 .alpha(0.4f * ecgAlpha)
-                .background(Color(0xFF00D2FF), CircleShape)
+                .background(GradientStart, CircleShape)
         )
         Box(
             modifier = Modifier
                 .size(5.dp)
                 .offset(x = 80.dp, y = (particle2Y + 120).dp)
                 .alpha(0.3f * ecgAlpha)
-                .background(Color(0xFF0B8FAC), CircleShape)
+                .background(Primary, CircleShape)
         )
         Box(
             modifier = Modifier
                 .size(6.dp)
                 .offset(x = 50.dp, y = (particle1Y - 50).dp)
                 .alpha(0.25f * ecgAlpha)
-                .background(Color(0xFF26A69A), CircleShape)
+                .background(Secondary, CircleShape)
         )
 
         // ── Ligne ECG en fond (full width) ──
@@ -291,7 +292,7 @@ fun SplashScreen(
             // Glow
             drawPath(
                 path = ecgPath,
-                color = Color(0xFF00D2FF),
+                color = Primary,
                 style = Stroke(width = 4f, cap = StrokeCap.Round, join = StrokeJoin.Round)
             )
         }
@@ -310,13 +311,13 @@ fun SplashScreen(
             val crossH = h * 0.5f
 
             drawRoundRect(
-                color = Color(0xFF00D2FF),
+                color = Primary,
                 topLeft = Offset(cx - crossW / 2f, cy - crossH / 2f),
                 size = androidx.compose.ui.geometry.Size(crossW, crossH),
                 cornerRadius = androidx.compose.ui.geometry.CornerRadius(crossW * 0.3f)
             )
             drawRoundRect(
-                color = Color(0xFF00D2FF),
+                color = Primary,
                 topLeft = Offset(cx - crossH / 2f, cy - crossW / 2f),
                 size = androidx.compose.ui.geometry.Size(crossH, crossW),
                 cornerRadius = androidx.compose.ui.geometry.CornerRadius(crossW * 0.3f)
@@ -340,7 +341,7 @@ fun SplashScreen(
                         .alpha(logoAlpha * 0.3f)
                 ) {
                     drawCircle(
-                        color = Color(0xFF00D2FF),
+                        color = Primary,
                         radius = size.width / 2f - 4f,
                         style = Stroke(width = 1.5f)
                     )
@@ -350,7 +351,7 @@ fun SplashScreen(
                         val r = size.width / 2f - 4f
                         val px = size.width / 2f + r * kotlin.math.cos(rad).toFloat()
                         val py = size.height / 2f + r * kotlin.math.sin(rad).toFloat()
-                        drawCircle(Color(0xFF00D2FF), 3f, Offset(px, py))
+                        drawCircle(Primary, 3f, Offset(px, py))
                     }
                 }
 
@@ -364,8 +365,8 @@ fun SplashScreen(
                         .background(
                             Brush.radialGradient(
                                 colors = listOf(
-                                    Color(0xFF00D2FF).copy(alpha = 0.6f),
-                                    Color(0xFF0B8FAC).copy(alpha = 0.3f),
+                                    Primary.copy(alpha = 0.6f),
+                                    GradientEnd.copy(alpha = 0.3f),
                                     Color.Transparent
                                 )
                             ),
@@ -407,7 +408,7 @@ fun SplashScreen(
                 text = "Diabétologie Intelligente",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Light,
-                color = Color(0xFF80DEEA),
+                color = PrimaryContainer,
                 textAlign = TextAlign.Center,
                 letterSpacing = 2.sp,
                 modifier = Modifier
@@ -447,21 +448,21 @@ fun SplashScreen(
                 // Glow
                 drawPath(
                     miniEcg,
-                    Color(0xFF00D2FF).copy(alpha = 0.3f),
+                    Primary.copy(alpha = 0.3f),
                     style = Stroke(4f, cap = StrokeCap.Round, join = StrokeJoin.Round)
                 )
                 // Main line
                 drawPath(
                     miniEcg,
-                    Color(0xFF00D2FF),
+                    Primary,
                     style = Stroke(2f, cap = StrokeCap.Round, join = StrokeJoin.Round)
                 )
 
                 // Point lumineux qui trace
                 val dotX = visibleEnd.coerceIn(0f, w)
                 val dotY = cy // simplifié
-                drawCircle(Color(0xFF00D2FF), 4f, Offset(dotX, dotY))
-                drawCircle(Color(0xFF00D2FF).copy(alpha = 0.3f), 8f, Offset(dotX, dotY))
+                drawCircle(Primary, 4f, Offset(dotX, dotY))
+                drawCircle(Primary.copy(alpha = 0.3f), 8f, Offset(dotX, dotY))
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -496,9 +497,9 @@ fun SplashScreen(
                             .background(
                                 Brush.horizontalGradient(
                                     colors = listOf(
-                                        Color(0xFF00D2FF),
-                                        Color(0xFF0B8FAC),
-                                        Color(0xFF00D2FF)
+                                        Primary,
+                                        GradientEnd,
+                                        Primary
                                     )
                                 )
                             )

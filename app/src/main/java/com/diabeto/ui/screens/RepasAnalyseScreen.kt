@@ -49,11 +49,11 @@ import java.util.*
 
 // ── Dark theme colors (identiques au ChatbotScreen / ROLLY) ─────────────
 private val DarkBg = Color(0xFF0D0D1A)
-private val DarkSurface = Color(0xFF1A1A2E)
+private val DarkSurface = OnBackground
 private val DarkCard = Color(0xFF16213E)
 private val DarkInput = Color(0xFF1E1E30)
 private val DrawerBg = Color(0xFF111128)
-private val AccentCyan = Color(0xFF00D2FF)
+private val AccentCyan = Primary
 private val AccentPurple = Color(0xFF7C4DFF)
 private val AccentGreen = Color(0xFF4CAF50)
 private val AccentOrange = Color(0xFFFF9800)

@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.diabeto.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("SetJavaScriptEnabled")
@@ -125,7 +126,7 @@ fun VideoCallScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF1A1A2E)
+                    containerColor = OnBackground
                 )
             )
         }
@@ -161,7 +162,7 @@ fun VideoCallScreen(
                                 arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
                             )
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00D2FF))
+                        colors = ButtonDefaults.buttonColors(containerColor = Primary)
                     ) {
                         Text("Autoriser")
                     }
@@ -241,14 +242,14 @@ fun VideoCallScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Color(0xFF1A1A2E)),
+                            .background(OnBackground),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            CircularProgressIndicator(color = Color(0xFF00D2FF))
+                            CircularProgressIndicator(color = Primary)
                             Text(
                                 "Connexion en cours...",
                                 color = Color.White,
