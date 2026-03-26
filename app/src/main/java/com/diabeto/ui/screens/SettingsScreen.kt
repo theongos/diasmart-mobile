@@ -1,5 +1,7 @@
 package com.diabeto.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,6 +36,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
 
@@ -180,6 +184,44 @@ fun SettingsScreen(
                         icon = Icons.Default.Email,
                         title = "Contact",
                         subtitle = "ngostheo30@gmail.com"
+                    )
+                }
+            }
+
+            // ── Légal ───────────────────────────────────────
+            item {
+                SettingsSectionTitle("Légal")
+            }
+            item {
+                SettingsCard {
+                    SettingsClickableItem(
+                        icon = Icons.Default.Policy,
+                        title = "Politique de confidentialité",
+                        subtitle = "RGPD - Protection des données",
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://public-ochre-gamma.vercel.app/privacy.html"))
+                            context.startActivity(intent)
+                        }
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                    SettingsClickableItem(
+                        icon = Icons.Default.Gavel,
+                        title = "Licence",
+                        subtitle = "Licence propriétaire - NGOS THEODORE",
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://public-ochre-gamma.vercel.app/license.html"))
+                            context.startActivity(intent)
+                        }
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                    SettingsClickableItem(
+                        icon = Icons.Default.Description,
+                        title = "Conditions d'utilisation",
+                        subtitle = "Termes et conditions",
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://public-ochre-gamma.vercel.app/privacy.html"))
+                            context.startActivity(intent)
+                        }
                     )
                 }
             }

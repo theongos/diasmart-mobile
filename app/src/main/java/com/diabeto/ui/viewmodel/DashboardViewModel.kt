@@ -1,5 +1,6 @@
 package com.diabeto.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.diabeto.data.entity.*
@@ -37,16 +38,46 @@ class DashboardViewModel @Inject constructor(
     private val rendezVousRepository: RendezVousRepository,
     private val medicamentRepository: MedicamentRepository,
     private val authRepository: AuthRepository,
-    private val connectivityObserver: ConnectivityObserver
+    private val connectivityObserver: ConnectivityObserver,
+    private val cloudBackupRepository: CloudBackupRepository
 ) : ViewModel() {
+
+    companion object {
+        private const val TAG = "DashboardVM"
+    }
 
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
     init {
         loadUserRole()
+        checkAndRestoreFromCloud()
         loadDashboardData()
         observeConnectivity()
+    }
+
+    /**
+     * Auto-restore from cloud if local DB is empty (e.g., after app reinstall).
+     * This runs every time Dashboard loads, ensuring data is restored after login.
+     */
+    private fun checkAndRestoreFromCloud() {
+        viewModelScope.launch {
+            try {
+                if (cloudBackupRepository.isLocalDbEmpty() && cloudBackupRepository.hasCloudBackup()) {
+                    Log.d(TAG, "Local DB empty, restoring from cloud backup...")
+                    val result = cloudBackupRepository.performFullRestore()
+                    result.onSuccess { count ->
+                        Log.d(TAG, "Cloud restore complete: $count documents restored")
+                        // Reload dashboard data after restore
+                        loadDashboardData()
+                    }.onFailure { e ->
+                        Log.e(TAG, "Cloud restore failed", e)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Auto-restore check failed", e)
+            }
+        }
     }
 
     private fun loadUserRole() {
