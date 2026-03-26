@@ -1,0 +1,44 @@
+package com.diabeto.data.model
+
+import com.google.firebase.Timestamp
+
+/**
+ * Conversation entre un patient et un médecin
+ * Chemin Firestore : /conversations/{conversationId}
+ */
+data class Conversation(
+    val id: String = "",
+    val patientId: String = "",
+    val medecinId: String = "",
+    val patientNom: String = "",
+    val medecinNom: String = "",
+    val dernierMessage: String = "",
+    val dernierMessageAt: Timestamp = Timestamp.now(),
+    val nonLusPatient: Int = 0,
+    val nonLusMedecin: Int = 0
+) {
+    fun toMap(): Map<String, Any> = mapOf(
+        "patientId" to patientId,
+        "medecinId" to medecinId,
+        "patientNom" to patientNom,
+        "medecinNom" to medecinNom,
+        "dernierMessage" to dernierMessage,
+        "dernierMessageAt" to dernierMessageAt,
+        "nonLusPatient" to nonLusPatient,
+        "nonLusMedecin" to nonLusMedecin
+    )
+
+    companion object {
+        fun fromMap(id: String, map: Map<String, Any?>): Conversation = Conversation(
+            id = id,
+            patientId = map["patientId"] as? String ?: "",
+            medecinId = map["medecinId"] as? String ?: "",
+            patientNom = map["patientNom"] as? String ?: "",
+            medecinNom = map["medecinNom"] as? String ?: "",
+            dernierMessage = map["dernierMessage"] as? String ?: "",
+            dernierMessageAt = map["dernierMessageAt"] as? Timestamp ?: Timestamp.now(),
+            nonLusPatient = (map["nonLusPatient"] as? Long)?.toInt() ?: 0,
+            nonLusMedecin = (map["nonLusMedecin"] as? Long)?.toInt() ?: 0
+        )
+    }
+}

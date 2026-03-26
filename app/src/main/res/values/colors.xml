@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#FF0B8FAC</color>
+    <color name="primary_dark">#FF087F8C</color>
+    <color name="primary_light">#FFB3E5FC</color>
+    <color name="primary_container">#FFB3E5FC</color>
+    <color name="accent">#FF26A69A</color>
+    <color name="tertiary">#FF26A69A</color>
+
+    <color name="secondary">#FF5C6BC0</color>
+    <color name="secondary_dark">#FF3949AB</color>
+    <color name="secondary_light">#FFE8EAF6</color>
+    
+    <color name="background">#FFF5F7FA</color>
+    <color name="surface">#FFFFFFFF</color>
+    <color name="error">#FFE57373</color>
+    
+    <color name="on_primary">#FFFFFFFF</color>
+    <color name="on_secondary">#FFFFFFFF</color>
+    <color name="on_background">#FF2C3E50</color>
+    <color name="on_surface">#FF2C3E50</color>
+    <color name="on_surface_variant">#FF607D8B</color>
+    <color name="on_error">#FFFFFFFF</color>
+    
+    <color name="text_primary">#FF2C3E50</color>
+    <color name="text_secondary">#FF607D8B</color>
+    <color name="text_hint">#FFB0BEC5</color>
+    
+    <color name="glucose_low">#FFE57373</color>
+    <color name="glucose_normal">#FF81C784</color>
+    <color name="glucose_high">#FFFFB74D</color>
+    <color name="glucose_severe">#FFE53935</color>
+    
+    <color name="success">#FF4CAF50</color>
+    <color name="warning">#FFFF9800</color>
+    <color name="info">#FF2196F3</color>
+</resources>

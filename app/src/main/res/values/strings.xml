@@ -1,0 +1,132 @@
+<resources>
+    <string name="app_name">DiaSmart</string>
+    <string name="app_description">Gestion du diabète</string>
+    
+    <!-- Navigation -->
+    <string name="nav_dashboard">Tableau de bord</string>
+    <string name="nav_patients">Patients</string>
+    <string name="nav_rendezvous">Rendez-vous</string>
+    <string name="nav_medicaments">Médicaments</string>
+    <string name="nav_glucose">Glycémie</string>
+    
+    <!-- Actions -->
+    <string name="action_add">Ajouter</string>
+    <string name="action_edit">Modifier</string>
+    <string name="action_delete">Supprimer</string>
+    <string name="action_save">Sauvegarder</string>
+    <string name="action_cancel">Annuler</string>
+    <string name="action_confirm">Confirmer</string>
+    <string name="action_search">Rechercher</string>
+    <string name="action_filter">Filtrer</string>
+    
+    <!-- Patient -->
+    <string name="patient_nom">Nom</string>
+    <string name="patient_prenom">Prénom</string>
+    <string name="patient_date_naissance">Date de naissance</string>
+    <string name="patient_sexe">Sexe</string>
+    <string name="patient_telephone">Téléphone</string>
+    <string name="patient_email">Email</string>
+    <string name="patient_adresse">Adresse</string>
+    <string name="patient_type_diabete">Type de diabète</string>
+    <string name="patient_date_diagnostic">Date de diagnostic</string>
+    <string name="patient_notes">Notes</string>
+    
+    <!-- Glucose -->
+    <string name="glucose_valeur">Valeur (mg/dL)</string>
+    <string name="glucose_contexte">Contexte</string>
+    <string name="glucose_date">Date et heure</string>
+    <string name="glucose_moyenne">Moyenne</string>
+    <string name="glucose_min_max">Min-Max</string>
+    <string name="glucose_time_in_range">Temps dans la cible</string>
+    <string name="glucose_target_range">Cible: 70-180 mg/dL</string>
+    
+    <!-- Médicament -->
+    <string name="medicament_nom">Nom</string>
+    <string name="medicament_dosage">Dosage</string>
+    <string name="medicament_frequence">Fréquence</string>
+    <string name="medicament_heure">Heure de prise</string>
+    <string name="medicament_date_debut">Date de début</string>
+    <string name="medicament_date_fin">Date de fin</string>
+    <string name="medicament_rappel">Activer les rappels</string>
+    
+    <!-- Rendez-vous -->
+    <string name="rdv_titre">Titre</string>
+    <string name="rdv_date">Date</string>
+    <string name="rdv_heure">Heure</string>
+    <string name="rdv_duree">Durée (minutes)</string>
+    <string name="rdv_type">Type</string>
+    <string name="rdv_lieu">Lieu</string>
+    <string name="rdv_confirme">Confirmé</string>
+    
+    <!-- Messages -->
+    <string name="msg_required_field">Champ obligatoire</string>
+    <string name="msg_patient_saved">Patient sauvegardé avec succès</string>
+    <string name="msg_patient_deleted">Patient supprimé</string>
+    <string name="msg_glucose_added">Lecture ajoutée</string>
+    <string name="msg_medicament_added">Médicament ajouté</string>
+    <string name="msg_rdv_added">Rendez-vous ajouté</string>
+    <string name="msg_confirm_delete">Voulez-vous vraiment supprimer ?</string>
+    <string name="msg_no_data">Aucune donnée</string>
+    
+    <!-- Chatbot IA -->
+    <string name="chatbot_title">ROLLY</string>
+    <string name="chatbot_subtitle">Assistant IA DiaSmart</string>
+    <string name="chatbot_placeholder">Posez votre question…</string>
+    <string name="chatbot_reset">Réinitialiser la conversation</string>
+    <string name="chatbot_analyse_glycemie">Analyser glycémie</string>
+    <string name="chatbot_prevision_risques">Prévision risques</string>
+    <string name="chatbot_conseils_nutrition">Conseils nutrition</string>
+
+    <!-- Messagerie -->
+    <string name="messagerie_title">Messagerie</string>
+    <string name="messagerie_empty">Aucune conversation</string>
+    <string name="messagerie_new_conversation">Nouvelle conversation</string>
+    <string name="messagerie_choisir_medecin">Choisir un médecin</string>
+    <string name="messagerie_saisir_message">Saisir un message…</string>
+    <string name="notif_channel_messages">Messages DiaSmart</string>
+
+    <!-- Auth -->
+    <string name="auth_login">Connexion</string>
+    <string name="auth_register">Créer un compte</string>
+    <string name="auth_email">Email</string>
+    <string name="auth_password">Mot de passe</string>
+    <string name="auth_forgot_password">Mot de passe oublié ?</string>
+    <string name="auth_role_patient">Patient</string>
+    <string name="auth_role_medecin">Médecin</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_medicaments">Rappels de médicaments</string>
+    <string name="notif_channel_rdv">Rappels de rendez-vous</string>
+    <string name="notif_medicament_title">Prise de médicament</string>
+    <string name="notif_medicament_text">Il est temps de prendre %1$s</string>
+    <string name="notif_rdv_title">Rendez-vous à venir</string>
+    <string name="notif_rdv_text">%1$s à %2$s</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Paramètres</string>
+    <string name="settings_theme">Thème</string>
+    <string name="settings_language">Langue</string>
+    <string name="settings_notifications">Notifications</string>
+
+    <!-- Journal / Carnet de bord -->
+    <string name="journal_title">Carnet de bord</string>
+    <string name="journal_subtitle">Journal quotidien</string>
+    <string name="journal_mood">Comment vous sentez-vous ?</string>
+    <string name="journal_stress">Niveau de stress</string>
+    <string name="journal_sleep">Qualité du sommeil</string>
+    <string name="journal_activity">Activité physique</string>
+
+    <!-- Widget -->
+    <string name="widget_description">Affiche la glycémie actuelle et la tendance</string>
+
+    <!-- Courbes prédictives -->
+    <string name="predictive_title">Courbes prédictives</string>
+    <string name="predictive_subtitle">Prédiction glycémique ROLLY</string>
+
+    <!-- Podomètre -->
+    <string name="pedometer_title">Podomètre</string>
+    <string name="pedometer_steps">pas</string>
+    <string name="pedometer_goal">de l\'objectif</string>
+    <string name="pedometer_start">Démarrer le suivi</string>
+    <string name="pedometer_stop">Arrêter</string>
+</resources>

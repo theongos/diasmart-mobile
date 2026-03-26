@@ -1,0 +1,1116 @@
+################################################################################
+#                                                                              #
+#         GUIDE ULTRA-DETAILLE : FIREBASE POUR DIASMART                        #
+#         Chaque clic, chaque ecran, chaque verification                       #
+#                                                                              #
+#         Projet Firebase : project-d-r1997t                                   #
+#         Package Android : com.diabeto                                        #
+#         Date : Mars 2026                                                     #
+#                                                                              #
+################################################################################
+
+
+================================================================================
+   PREREQUIS AVANT DE COMMENCER
+================================================================================
+
+Assurez-vous d'avoir :
+  [x] Un compte Google (celui utilise pour creer le projet Firebase)
+  [x] Android Studio installe (version Hedgehog ou plus recent)
+  [x] Le projet DiaSmart ouvert dans Android Studio
+  [x] Un appareil Android physique OU un emulateur configure
+  [x] Une connexion internet stable
+
+Informations de votre projet (a garder sous la main) :
+  - Project ID Firebase : project-d-r1997t
+  - Package Android     : com.diabeto
+  - SHA-1  (debug)      : F4:D3:D1:60:C4:76:0A:B8:03:0F:73:89:B7:03:A2:5E:72:D0:1C:EB
+  - SHA-256 (debug)     : 90:95:82:82:44:07:E8:38:BD:F9:8C:BE:A3:8B:80:26:30:17:40:75:CB:C2:89:B8:2E:EC:13:17:77:C0:50:37
+  - Cle API Gemini      : AIzaSyD4eOlk-Agx1rUVurd9o-jwE4MC6z760SI
+
+
+================================================================================
+================================================================================
+   ETAPE 1 : AJOUTER LES EMPREINTES SHA DANS FIREBASE CONSOLE
+================================================================================
+================================================================================
+
+POURQUOI C'EST NECESSAIRE :
+  Firebase utilise les empreintes SHA pour verifier que les requetes
+  proviennent bien de VOTRE application (et pas d'une copie pirate).
+  Sans SHA-1, Firebase Auth ne fonctionnera PAS.
+  Sans SHA-256, App Check ne fonctionnera PAS.
+
+PROCEDURE DETAILLEE :
+
+1. Ouvrez votre navigateur web (Chrome recommande)
+
+2. Allez sur :
+   https://console.firebase.google.com/project/project-d-r1997t/settings/general
+
+3. Connectez-vous avec votre compte Google si ce n'est pas deja fait
+
+4. Vous arrivez sur la page "Parametres du projet" (Project Settings)
+   Vous devriez voir en haut : "project-d-r1997t"
+
+5. Descendez dans la page jusqu'a la section "Vos applications"
+   Vous devriez voir une carte avec :
+     - Icone Android (le petit robot vert)
+     - "com.diabeto"
+     - App ID : 1:630181163819:android:8c6ab33632b28ca9478b6e
+
+6. Dans cette carte Android, cherchez la sous-section "Empreinte du certificat SHA"
+   (SHA certificate fingerprints)
+
+7. Cliquez le bouton "Ajouter une empreinte" (Add fingerprint)
+
+8. Un champ de texte apparait. Collez exactement ce SHA-1 :
+   F4:D3:D1:60:C4:76:0A:B8:03:0F:73:89:B7:03:A2:5E:72:D0:1C:EB
+
+9. Cliquez sur l'icone de sauvegarde (coche/checkmark) a droite du champ
+
+10. Le SHA-1 apparait maintenant dans la liste
+
+11. Cliquez a nouveau "Ajouter une empreinte"
+
+12. Collez ce SHA-256 :
+    90:95:82:82:44:07:E8:38:BD:F9:8C:BE:A3:8B:80:26:30:17:40:75:CB:C2:89:B8:2E:EC:13:17:77:C0:50:37
+
+13. Cliquez sur l'icone de sauvegarde
+
+14. IMPORTANT - RE-TELECHARGER google-services.json :
+    a) Juste au-dessus de la section SHA, vous voyez un bouton
+       "google-services.json" (avec une icone de telechargement)
+    b) Cliquez dessus pour telecharger le fichier mis a jour
+    c) Le fichier se telecharge dans votre dossier Telechargements
+
+15. Remplacez l'ancien fichier :
+    a) Ouvrez l'Explorateur de fichiers Windows
+    b) Naviguez vers : C:\Users\PC\Desktop\diabetomobile\app\
+    c) Vous voyez le fichier "google-services.json" existant
+    d) Copiez le nouveau fichier telecharge PAR-DESSUS l'ancien
+       (confirmez le remplacement quand Windows demande)
+
+VERIFICATION :
+  - Ouvrez le nouveau google-services.json avec Bloc-notes
+  - Il devrait contenir "project_id": "project-d-r1997t"
+  - Il devrait contenir "package_name": "com.diabeto"
+  - Il PEUT contenir une section "certificate_hash" avec vos empreintes
+    (pas toujours visible dans le JSON mais c'est enregistre cote serveur)
+
+SI VOUS NE RETROUVEZ PAS VOS SHA :
+  Ouvrez un terminal dans Android Studio (View > Tool Windows > Terminal)
+  et tapez :
+    keytool -list -v -keystore "%USERPROFILE%\.android\debug.keystore" -alias androiddebugkey -storepass android -keypass android
+  Cela affichera votre SHA-1 et SHA-256 de debug.
+
+
+================================================================================
+================================================================================
+   ETAPE 2 : ACTIVER FIREBASE AUTHENTICATION
+================================================================================
+================================================================================
+
+POURQUOI C'EST NECESSAIRE :
+  Firebase Authentication gere l'inscription et la connexion des
+  utilisateurs (patients et medecins). Sans cette activation,
+  les ecrans de connexion et inscription de DiaSmart ne fonctionneront pas.
+
+PROCEDURE DETAILLEE :
+
+1. Allez sur :
+   https://console.firebase.google.com/project/project-d-r1997t/authentication
+
+2. Si c'est la premiere fois :
+   - Vous voyez un ecran d'accueil avec "Commencer" (Get started)
+   - Cliquez sur "Commencer"
+
+3. Vous arrivez sur l'onglet "Sign-in method" (Methode de connexion)
+   Vous voyez une liste de fournisseurs d'authentification :
+     - Adresse e-mail/Mot de passe
+     - Telephone
+     - Google
+     - Facebook
+     - Apple
+     - etc.
+
+4. Cliquez sur "Adresse e-mail/Mot de passe" (Email/Password)
+   C'est generalement le premier de la liste
+
+5. Un panneau s'ouvre avec deux options :
+
+   OPTION 1 : "Adresse e-mail/Mot de passe"
+   >>> Activez le toggle ON (basculez-le a droite, il devient bleu)
+
+   OPTION 2 : "Lien par e-mail (connexion sans mot de passe)"
+   >>> Laissez cette option DESACTIVEE (OFF)
+   (DiaSmart utilise email + mot de passe, pas le magic link)
+
+6. Cliquez "Enregistrer" (Save) en bas du panneau
+
+7. Vous revenez a la liste. "Adresse e-mail/Mot de passe" devrait
+   maintenant afficher "Active" (Enabled) avec une coche verte
+
+VERIFICATION :
+  - L'onglet "Sign-in method" montre "Adresse e-mail/Mot de passe : Active"
+  - L'onglet "Users" est vide (c'est normal, aucun utilisateur n'est inscrit encore)
+
+CE QUI SE PASSE DANS L'APP :
+  - L'ecran LoginScreen.kt utilise authRepository.signIn(email, password)
+  - L'ecran RegisterScreen.kt utilise authRepository.register(email, password)
+  - Ces fonctions appellent Firebase Auth qui est maintenant active
+
+OPTIONNEL - Activer Google Sign-In :
+  Si vous voulez aussi permettre la connexion Google :
+  1. Retournez dans Sign-in method
+  2. Cliquez sur "Google"
+  3. Activez le toggle ON
+  4. Remplissez le "Nom public du projet" : DiaSmart
+  5. Selectionnez un "E-mail d'assistance" : votre email
+  6. Cliquez "Enregistrer"
+  (Note : cela necessitera des modifications supplementaires dans le code)
+
+
+================================================================================
+================================================================================
+   ETAPE 3 : CREER ET CONFIGURER CLOUD FIRESTORE
+================================================================================
+================================================================================
+
+POURQUOI C'EST NECESSAIRE :
+  Cloud Firestore est la base de donnees NoSQL de Firebase.
+  DiaSmart l'utilise pour stocker :
+    - Les profils utilisateurs (/users/{uid})
+    - Les conversations patient-medecin (/conversations/{id}/messages/{id})
+    - L'historique des repas analyses (/users/{uid}/repas/{id})
+
+PARTIE A : CREER LA BASE DE DONNEES
+-------------------------------------
+
+1. Allez sur :
+   https://console.firebase.google.com/project/project-d-r1997t/firestore
+
+2. Si c'est la premiere fois :
+   - Vous voyez "Creer une base de donnees" (Create database)
+   - Cliquez dessus
+
+3. Premiere popup - Regles de securite :
+   - Selectionnez "Demarrer en mode test" (Start in test mode)
+   - Cela permet un acces libre pendant 30 jours (on securisera apres)
+   - Cliquez "Suivant" (Next)
+
+4. Deuxieme popup - Emplacement :
+   - CHOIX RECOMMANDE : "eur3 (europe-west)"
+     (adapte pour l'Europe et l'Afrique du Nord)
+   - Alternatives :
+     * "nam5 (us-central)" si vous etes en Amerique du Nord
+     * "asia-south1 (Mumbai)" si vous etes en Asie
+
+   !! ATTENTION !! L'emplacement ne peut PAS etre change apres creation !
+   Choisissez la region la plus proche de vos utilisateurs.
+
+5. Cliquez "Activer" (Enable)
+
+6. Attendez quelques secondes... La page se recharge et vous voyez
+   l'interface Firestore avec une base de donnees vide.
+   C'est normal ! Les collections seront creees automatiquement
+   quand l'app commencera a ecrire des donnees.
+
+
+PARTIE B : CONFIGURER LES REGLES DE SECURITE
+----------------------------------------------
+
+1. Dans Firestore, cliquez sur l'onglet "Regles" (Rules)
+   C'est le deuxieme onglet en haut, apres "Donnees" (Data)
+
+2. Vous voyez un editeur de texte avec les regles actuelles.
+   En mode test, elles ressemblent a :
+
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /{document=**} {
+         allow read, write: if request.time < timestamp.date(2026, 4, 12);
+       }
+     }
+   }
+
+3. SELECTIONNEZ TOUT le texte (Ctrl+A) puis SUPPRIMEZ-LE (Suppr)
+
+4. COLLEZ les regles de securite suivantes :
+
+------- DEBUT DES REGLES (copiez tout ce qui suit) -------
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================
+    // PROFILS UTILISATEURS
+    // ============================================
+    // Chemin : /users/{userId}
+    // Lecture : tout utilisateur connecte peut lire les profils
+    //           (necessaire pour voir les noms des medecins/patients)
+    // Ecriture : uniquement le proprietaire du profil
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+
+      // ============================================
+      // REPAS ANALYSES PAR ROLLY
+      // ============================================
+      // Chemin : /users/{userId}/repas/{repasId}
+      // Seul le proprietaire peut lire/ecrire ses propres repas
+      match /repas/{repasId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // ============================================
+    // CONVERSATIONS (MESSAGERIE PATIENT-MEDECIN)
+    // ============================================
+    // Chemin : /conversations/{conversationId}
+    // Lecture/Ecriture : uniquement les participants (patient ou medecin)
+    match /conversations/{conversationId} {
+      allow read: if request.auth != null &&
+        (resource.data.patientId == request.auth.uid ||
+         resource.data.medecinId == request.auth.uid);
+      allow create: if request.auth != null;
+      allow update: if request.auth != null &&
+        (resource.data.patientId == request.auth.uid ||
+         resource.data.medecinId == request.auth.uid);
+
+      // MESSAGES DANS UNE CONVERSATION
+      // Chemin : /conversations/{conversationId}/messages/{messageId}
+      match /messages/{messageId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null;
+      }
+    }
+  }
+}
+
+------- FIN DES REGLES -------
+
+5. Cliquez le bouton "Publier" (Publish) en haut de l'editeur
+
+6. Un message de confirmation apparait : "Regles publiees avec succes"
+   (ou "Rules published successfully")
+
+EXPLICATION DES REGLES :
+  - request.auth != null   = l'utilisateur doit etre connecte
+  - request.auth.uid == userId = l'utilisateur ne peut modifier QUE ses donnees
+  - resource.data.patientId = verifie que l'utilisateur est participant
+  - allow create: if request.auth != null = tout utilisateur connecte peut
+    creer une conversation (un patient contacte un medecin)
+
+VERIFICATION :
+  - L'onglet "Regles" montre le nouveau contenu
+  - Un badge vert "Publie" (Published) apparait
+  - L'onglet "Donnees" est toujours vide (normal)
+
+
+PARTIE C : COMPRENDRE LA STRUCTURE DES DONNEES
+------------------------------------------------
+
+Voici ce que Firestore contiendra une fois l'app utilisee :
+
+/users/
+  |-- {uid_patient_1}/
+  |     |-- nomComplet: "Ali Benali"
+  |     |-- email: "ali@email.com"
+  |     |-- role: "PATIENT"
+  |     |-- repas/
+  |           |-- {auto_id_1}/
+  |           |     |-- nomRepas: "Couscous aux legumes"
+  |           |     |-- glucidesEstimes: 65.0
+  |           |     |-- indexGlycemique: 55
+  |           |     |-- scoreDiabete: 6
+  |           |     |-- timestamp: 2026-03-12T14:30:00Z
+  |           |     |-- confirmeParUtilisateur: true
+  |           |-- {auto_id_2}/
+  |                 |-- ...
+  |
+  |-- {uid_medecin_1}/
+        |-- nomComplet: "Dr. Karim Mansouri"
+        |-- email: "dr.karim@email.com"
+        |-- role: "MEDECIN"
+
+/conversations/
+  |-- {conversation_id_1}/
+  |     |-- patientId: "uid_patient_1"
+  |     |-- medecinId: "uid_medecin_1"
+  |     |-- patientNom: "Ali Benali"
+  |     |-- medecinNom: "Dr. Karim Mansouri"
+  |     |-- dernierMessage: "Bonjour docteur"
+  |     |-- dernierMessageAt: 2026-03-12T15:00:00Z
+  |     |-- messages/
+  |           |-- {message_id_1}/
+  |           |     |-- envoyeurId: "uid_patient_1"
+  |           |     |-- envoyeurNom: "Ali Benali"
+  |           |     |-- contenu: "Bonjour docteur"
+  |           |     |-- timestamp: 2026-03-12T15:00:00Z
+  |           |-- {message_id_2}/
+  |                 |-- ...
+
+
+================================================================================
+================================================================================
+   ETAPE 4 : ACTIVER FIREBASE APP CHECK
+================================================================================
+================================================================================
+
+POURQUOI C'EST NECESSAIRE :
+  App Check protege votre quota Gemini (et Firestore) contre les abus.
+  Sans App Check, n'importe qui pourrait copier vos cles API et
+  consommer votre quota gratuitement.
+
+  Fonctionnement :
+  - En PRODUCTION : Play Integrity verifie que l'APK est signe par vous
+  - En DEVELOPPEMENT : Un token de debug est genere (a enregistrer manuellement)
+
+PARTIE A : ACTIVER APP CHECK DANS LA CONSOLE
+----------------------------------------------
+
+1. Allez sur :
+   https://console.firebase.google.com/project/project-d-r1997t/appcheck
+
+2. Si c'est la premiere fois :
+   - Cliquez "Commencer" (Get started)
+
+3. Vous voyez la liste de vos applications.
+   Trouvez "com.diabeto" (application Android)
+
+4. Cliquez dessus pour la configurer
+
+5. Dans le menu deroulant "Fournisseur d'attestation" (Attestation provider) :
+   - Selectionnez "Play Integrity"
+
+   EXPLICATION : Play Integrity est le systeme de Google pour verifier
+   que votre app est authentique (pas modifiee, pas rootee, etc.)
+   C'est gratuit jusqu'a 10 000 verifications/jour.
+
+6. Cliquez "Enregistrer" (Save)
+
+7. Un badge vert "Active" apparait a cote de com.diabeto
+
+
+PARTIE B : OBTENIR ET ENREGISTRER LE TOKEN DE DEBUG
+-----------------------------------------------------
+
+En mode developpement (quand vous lancez l'app depuis Android Studio),
+Play Integrity ne fonctionne pas sur un emulateur. C'est pourquoi
+notre code DiabetoApplication.kt utilise DebugAppCheckProvider en mode debug.
+
+1. Lancez l'application DiaSmart depuis Android Studio :
+   - Connectez un appareil Android OU lancez un emulateur
+   - Cliquez le bouton "Run" (triangle vert >) en haut d'Android Studio
+   - Attendez que l'app se lance
+
+2. Ouvrez Logcat dans Android Studio :
+   - En bas d'Android Studio, cliquez sur l'onglet "Logcat"
+   - OU allez dans le menu : View > Tool Windows > Logcat
+
+3. Dans le champ de recherche de Logcat, tapez :
+   DebugAppCheckProvider
+
+4. Cherchez une ligne qui ressemble a :
+   D DebugAppCheckProvider: Enter this debug token into the allow list
+   in the Firebase Console for your project:
+   xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+5. COPIEZ ce token (le UUID avec les tirets)
+   Par exemple : a1b2c3d4-e5f6-7890-abcd-ef1234567890
+
+6. IMPORTANT : Si vous ne voyez pas ce message :
+   - Verifiez que le filtre Logcat est bien "DebugAppCheckProvider"
+   - Verifiez que vous n'avez pas de filtre de niveau (selectionnez "Verbose")
+   - Relancez l'app (Stop puis Run a nouveau)
+   - Le token n'apparait QU'AU PREMIER LANCEMENT apres installation
+
+7. Retournez dans la console Firebase :
+   https://console.firebase.google.com/project/project-d-r1997t/appcheck
+
+8. Trouvez l'application "com.diabeto"
+
+9. Cliquez sur le menu "trois points verticaux" (⋮) a droite
+
+10. Selectionnez "Gerer les jetons de debogage" (Manage debug tokens)
+
+11. Cliquez "Ajouter un jeton de debogage" (Add debug token)
+
+12. Deux champs apparaissent :
+    - "Nom" : Tapez un nom descriptif, par exemple :
+      "PC Dev - Emulateur" ou "Mon PC - Samsung Galaxy"
+    - "Valeur" : Collez le token copie depuis Logcat
+
+13. Cliquez "Enregistrer" (Save)
+
+14. Le token apparait dans la liste des jetons de debogage
+
+
+PARTIE C : ACTIVER APP CHECK POUR LES SERVICES
+-------------------------------------------------
+
+1. Toujours dans la page App Check, cliquez sur l'onglet "APIs"
+
+2. Vous voyez une liste de services Firebase :
+   - Cloud Firestore
+   - Realtime Database
+   - Cloud Storage
+   - Firebase Authentication
+   - Firebase ML
+   - Vertex AI for Firebase
+
+3. Pour CHAQUE service que DiaSmart utilise, activez App Check :
+
+   a) Cloud Firestore :
+      - Cliquez sur "Cloud Firestore"
+      - Cliquez "Appliquer" (Enforce)
+      - Confirmez dans la popup
+      !! ATTENTION !! Si vous faites cela AVANT d'enregistrer le token debug,
+      l'app en mode developpement ne pourra plus acceder a Firestore !
+      Assurez-vous que le token debug est bien enregistre (Partie B).
+
+   b) Vertex AI for Firebase (si disponible dans la liste) :
+      - Cliquez sur "Vertex AI for Firebase"
+      - Cliquez "Appliquer"
+
+   c) Firebase Authentication (si disponible) :
+      - Cliquez sur "Firebase Authentication"
+      - Cliquez "Appliquer"
+
+4. Les services actives affichent un badge "Applique" (Enforced)
+
+VERIFICATION :
+  - L'onglet "Apps" montre com.diabeto avec un badge vert
+  - L'onglet "APIs" montre les services avec "Applique"
+  - Relancez l'app depuis Android Studio
+  - Dans Logcat, cherchez "AppCheck" — pas d'erreur = tout va bien
+
+
+PARTIE D : CE QUI SE PASSE DANS LE CODE
+------------------------------------------
+
+Fichier : DiabetoApplication.kt
+
+  Le code fait automatiquement :
+  - En mode DEBUG (lance depuis Android Studio) :
+    > Utilise DebugAppCheckProviderFactory
+    > Genere un token de debug affiche dans Logcat
+    > Ce token doit etre enregistre dans la console (fait en Partie B)
+
+  - En mode RELEASE (APK signe pour production) :
+    > Utilise PlayIntegrityAppCheckProviderFactory
+    > Verifie automatiquement que l'APK est signe par vous
+    > Aucune action manuelle necessaire
+
+  AUCUNE MODIFICATION DE CODE N'EST NECESSAIRE.
+
+
+================================================================================
+================================================================================
+   ETAPE 5 : CONFIGURER FIREBASE CLOUD MESSAGING (FCM)
+================================================================================
+================================================================================
+
+POURQUOI C'EST NECESSAIRE :
+  FCM permet d'envoyer des notifications push aux utilisateurs :
+  - Rappels de prise de medicaments
+  - Nouveaux messages d'un medecin
+  - Alertes de glycemie
+
+PROCEDURE :
+
+1. Allez sur :
+   https://console.firebase.google.com/project/project-d-r1997t/messaging
+
+2. FCM est AUTOMATIQUEMENT active quand vous creez un projet Firebase.
+   Normalement, vous voyez directement l'interface Cloud Messaging.
+
+3. Si vous voyez "Activer" ou "Get started", cliquez dessus.
+
+4. C'est tout ! Le service est deja configure cote serveur.
+
+POUR TESTER LES NOTIFICATIONS :
+
+1. Lancez DiaSmart sur un appareil physique (pas un emulateur)
+   Les emulateurs ne recoivent pas toujours les notifications.
+
+2. Dans la console Firebase > Cloud Messaging :
+   - Cliquez "Creer votre premiere campagne" (Create your first campaign)
+   - Selectionnez "Messages Firebase Notification"
+   - Cliquez "Creer" (Create)
+
+3. Remplissez :
+   - Titre de la notification : "Test DiaSmart"
+   - Texte : "Si vous voyez ceci, FCM fonctionne !"
+   - Cliquez "Suivant"
+
+4. Cible :
+   - Selectionnez "Application" > com.diabeto
+   - Cliquez "Suivant"
+
+5. Planification :
+   - Laissez "Maintenant" (Now)
+   - Cliquez "Examiner" (Review)
+
+6. Cliquez "Publier" (Publish)
+
+7. La notification devrait apparaitre sur l'appareil dans quelques secondes.
+
+SI LA NOTIFICATION N'ARRIVE PAS :
+  - Verifiez que l'appareil n'est pas en mode "Ne pas deranger"
+  - Verifiez que DiaSmart a la permission de notifications :
+    Parametres Android > Applications > DiaSmart > Notifications > Activer
+  - Verifiez dans Logcat que le FCM token est genere :
+    Cherchez "FCM" ou "DiaSmartFCMService"
+
+
+================================================================================
+================================================================================
+   ETAPE 6 : VERIFIER LA CLE API GEMINI (pour ROLLY)
+================================================================================
+================================================================================
+
+POURQUOI C'EST NECESSAIRE :
+  ROLLY (l'assistant IA de DiaSmart) utilise l'API Gemini de Google.
+  La cle API permet a l'app de communiquer avec le modele d'IA.
+
+VERIFICATION DE LA CLE ACTUELLE :
+
+1. Ouvrez le fichier local.properties dans Android Studio :
+   Chemin : C:\Users\PC\Desktop\diabetomobile\local.properties
+
+2. Verifiez la ligne :
+   GEMINI_API_KEY=AIzaSyD4eOlk-Agx1rUVurd9o-jwE4MC6z760SI
+
+3. Testez la cle :
+   - Ouvrez votre navigateur
+   - Allez sur : https://aistudio.google.com/app/apikey
+   - Connectez-vous avec votre compte Google
+   - Vous devriez voir votre cle dans la liste
+   - Si elle est marquee "Active", tout va bien
+
+SI LA CLE NE FONCTIONNE PAS (erreur dans Logcat) :
+
+1. Allez sur : https://aistudio.google.com/app/apikey
+
+2. Cliquez "Creer une cle API" (Create API Key)
+
+3. Dans la popup, selectionnez votre projet Google Cloud :
+   "project-d-r1997t"
+   (Si vous ne le voyez pas, cherchez-le dans la liste)
+
+4. Cliquez "Creer une cle dans un projet existant"
+
+5. La nouvelle cle s'affiche (format : AIzaSy...)
+   COPIEZ-LA immediatement
+
+6. Ouvrez C:\Users\PC\Desktop\diabetomobile\local.properties
+
+7. Remplacez la ligne GEMINI_API_KEY=... par :
+   GEMINI_API_KEY=votre_nouvelle_cle_ici
+
+8. Sauvegardez le fichier (Ctrl+S)
+
+9. Dans Android Studio, faites :
+   Build > Clean Project
+   puis
+   Build > Rebuild Project
+
+10. Relancez l'app
+
+SECURITE :
+  - La cle est stockee dans local.properties (pas commitee sur Git)
+  - Elle est injectee dans BuildConfig au moment de la compilation
+  - En production, utilisez plutot Vertex AI for Firebase
+    (qui utilise App Check au lieu d'une cle API directe)
+
+QUOTAS ET LIMITES :
+  - API Gemini gratuite : 60 requetes/minute
+  - Si vous depassez, l'app affichera une erreur temporaire
+  - Pour augmenter les limites : https://console.cloud.google.com/
+
+
+================================================================================
+================================================================================
+   ETAPE 7 : CREER LES INDEX FIRESTORE (COMPOSITE)
+================================================================================
+================================================================================
+
+POURQUOI C'EST NECESSAIRE :
+  Firestore a besoin d'index pour les requetes complexes
+  (tri + filtre sur plusieurs champs). Sans index, les requetes
+  echoueront avec une erreur "FAILED_PRECONDITION: The query requires an index".
+
+METHODE 1 : CREATION AUTOMATIQUE (RECOMMANDEE)
+-------------------------------------------------
+
+C'est la methode la plus simple :
+
+1. Lancez DiaSmart et utilisez chaque fonctionnalite :
+   - Ouvrez la messagerie (pour declencher la requete conversations)
+   - Ouvrez l'analyse de repas (pour declencher la requete repas)
+
+2. Quand une fonctionnalite necessite un index manquant :
+   - L'app affichera une erreur ou ne chargera pas les donnees
+   - Dans Logcat (Android Studio), vous verrez un message d'erreur avec un lien :
+
+     "FAILED_PRECONDITION: The query requires an index.
+      You can create it here: https://console.firebase.google.com/..."
+
+3. Cliquez sur ce lien (ou copiez-le dans votre navigateur)
+
+4. Firebase ouvre une page pre-remplie pour creer l'index
+
+5. Cliquez simplement "Creer un index" (Create index)
+
+6. Attendez 2-5 minutes que l'index soit construit
+   (Firebase affiche "En cours de creation..." puis "Active")
+
+7. Relancez la fonctionnalite dans l'app — ca devrait fonctionner
+
+
+METHODE 2 : CREATION MANUELLE (SI VOUS PREFEREZ TOUT PREPARER)
+-----------------------------------------------------------------
+
+1. Allez sur :
+   https://console.firebase.google.com/project/project-d-r1997t/firestore/indexes
+
+2. Cliquez "Creer un index" (Create index)
+
+--- INDEX 1 : Conversations du patient ---
+
+3. Remplissez :
+   - Collection ID : conversations
+   - Champ 1 :
+     * Chemin du champ (Field path) : patientId
+     * Ordre (Order) : Ascending (Croissant)
+   - Cliquez "+ Ajouter un champ"
+   - Champ 2 :
+     * Chemin du champ : dernierMessageAt
+     * Ordre : Descending (Decroissant)
+   - Portee de la requete (Query scope) : Collection
+
+4. Cliquez "Creer un index"
+
+5. Attendez que le statut passe de "En cours" a "Active" (2-5 minutes)
+
+--- INDEX 2 : Conversations du medecin ---
+
+6. Cliquez a nouveau "Creer un index"
+
+7. Remplissez :
+   - Collection ID : conversations
+   - Champ 1 :
+     * Chemin du champ : medecinId
+     * Ordre : Ascending
+   - Champ 2 :
+     * Chemin du champ : dernierMessageAt
+     * Ordre : Descending
+   - Portee : Collection
+
+8. Cliquez "Creer un index"
+
+--- INDEX 3 : Historique des repas par date ---
+
+9. Cliquez "Creer un index"
+
+10. Remplissez :
+    - Collection ID : repas
+    - Champ 1 :
+      * Chemin du champ : timestamp
+      * Ordre : Descending
+    - Portee : Collection group
+      (Collection GROUP car les repas sont dans des sous-collections
+       /users/{uid}/repas/ et on veut interroger toutes les sous-collections)
+
+11. Cliquez "Creer un index"
+
+--- INDEX 4 (optionnel) : Repas recents avec filtre ---
+
+12. Si vous utilisez la fonction getRepasDepuis() (stats) :
+    - Collection ID : repas
+    - Champ 1 :
+      * Chemin du champ : timestamp
+      * Ordre : Descending
+    - Portee : Collection
+      (Collection simple cette fois, car on filtre par UID parent)
+
+VERIFICATION :
+  - Allez sur l'onglet "Index" dans Firestore
+  - Tous les index doivent avoir le statut "Active" (badge vert)
+  - Si un index est "En cours de creation", attendez quelques minutes
+
+
+================================================================================
+================================================================================
+   ETAPE 8 : PREMIER TEST COMPLET
+================================================================================
+================================================================================
+
+Maintenant que tout est configure, testons chaque fonctionnalite :
+
+PREPARATION :
+
+1. Ouvrez Android Studio avec le projet DiaSmart
+
+2. Connectez un appareil Android OU lancez un emulateur :
+   - Appareil physique : branchez en USB, activez "Debogage USB"
+     (Parametres > A propos > tapez 7 fois sur "Numero de build" >
+      Retour > Options pour les developpeurs > Debogage USB)
+   - Emulateur : Tools > Device Manager > Lancez un emulateur existant
+     OU creez-en un (Pixel 6, API 33+ recommande)
+
+3. Cliquez "Run" (triangle vert) dans Android Studio
+
+4. L'app se compile puis se lance. Si le build echoue :
+   - Build > Clean Project > Rebuild Project
+   - Verifiez que google-services.json est bien dans le dossier app/
+
+--- TEST 1 : INSCRIPTION ---
+
+5. L'ecran de connexion s'affiche
+
+6. Cliquez "Creer un compte" ou "S'inscrire"
+
+7. Remplissez :
+   - Nom complet : "Dr. Ahmed Test"
+   - Email : testmedecin@diasmart.com
+   - Mot de passe : Test1234!
+   - Role : Medecin
+
+8. Cliquez "S'inscrire"
+
+9. RESULTAT ATTENDU :
+   - L'app redirige vers le Dashboard
+   - Dans Firebase Console > Authentication > Users :
+     Vous voyez "testmedecin@diasmart.com" dans la liste
+
+10. Deconnectez-vous (bouton de deconnexion dans le profil ou parametres)
+
+11. Creez un 2eme compte :
+    - Nom : "Ali Patient Test"
+    - Email : testpatient@diasmart.com
+    - Mot de passe : Test1234!
+    - Role : Patient
+
+--- TEST 2 : CONNEXION ---
+
+12. Deconnectez-vous
+
+13. Reconnectez-vous avec testpatient@diasmart.com / Test1234!
+
+14. RESULTAT ATTENDU :
+    - Connexion reussie, Dashboard s'affiche
+    - Le nom "Ali Patient Test" apparait
+
+--- TEST 3 : ROLLY (ASSISTANT IA) ---
+
+15. Depuis le Dashboard, ouvrez le chatbot ROLLY
+    (bouton ou carte "ROLLY - Assistant IA")
+
+16. Tapez un message :
+    "Bonjour ROLLY, quels sont les symptomes du diabete de type 2 ?"
+
+17. RESULTAT ATTENDU :
+    - ROLLY repond avec des informations sur le diabete
+    - La reponse est en francais
+    - Pas d'erreur de connexion
+
+18. SI ERREUR :
+    - Verifiez Logcat pour "PERMISSION_DENIED" > probleme App Check
+    - Verifiez Logcat pour "API_KEY" > cle Gemini invalide
+    - Verifiez Logcat pour "NETWORK" > probleme de connexion internet
+
+--- TEST 4 : ANALYSE DE REPAS ---
+
+19. Depuis le Dashboard, ouvrez "Analyse Repas"
+
+20. Dans le champ de texte, decrivez un repas :
+    "Couscous aux legumes avec poulet, un verre de lait et une orange"
+
+21. Cliquez "Analyser"
+
+22. RESULTAT ATTENDU :
+    - ROLLY analyse le repas (chargement de quelques secondes)
+    - Un resultat JSON s'affiche avec :
+      * Nom du repas
+      * Glucides estimes (en grammes)
+      * Index glycemique
+      * Score diabete (1-10)
+      * Recommandations
+
+23. Verifiez les valeurs et cliquez "Confirmer et Sauvegarder"
+
+24. Une popup de VALIDATION MEDICALE apparait :
+    "Les valeurs sont des estimations de l'IA. Confirmez-vous ?"
+
+25. Modifiez les valeurs si necessaire, puis cliquez "Confirmer"
+
+26. RESULTAT ATTENDU :
+    - Le repas est sauvegarde dans Firestore
+    - Dans Firebase Console > Firestore > users > {votre uid} > repas :
+      Un nouveau document avec les donnees du repas
+
+--- TEST 5 : MESSAGERIE ---
+
+27. Depuis le Dashboard, ouvrez "Messagerie"
+
+28. Cliquez "Nouvelle conversation" ou cherchez un medecin
+
+29. Selectionnez "Dr. Ahmed Test" (le compte medecin cree plus tot)
+
+30. Tapez un message : "Bonjour docteur, j'ai une question sur ma glycemie"
+
+31. Cliquez "Envoyer"
+
+32. RESULTAT ATTENDU :
+    - Le message apparait dans la conversation
+    - Dans Firebase Console > Firestore > conversations :
+      Un nouveau document avec patientId, medecinId, le message
+
+33. Deconnectez-vous et connectez-vous avec le compte medecin
+
+34. Ouvrez la messagerie — vous devriez voir la conversation du patient
+
+--- TEST 6 : VERIFIER FIRESTORE ---
+
+35. Ouvrez Firebase Console > Firestore > Donnees
+
+36. Verifiez ces collections :
+    - "users" avec 2 documents (medecin + patient)
+    - "conversations" avec 1 document contenant des "messages"
+    - "users/{uid}/repas" avec le repas analyse
+
+
+================================================================================
+================================================================================
+   ETAPE 9 : RESOLUTION DES PROBLEMES COURANTS
+================================================================================
+================================================================================
+
+PROBLEME 1 : "Default FirebaseApp is not initialized"
+--------------------------------------------------------
+CAUSE   : google-services.json manquant ou incorrect
+SOLUTION :
+  1. Verifiez que google-services.json est dans :
+     C:\Users\PC\Desktop\diabetomobile\app\google-services.json
+  2. Ouvrez-le et verifiez que "project_id" = "project-d-r1997t"
+  3. Retelecharger depuis Firebase Console si necessaire
+  4. Build > Clean Project > Rebuild Project
+
+
+PROBLEME 2 : "PERMISSION_DENIED" dans Logcat
+----------------------------------------------
+CAUSE   : App Check bloque les requetes OU regles Firestore incorrectes
+SOLUTION :
+  A) Si App Check est active mais le debug token n'est pas enregistre :
+     - Relancez l'app
+     - Copiez le token de Logcat (DebugAppCheckProvider)
+     - Enregistrez-le dans Firebase Console > App Check > Manage debug tokens
+  B) Si les regles Firestore sont trop restrictives :
+     - Verifiez que vous avez bien copie les regles de l'Etape 3
+     - Temporairement, remettez les regles en mode test pour tester
+
+
+PROBLEME 3 : "FAILED_PRECONDITION: The query requires an index"
+------------------------------------------------------------------
+CAUSE   : Un index Firestore manque
+SOLUTION :
+  1. Copiez le lien du message d'erreur dans Logcat
+  2. Collez-le dans votre navigateur
+  3. Firebase propose de creer l'index automatiquement
+  4. Cliquez "Creer"
+  5. Attendez 2-5 minutes
+  6. Relancez l'app
+
+
+PROBLEME 4 : ROLLY ne repond pas / Erreur Gemini
+---------------------------------------------------
+CAUSE   : Cle API invalide ou quota depasse
+SOLUTION :
+  1. Verifiez la cle dans local.properties
+  2. Testez la cle sur https://aistudio.google.com/app/apikey
+  3. Si la cle est invalide, regenerez-en une (voir Etape 6)
+  4. Verifiez que App Check n'est pas en mode "Enforced" pour Vertex AI
+     sans avoir un token debug valide
+
+
+PROBLEME 5 : L'app crash au demarrage
+----------------------------------------
+CAUSE   : Dependance manquante ou erreur de configuration
+SOLUTION :
+  1. Build > Clean Project
+  2. File > Invalidate Caches > Invalidate and Restart
+  3. Attendez qu'Android Studio re-synchronise Gradle
+  4. Verifiez Logcat pour le stacktrace exact
+  5. Cherchez la classe/methode qui cause le crash
+
+
+PROBLEME 6 : "No matching client found for package name 'com.diabeto'"
+------------------------------------------------------------------------
+CAUSE   : google-services.json ne contient pas le bon package
+SOLUTION :
+  1. Ouvrez google-services.json
+  2. Verifiez que "package_name": "com.diabeto" est present
+  3. Si ce n'est pas le cas, ajoutez l'app Android dans Firebase Console :
+     Project Settings > Ajouter une application > Android
+     Package name : com.diabeto
+  4. Retelecharger google-services.json
+
+
+PROBLEME 7 : Les notifications push n'arrivent pas
+-----------------------------------------------------
+CAUSE   : FCM token non enregistre ou permissions manquantes
+SOLUTION :
+  1. Verifiez dans Logcat : cherchez "FCM" pour voir le token
+  2. Verifiez les permissions de notification de l'app
+     (Parametres Android > Apps > DiaSmart > Notifications)
+  3. Sur Android 13+, l'app doit demander la permission POST_NOTIFICATIONS
+  4. Les emulateurs peuvent ne pas recevoir les notifications
+
+
+================================================================================
+================================================================================
+   ETAPE 10 (OPTIONNEL) : PREPARER LA VERSION DE PRODUCTION
+================================================================================
+================================================================================
+
+Quand tout fonctionne en debug et que vous etes pret a publier :
+
+PARTIE A : CREER UNE KEYSTORE DE PRODUCTION
+----------------------------------------------
+
+1. Ouvrez un terminal (cmd ou PowerShell)
+
+2. Executez cette commande :
+
+   keytool -genkey -v -keystore C:\Users\PC\Desktop\diasmart-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias diasmart
+
+3. Repondez aux questions :
+   - Mot de passe du keystore : (choisissez un mot de passe FORT et NOTEZ-LE)
+   - Prenom et nom : Votre nom
+   - Unite organisationnelle : DiaSmart
+   - Nom de l'organisation : Votre organisation
+   - Ville, Departement, Code pays : Vos infos
+
+4. Un fichier diasmart-release.jks est cree sur votre Bureau
+
+5. !! TRES IMPORTANT !!
+   - SAUVEGARDEZ CE FICHIER dans un endroit sur (USB, cloud prive)
+   - NOTEZ LE MOT DE PASSE dans un gestionnaire de mots de passe
+   - Si vous perdez ce fichier, vous ne pourrez JAMAIS mettre a jour
+     votre app sur le Play Store
+
+
+PARTIE B : AJOUTER LE SHA DE PRODUCTION DANS FIREBASE
+-------------------------------------------------------
+
+1. Obtenez les SHA de la keystore de production :
+
+   keytool -list -v -keystore C:\Users\PC\Desktop\diasmart-release.jks -alias diasmart
+
+2. Entrez le mot de passe de la keystore
+
+3. Copiez le SHA-1 et SHA-256 affiches
+
+4. Allez dans Firebase Console > Project Settings > votre app Android
+
+5. Ajoutez ces DEUX nouvelles empreintes (en plus des empreintes debug)
+
+6. Retelecharger google-services.json et remplacez-le dans le projet
+
+
+PARTIE C : CONFIGURER GRADLE POUR LE RELEASE
+-----------------------------------------------
+
+1. Deplacez la keystore dans le dossier du projet :
+   Copiez diasmart-release.jks dans C:\Users\PC\Desktop\diabetomobile\
+
+2. Ouvrez app/build.gradle.kts
+
+3. Dans le bloc android { ... }, ajoutez AVANT buildTypes :
+
+   signingConfigs {
+       create("release") {
+           storeFile = file("../diasmart-release.jks")
+           storePassword = "votre_mot_de_passe"
+           keyAlias = "diasmart"
+           keyPassword = "votre_mot_de_passe"
+       }
+   }
+
+4. Dans buildTypes, modifiez le release :
+
+   buildTypes {
+       release {
+           isMinifyEnabled = true
+           isShrinkResources = true
+           proguardFiles(
+               getDefaultProguardFile("proguard-android-optimize.txt"),
+               "proguard-rules.pro"
+           )
+           signingConfig = signingConfigs.getByName("release")
+       }
+   }
+
+5. Sauvegardez et synchronisez Gradle
+
+
+PARTIE D : GENERER L'APK DE PRODUCTION
+-----------------------------------------
+
+1. Dans Android Studio :
+   Build > Generate Signed Bundle / APK
+
+2. Selectionnez "APK" puis "Next"
+
+3. Remplissez :
+   - Key store path : ../diasmart-release.jks
+   - Key store password : votre mot de passe
+   - Key alias : diasmart
+   - Key password : votre mot de passe
+
+4. Cliquez "Next"
+
+5. Selectionnez "release" et cochez "V1" et "V2" (signatures)
+
+6. Cliquez "Create"
+
+7. L'APK signe est genere dans :
+   app/build/outputs/apk/release/app-release.apk
+
+OU via le terminal :
+   cd C:\Users\PC\Desktop\diabetomobile
+   gradlew.bat assembleRelease
+
+L'APK sera dans :
+   app\build\outputs\apk\release\app-release.apk
+
+
+================================================================================
+   FIN DU GUIDE
+================================================================================
+
+RESUME DE CE QUE VOUS AVEZ CONFIGURE :
+
+  [x] SHA-1 et SHA-256 dans Firebase Console
+  [x] google-services.json mis a jour
+  [x] Firebase Authentication (Email/Password) active
+  [x] Cloud Firestore cree avec regles de securite
+  [x] Firebase App Check active (Play Integrity + Debug token)
+  [x] Cloud Messaging (FCM) active
+  [x] Cle API Gemini verifiee
+  [x] Index Firestore crees
+  [x] Tests complets effectues
+
+Votre application DiaSmart est maintenant 100% fonctionnelle !
+
+Si vous avez des questions, consultez la documentation officielle :
+  - Firebase : https://firebase.google.com/docs
+  - Gemini AI : https://ai.google.dev/docs
+  - Jetpack Compose : https://developer.android.com/jetpack/compose
+
+================================================================================

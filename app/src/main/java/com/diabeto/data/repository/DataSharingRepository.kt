@@ -1,0 +1,290 @@
+package com.diabeto.data.repository
+
+import com.diabeto.data.model.ConsentStatus
+import com.diabeto.data.model.DataSharingConsent
+import com.diabeto.data.model.UserProfile
+import com.diabeto.data.model.UserRole
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
+import javax.inject.Singleton
+
+/**
+ * Repository pour le partage de données patient-médecin.
+ * Gère le consentement et l'accès aux données partagées.
+ */
+@Singleton
+class DataSharingRepository @Inject constructor(
+    private val firestore: FirebaseFirestore,
+    private val authRepository: AuthRepository
+) {
+    companion object {
+        private const val COLLECTION_SHARING = "data_sharing"
+        private const val COLLECTION_USERS = "users"
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  MÉDECIN : Demander l'accès aux données d'un patient
+    // ═══════════════════════════════════════════════════════════════
+
+    suspend fun requestAccess(patientUid: String): Result<Unit> {
+        val medecinUid = authRepository.currentUserId ?: return Result.failure(Exception("Non connecté"))
+        val medecinProfile = authRepository.getCurrentUserProfile() ?: return Result.failure(Exception("Profil introuvable"))
+        val patientProfile = authRepository.getUserProfile(patientUid) ?: return Result.failure(Exception("Patient introuvable"))
+
+        val consent = DataSharingConsent(
+            patientUid = patientUid,
+            medecinUid = medecinUid,
+            patientNom = patientProfile.nomComplet,
+            medecinNom = medecinProfile.nomComplet,
+            isActive = false,
+            status = ConsentStatus.PENDING,
+            grantedAt = Timestamp.now()
+        )
+
+        return try {
+            firestore.collection(COLLECTION_SHARING)
+                .document(consent.documentId)
+                .set(consent.toMap())
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  PATIENT : Accepter/Refuser une demande d'accès
+    // ═══════════════════════════════════════════════════════════════
+
+    suspend fun acceptRequest(medecinUid: String): Result<Unit> {
+        val patientUid = authRepository.currentUserId ?: return Result.failure(Exception("Non connecté"))
+        val docId = "${patientUid}_${medecinUid}"
+        return try {
+            firestore.collection(COLLECTION_SHARING).document(docId)
+                .update(mapOf(
+                    "status" to ConsentStatus.ACCEPTED.name,
+                    "isActive" to true,
+                    "grantedAt" to Timestamp.now()
+                )).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun rejectRequest(medecinUid: String): Result<Unit> {
+        val patientUid = authRepository.currentUserId ?: return Result.failure(Exception("Non connecté"))
+        val docId = "${patientUid}_${medecinUid}"
+        return try {
+            firestore.collection(COLLECTION_SHARING).document(docId)
+                .update(mapOf(
+                    "status" to ConsentStatus.REJECTED.name,
+                    "isActive" to false,
+                    "revokedAt" to Timestamp.now()
+                )).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // ── Patient : lister les demandes en attente ──
+    suspend fun getPendingRequests(): List<DataSharingConsent> {
+        val patientUid = authRepository.currentUserId ?: return emptyList()
+        return try {
+            val snap = firestore.collection(COLLECTION_SHARING)
+                .whereEqualTo("patientUid", patientUid)
+                .whereEqualTo("status", ConsentStatus.PENDING.name)
+                .get().await()
+            snap.documents.mapNotNull { doc ->
+                @Suppress("UNCHECKED_CAST")
+                doc.data?.let { DataSharingConsent.fromMap(it as Map<String, Any?>) }
+            }
+        } catch (_: Exception) { emptyList() }
+    }
+
+    // ── Patient : accorder le consentement à un médecin (ancien flow) ──
+    suspend fun grantConsent(medecinUid: String): Result<Unit> {
+        val patientUid = authRepository.currentUserId ?: return Result.failure(Exception("Non connecté"))
+        val patientProfile = authRepository.getCurrentUserProfile() ?: return Result.failure(Exception("Profil introuvable"))
+        val medecinProfile = authRepository.getUserProfile(medecinUid) ?: return Result.failure(Exception("Médecin introuvable"))
+
+        val consent = DataSharingConsent(
+            patientUid = patientUid,
+            medecinUid = medecinUid,
+            patientNom = patientProfile.nomComplet,
+            medecinNom = medecinProfile.nomComplet,
+            isActive = true,
+            status = ConsentStatus.ACCEPTED,
+            grantedAt = Timestamp.now()
+        )
+
+        return try {
+            firestore.collection(COLLECTION_SHARING)
+                .document(consent.documentId)
+                .set(consent.toMap()).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // ── Patient : révoquer le consentement ──
+    suspend fun revokeConsent(medecinUid: String): Result<Unit> {
+        val patientUid = authRepository.currentUserId ?: return Result.failure(Exception("Non connecté"))
+        val docId = "${patientUid}_${medecinUid}"
+        return try {
+            firestore.collection(COLLECTION_SHARING).document(docId)
+                .update(mapOf(
+                    "isActive" to false,
+                    "status" to ConsentStatus.REJECTED.name,
+                    "revokedAt" to Timestamp.now()
+                )).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // ── Patient : lister ses consentements ──
+    suspend fun getMyConsents(): List<DataSharingConsent> {
+        val patientUid = authRepository.currentUserId ?: return emptyList()
+        return try {
+            val snap = firestore.collection(COLLECTION_SHARING)
+                .whereEqualTo("patientUid", patientUid)
+                .get().await()
+            snap.documents.mapNotNull { doc ->
+                @Suppress("UNCHECKED_CAST")
+                doc.data?.let { DataSharingConsent.fromMap(it as Map<String, Any?>) }
+            }
+        } catch (_: Exception) { emptyList() }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  MÉDECIN : Lister les patients qui ont accepté
+    // ═══════════════════════════════════════════════════════════════
+
+    suspend fun getSharedPatients(): List<DataSharingConsent> {
+        val medecinUid = authRepository.currentUserId ?: return emptyList()
+        return try {
+            val snap = firestore.collection(COLLECTION_SHARING)
+                .whereEqualTo("medecinUid", medecinUid)
+                .whereEqualTo("isActive", true)
+                .get().await()
+            snap.documents.mapNotNull { doc ->
+                @Suppress("UNCHECKED_CAST")
+                doc.data?.let { DataSharingConsent.fromMap(it as Map<String, Any?>) }
+            }
+        } catch (_: Exception) { emptyList() }
+    }
+
+    // ── Médecin : lister ses demandes en cours (toutes) ──
+    suspend fun getMyRequests(): List<DataSharingConsent> {
+        val medecinUid = authRepository.currentUserId ?: return emptyList()
+        return try {
+            val snap = firestore.collection(COLLECTION_SHARING)
+                .whereEqualTo("medecinUid", medecinUid)
+                .get().await()
+            snap.documents.mapNotNull { doc ->
+                @Suppress("UNCHECKED_CAST")
+                doc.data?.let { DataSharingConsent.fromMap(it as Map<String, Any?>) }
+            }
+        } catch (_: Exception) { emptyList() }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  COMMUN : Lister tous les patients de la plateforme
+    // ═══════════════════════════════════════════════════════════════
+
+    suspend fun getAllPlatformPatients(): List<UserProfile> {
+        return try {
+            val snap = firestore.collection(COLLECTION_USERS)
+                .whereEqualTo("role", UserRole.PATIENT.name)
+                .get().await()
+            snap.documents.mapNotNull { doc ->
+                @Suppress("UNCHECKED_CAST")
+                doc.data?.let { UserProfile.fromMap(it as Map<String, Any?>) }
+            }
+        } catch (_: Exception) { emptyList() }
+    }
+
+    // ── Lister les médecins disponibles ──
+    suspend fun getAvailableMedecins(): List<UserProfile> {
+        return authRepository.getMedecins()
+    }
+
+    // ── Vérifier si un médecin a accès à un patient ──
+    suspend fun hasAccess(patientUid: String, medecinUid: String): Boolean {
+        val docId = "${patientUid}_${medecinUid}"
+        return try {
+            val doc = firestore.collection(COLLECTION_SHARING).document(docId).get().await()
+            if (doc.exists()) {
+                @Suppress("UNCHECKED_CAST")
+                val consent = DataSharingConsent.fromMap(doc.data as Map<String, Any?>)
+                consent.isActive && consent.status == ConsentStatus.ACCEPTED
+            } else false
+        } catch (_: Exception) { false }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  RDV : Créer un RDV pour un patient (médecin → patient)
+    // ═══════════════════════════════════════════════════════════════
+
+    suspend fun createRendezVousForPatient(
+        patientUid: String,
+        titre: String,
+        description: String,
+        dateHeure: String,
+        lieu: String
+    ): Result<Unit> {
+        val medecinUid = authRepository.currentUserId ?: return Result.failure(Exception("Non connecté"))
+        val medecinProfile = authRepository.getCurrentUserProfile() ?: return Result.failure(Exception("Profil introuvable"))
+
+        val rdvData = mapOf(
+            "userId" to patientUid,
+            "medecinUid" to medecinUid,
+            "medecinNom" to medecinProfile.nomComplet,
+            "titre" to titre,
+            "description" to description,
+            "dateHeure" to dateHeure,
+            "lieu" to lieu,
+            "status" to "PLANIFIE",
+            "createdAt" to Timestamp.now(),
+            "createdByMedecin" to true
+        )
+
+        return try {
+            firestore.collection("rendezvous").add(rdvData).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // ── Récupérer les données Firestore d'un patient partagé ──
+    suspend fun getPatientGlucoseData(patientUid: String): List<Map<String, Any?>> {
+        return try {
+            val snap = firestore.collection("glucose")
+                .whereEqualTo("userId", patientUid)
+                .get().await()
+            snap.documents.mapNotNull {
+                @Suppress("UNCHECKED_CAST")
+                it.data as? Map<String, Any?>
+            }
+        } catch (_: Exception) { emptyList() }
+    }
+
+    suspend fun getPatientRepasData(patientUid: String): List<Map<String, Any?>> {
+        return try {
+            val snap = firestore.collection("repas")
+                .whereEqualTo("userId", patientUid)
+                .get().await()
+            snap.documents.mapNotNull {
+                @Suppress("UNCHECKED_CAST")
+                it.data as? Map<String, Any?>
+            }
+        } catch (_: Exception) { emptyList() }
+    }
+}

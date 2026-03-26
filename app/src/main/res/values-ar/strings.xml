@@ -1,0 +1,125 @@
+<resources>
+    <string name="app_name">دياسمارت</string>
+    <string name="app_description">إدارة مرض السكري</string>
+
+    <!-- Navigation -->
+    <string name="nav_dashboard">لوحة التحكم</string>
+    <string name="nav_patients">المرضى</string>
+    <string name="nav_rendezvous">المواعيد</string>
+    <string name="nav_medicaments">الأدوية</string>
+    <string name="nav_glucose">سكر الدم</string>
+
+    <!-- Actions -->
+    <string name="action_add">إضافة</string>
+    <string name="action_edit">تعديل</string>
+    <string name="action_delete">حذف</string>
+    <string name="action_save">حفظ</string>
+    <string name="action_cancel">إلغاء</string>
+    <string name="action_confirm">تأكيد</string>
+    <string name="action_search">بحث</string>
+    <string name="action_filter">تصفية</string>
+
+    <!-- Patient -->
+    <string name="patient_nom">اسم العائلة</string>
+    <string name="patient_prenom">الاسم الأول</string>
+    <string name="patient_date_naissance">تاريخ الميلاد</string>
+    <string name="patient_sexe">الجنس</string>
+    <string name="patient_telephone">الهاتف</string>
+    <string name="patient_email">البريد الإلكتروني</string>
+    <string name="patient_adresse">العنوان</string>
+    <string name="patient_type_diabete">نوع السكري</string>
+    <string name="patient_date_diagnostic">تاريخ التشخيص</string>
+    <string name="patient_notes">ملاحظات</string>
+
+    <!-- Glucose -->
+    <string name="glucose_valeur">القيمة (مجم/ديسيلتر)</string>
+    <string name="glucose_contexte">السياق</string>
+    <string name="glucose_date">التاريخ والوقت</string>
+    <string name="glucose_moyenne">المتوسط</string>
+    <string name="glucose_min_max">الأدنى-الأقصى</string>
+    <string name="glucose_time_in_range">الوقت في النطاق</string>
+    <string name="glucose_target_range">الهدف: 70-180 مجم/ديسيلتر</string>
+
+    <!-- Medication -->
+    <string name="medicament_nom">الاسم</string>
+    <string name="medicament_dosage">الجرعة</string>
+    <string name="medicament_frequence">التكرار</string>
+    <string name="medicament_heure">وقت الجرعة</string>
+    <string name="medicament_date_debut">تاريخ البدء</string>
+    <string name="medicament_date_fin">تاريخ الانتهاء</string>
+    <string name="medicament_rappel">تفعيل التذكيرات</string>
+
+    <!-- Appointments -->
+    <string name="rdv_titre">العنوان</string>
+    <string name="rdv_date">التاريخ</string>
+    <string name="rdv_heure">الوقت</string>
+    <string name="rdv_duree">المدة (دقائق)</string>
+    <string name="rdv_type">النوع</string>
+    <string name="rdv_lieu">المكان</string>
+    <string name="rdv_confirme">مؤكد</string>
+
+    <!-- Messages -->
+    <string name="msg_required_field">حقل مطلوب</string>
+    <string name="msg_patient_saved">تم حفظ المريض بنجاح</string>
+    <string name="msg_patient_deleted">تم حذف المريض</string>
+    <string name="msg_glucose_added">تمت إضافة القراءة</string>
+    <string name="msg_medicament_added">تمت إضافة الدواء</string>
+    <string name="msg_rdv_added">تمت إضافة الموعد</string>
+    <string name="msg_confirm_delete">هل تريد الحذف فعلاً؟</string>
+    <string name="msg_no_data">لا توجد بيانات</string>
+
+    <!-- AI Chatbot -->
+    <string name="chatbot_title">رولي</string>
+    <string name="chatbot_subtitle">مساعد دياسمارت الذكي</string>
+    <string name="chatbot_placeholder">اطرح سؤالك…</string>
+    <string name="chatbot_reset">إعادة تعيين المحادثة</string>
+    <string name="chatbot_analyse_glycemie">تحليل سكر الدم</string>
+    <string name="chatbot_prevision_risques">توقع المخاطر</string>
+    <string name="chatbot_conseils_nutrition">نصائح غذائية</string>
+
+    <!-- Messaging -->
+    <string name="messagerie_title">الرسائل</string>
+    <string name="messagerie_empty">لا توجد محادثات</string>
+    <string name="messagerie_new_conversation">محادثة جديدة</string>
+    <string name="messagerie_choisir_medecin">اختيار طبيب</string>
+    <string name="messagerie_saisir_message">اكتب رسالة…</string>
+    <string name="notif_channel_messages">رسائل دياسمارت</string>
+
+    <!-- Auth -->
+    <string name="auth_login">تسجيل الدخول</string>
+    <string name="auth_register">إنشاء حساب</string>
+    <string name="auth_email">البريد الإلكتروني</string>
+    <string name="auth_password">كلمة المرور</string>
+    <string name="auth_forgot_password">نسيت كلمة المرور؟</string>
+    <string name="auth_role_patient">مريض</string>
+    <string name="auth_role_medecin">طبيب</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_medicaments">تذكيرات الأدوية</string>
+    <string name="notif_channel_rdv">تذكيرات المواعيد</string>
+    <string name="notif_medicament_title">تذكير بالدواء</string>
+    <string name="notif_medicament_text">حان وقت تناول %1$s</string>
+    <string name="notif_rdv_title">موعد قادم</string>
+    <string name="notif_rdv_text">%1$s في %2$s</string>
+
+    <!-- Settings -->
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_theme">المظهر</string>
+    <string name="settings_language">اللغة</string>
+    <string name="settings_notifications">الإشعارات</string>
+
+    <!-- Journal -->
+    <string name="journal_title">دفتر اليوميات</string>
+    <string name="journal_subtitle">المذكرة اليومية</string>
+    <string name="journal_mood">كيف تشعر؟</string>
+    <string name="journal_stress">مستوى التوتر</string>
+    <string name="journal_sleep">جودة النوم</string>
+    <string name="journal_activity">النشاط البدني</string>
+
+    <!-- Pedometer -->
+    <string name="pedometer_title">عداد الخطوات</string>
+    <string name="pedometer_steps">خطوة</string>
+    <string name="pedometer_goal">من الهدف</string>
+    <string name="pedometer_start">بدء التتبع</string>
+    <string name="pedometer_stop">إيقاف</string>
+</resources>

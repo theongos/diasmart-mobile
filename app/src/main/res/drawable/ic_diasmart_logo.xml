@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Dark navy background circle -->
+    <path
+        android:fillColor="#0B1F4D"
+        android:pathData="M60,4 A56,56 0 1,1 60,116 A56,56 0 1,1 60,4 Z"/>
+
+    <!-- Blue filled circle (left-center) -->
+    <path
+        android:fillColor="#2962FF"
+        android:pathData="M46,30 A30,30 0 1,1 46,90 A30,30 0 1,1 46,30 Z"/>
+
+    <!-- White filled circle (right-center) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M74,30 A30,30 0 1,1 74,90 A30,30 0 1,1 74,30 Z"/>
+
+    <!-- Dark navy center circle (creates interlocking D-shape appearance) -->
+    <path
+        android:fillColor="#0B1F4D"
+        android:pathData="M60,42 A18,18 0 1,1 60,78 A18,18 0 1,1 60,42 Z"/>
+
+    <!-- Red blood drop (teardrop shape in center) -->
+    <path
+        android:fillColor="#D32F2F"
+        android:pathData="M60,48 L69,62 A9,9 0 0,1 51,62 Z"/>
+
+</vector>

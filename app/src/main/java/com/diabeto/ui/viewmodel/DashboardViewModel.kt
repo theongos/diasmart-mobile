@@ -1,0 +1,136 @@
+package com.diabeto.ui.viewmodel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.diabeto.data.entity.*
+import com.diabeto.data.model.UserRole
+import com.diabeto.data.repository.*
+import com.diabeto.util.ConnectivityObserver
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import javax.inject.Inject
+
+/**
+ * État du tableau de bord
+ */
+data class DashboardUiState(
+    val totalPatients: Int = 0,
+    val avgGlucose: Double = 0.0,
+    val todayRendezVous: Int = 0,
+    val todayConfirmed: Int = 0,
+    val pendingConfirmations: Int = 0,
+    val upcomingMedicaments: Int = 0,
+    val upcomingRendezVous: List<RendezVousAvecPatient> = emptyList(),
+    val recentPatients: List<PatientEntity> = emptyList(),
+    val isLoading: Boolean = false,
+    val isOnline: Boolean = true,
+    val error: String? = null,
+    val userRole: UserRole = UserRole.PATIENT
+)
+
+@HiltViewModel
+class DashboardViewModel @Inject constructor(
+    private val patientRepository: PatientRepository,
+    private val glucoseRepository: GlucoseRepository,
+    private val rendezVousRepository: RendezVousRepository,
+    private val medicamentRepository: MedicamentRepository,
+    private val authRepository: AuthRepository,
+    private val connectivityObserver: ConnectivityObserver
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(DashboardUiState())
+    val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
+
+    init {
+        loadUserRole()
+        loadDashboardData()
+        observeConnectivity()
+    }
+
+    private fun loadUserRole() {
+        viewModelScope.launch {
+            try {
+                val profile = authRepository.getCurrentUserProfile()
+                profile?.let {
+                    _uiState.update { state -> state.copy(userRole = it.role) }
+                }
+            } catch (_: Exception) {
+                // Par défaut PATIENT
+            }
+        }
+    }
+
+    private fun observeConnectivity() {
+        viewModelScope.launch {
+            connectivityObserver.observe().collect { online ->
+                _uiState.update { it.copy(isOnline = online) }
+            }
+        }
+    }
+
+    fun loadDashboardData() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            
+            try {
+                // Nombre total de patients
+                val patientCount = patientRepository.getPatientCount()
+                
+                // Rendez-vous du jour
+                val todayCount = rendezVousRepository.getCountForDate(LocalDate.now())
+                val confirmedCount = rendezVousRepository.getConfirmedCountForDate(LocalDate.now())
+                val pending = rendezVousRepository.getPendingConfirmations()
+                
+                // Prochains rendez-vous
+                val upcomingRdvs = rendezVousRepository.getUpcomingRendezVous(5)
+                
+                // Médicaments à venir
+                val upcomingMeds = medicamentRepository.getUpcomingMedicaments()
+                
+                // Moyenne glycémie globale
+                val patients = patientRepository.getAllPatientsList()
+                var totalGlucose = 0.0
+                var count = 0
+                patients.take(10).forEach { p ->
+                    val avg = glucoseRepository.getLast24HoursAverage(p.id)
+                    if (avg > 0) {
+                        totalGlucose += avg
+                        count++
+                    }
+                }
+                val avgGlucose = if (count > 0) totalGlucose / count else 0.0
+                
+                _uiState.update {
+                    it.copy(
+                        totalPatients = patientCount,
+                        avgGlucose = avgGlucose,
+                        todayRendezVous = todayCount,
+                        todayConfirmed = confirmedCount,
+                        pendingConfirmations = pending.size,
+                        upcomingMedicaments = upcomingMeds.size,
+                        upcomingRendezVous = upcomingRdvs,
+                        recentPatients = patients.take(5),
+                        isLoading = false
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "Erreur lors du chargement: ${e.message}"
+                    )
+                }
+            }
+        }
+    }
+    
+    fun refresh() {
+        loadDashboardData()
+    }
+    
+    fun clearError() {
+        _uiState.update { it.copy(error = null) }
+    }
+}

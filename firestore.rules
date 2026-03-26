@@ -1,0 +1,157 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================
+    // PROFILS UTILISATEURS
+    // ============================================
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+
+      // Sous-collection repas de l'utilisateur
+      match /repas/{repasId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null && request.auth.uid == userId;
+        allow update, delete: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // ============================================
+    // PATIENTS
+    // ============================================
+    match /patients/{patientId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // ============================================
+    // GLYCEMIE / GLUCOSE
+    // ============================================
+    match /glucose/{docId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // ============================================
+    // CONVERSATIONS (MESSAGERIE PATIENT-MEDECIN)
+    // ============================================
+    match /conversations/{conversationId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+
+      match /messages/{messageId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null;
+      }
+    }
+
+    // ============================================
+    // HISTORIQUE CHATBOT ROLLY (multi-sessions)
+    // ============================================
+    match /rolly_history/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // Anciennes messages (flat)
+      match /messages/{messageId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Nouvelles sessions/conversations
+      match /conversations/{convId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+
+        match /messages/{messageId} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
+      }
+    }
+
+    // ============================================
+    // ACTIVITE PHYSIQUE / PODOMETRE
+    // ============================================
+    match /activite/{docId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null;
+    }
+
+    match /steps/{docId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null;
+    }
+
+    // ============================================
+    // VALIDATIONS ROLLY (MEDECIN-PATIENT-IA)
+    // ============================================
+    match /validations/{validationId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+    }
+
+    // ============================================
+    // MEDICAMENTS
+    // ============================================
+    match /medicaments/{medId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // ============================================
+    // RENDEZ-VOUS
+    // ============================================
+    match /rendezvous/{rdvId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // ============================================
+    // JOURNAL DE BORD
+    // ============================================
+    match /journal/{entryId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // ============================================
+    // REPAS (top-level collection)
+    // ============================================
+    match /repas/{repasId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // ============================================
+    // CONSENTEMENTS / DATA SHARING
+    // ============================================
+    match /consents/{consentId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null;
+    }
+
+    // ============================================
+    // QUOTA (REQUETES IA PAR JOUR)
+    // ============================================
+    match /quota/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ============================================
+    // CONFIG APPLICATION (MISES A JOUR)
+    // ============================================
+    match /app_config/{docId} {
+      allow read: if true;  // Tout le monde peut lire la version
+      allow write: if false; // Seul l'admin Firebase peut ecrire
+    }
+  }
+}

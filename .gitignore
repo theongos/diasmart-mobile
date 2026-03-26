@@ -1,0 +1,63 @@
+# Gradle files
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Android Studio
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+# Keystore files
+*.jks
+*.keystore
+
+# External native build folder generated in Android Studio 2.2 and later
+.externalNativeBuild
+.cxx/
+
+# Google Services (e.g. APIs or Firebase)
+google-services.json
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Android Studio captures folder
+captures/
+
+# IntelliJ
+*.hprof
+
+# Kotlin
+.kotlin/
+
+# Version control
+vcs.xml
+
+# APK files
+*.apk
+*.idsig
+
+# Firebase service accounts / secrets
+firebase-service-account.json
+auth_test.json
+
+# Claude Code local
+.claude/
+memory/
+
+# Gradle wrapper script (Unix)
+gradlew
