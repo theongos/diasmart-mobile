@@ -25,19 +25,27 @@ import javax.inject.Singleton
 
 /**
  * Production-grade call orchestrator.
- * Bridges FirestoreSignaling ↔ WebRTCManager with:
+ * Bridges FirestoreSignaling ↔ WebRTCManager.
  *
- * ─ ICE restart on DISCONNECTED (auto-recovery)
- * ─ Reconnection attempts (up to 3) on FAILED
- * ─ Heartbeat monitoring for dead connections
- * ─ Network change recovery (WiFi↔4G)
- * ─ Call duration timer
- * ─ Proper audio focus management
+ * Critical call flows:
  *
- * Call flow:
- *   CALLER: createPeerConnection → createOffer → Firestore doc (with offer) → listen for answer
- *   CALLEE: detect incoming → acceptCall → createPeerConnection → process offer → createAnswer → send answer
- *   Both: exchange ICE candidates throughout, ICE restart on failure
+ * CALLER (outgoing):
+ *   1. setupWebRTCCallbacks()
+ *   2. createPeerConnection(isVideo)
+ *   3. createOffer → initiateCall(offer) → Firestore doc created
+ *   4. listenToIceCandidates() (caller's candidates are sent as they arrive)
+ *   5. Wait for callee's answer via listenToCall()
+ *   6. setRemoteDescription(answer) → drainPendingIceCandidates()
+ *   7. ICE connects → CONNECTED
+ *
+ * CALLEE (incoming):
+ *   1. Incoming call detected via listenForIncomingCalls() → RINGING
+ *   2. User taps Accept:
+ *      a. setupWebRTCCallbacks()
+ *      b. createPeerConnection(isVideo)
+ *      c. acceptCall() → starts listenToCall() + listenToIceCandidates()
+ *      d. listenToCall fires with offer → setRemoteDescription(offer) → createAnswer → sendAnswer
+ *      e. ICE connects → CONNECTED
  */
 @Singleton
 class CallManager @Inject constructor(
@@ -87,7 +95,7 @@ class CallManager @Inject constructor(
     private var vibrator: Vibrator? = null
 
     private var pendingIceCandidates = mutableListOf<IceCandidate>()
-    private var remoteDescriptionSet = false
+    @Volatile private var remoteDescriptionSet = false
     private var timeoutJob: Job? = null
     private var durationJob: Job? = null
     private var disconnectedJob: Job? = null
@@ -110,7 +118,7 @@ class CallManager @Inject constructor(
         webRTCManager.initialize()
         setupSignalingCallbacks()
         signaling.listenForIncomingCalls()
-        Log.d(TAG, "✅ CallManager initialized, uid=${signaling.currentUid}")
+        Log.d(TAG, "CallManager initialized, uid=${signaling.currentUid}")
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -121,7 +129,7 @@ class CallManager @Inject constructor(
 
         // ── Incoming call (callee side) ──
         signaling.onCallIncoming = { callDoc ->
-            Log.d(TAG, "📞 Incoming call from ${callDoc.callerNom} (${callDoc.callId})")
+            Log.d(TAG, "Incoming call from ${callDoc.callerNom} (${callDoc.callId})")
             _callState.value = CallInfo(
                 callId = callDoc.callId,
                 remoteUid = callDoc.callerUid,
@@ -136,7 +144,7 @@ class CallManager @Inject constructor(
 
         // ── Callee accepted (caller sees this) ──
         signaling.onCallAccepted = { callId ->
-            Log.d(TAG, "✅ Call accepted by callee: $callId")
+            Log.d(TAG, "Call accepted by callee: $callId")
             if (_callState.value.isOutgoing && _callState.value.state == CallState.CALLING) {
                 _callState.value = _callState.value.copy(state = CallState.CONNECTING)
             }
@@ -144,21 +152,23 @@ class CallManager @Inject constructor(
 
         // ── Call ended ──
         signaling.onCallEnded = { callId, reason ->
-            Log.d(TAG, "📴 Call ended: $callId reason=$reason")
+            Log.d(TAG, "Call ended: $callId reason=$reason")
             cleanupCallResources()
         }
 
         // ── Remote SDP offer (callee side) ──
+        // This fires when the callee's listener sees the offer in the call document.
+        // At this point, PeerConnection is already created (in acceptCall).
         signaling.onRemoteOffer = { callId, sdp ->
-            Log.d(TAG, "📩 Remote offer for $callId (${sdp.length} chars)")
+            Log.d(TAG, "Remote offer received for $callId (${sdp.length} chars)")
             val sessionDesc = SessionDescription(SessionDescription.Type.OFFER, sdp)
             webRTCManager.setRemoteDescription(sessionDesc) {
-                Log.d(TAG, "✅ Remote offer set, creating answer...")
+                Log.d(TAG, "Remote offer set successfully, creating answer...")
                 remoteDescriptionSet = true
                 drainPendingIceCandidates()
 
                 webRTCManager.createAnswer { answer ->
-                    Log.d(TAG, "✅ Answer created, sending via Firestore")
+                    Log.d(TAG, "Answer created, sending via Firestore")
                     scope.launch {
                         signaling.sendAnswer(callId, answer.description)
                     }
@@ -168,10 +178,10 @@ class CallManager @Inject constructor(
 
         // ── Remote SDP answer (caller side) ──
         signaling.onRemoteAnswer = { callId, sdp ->
-            Log.d(TAG, "📩 Remote answer for $callId (${sdp.length} chars)")
+            Log.d(TAG, "Remote answer received for $callId (${sdp.length} chars)")
             val sessionDesc = SessionDescription(SessionDescription.Type.ANSWER, sdp)
             webRTCManager.setRemoteDescription(sessionDesc) {
-                Log.d(TAG, "✅ Remote answer set")
+                Log.d(TAG, "Remote answer set successfully")
                 remoteDescriptionSet = true
                 drainPendingIceCandidates()
             }
@@ -181,16 +191,17 @@ class CallManager @Inject constructor(
         signaling.onRemoteIceCandidate = { candidate, sdpMid, sdpMLineIndex ->
             val iceCandidate = IceCandidate(sdpMid, sdpMLineIndex, candidate)
             if (remoteDescriptionSet) {
-                webRTCManager.addIceCandidate(iceCandidate)
+                val added = webRTCManager.addIceCandidate(iceCandidate)
+                Log.d(TAG, "ICE candidate added: $added (sdpMid=$sdpMid)")
             } else {
-                Log.d(TAG, "🧊 Buffering ICE candidate (remote desc not set)")
+                Log.d(TAG, "Buffering ICE candidate (remote desc not set yet) sdpMid=$sdpMid")
                 pendingIceCandidates.add(iceCandidate)
             }
         }
 
         // ── ICE restart offer/answer from remote ──
         signaling.onIceRestartOffer = { callId, sdp ->
-            Log.d(TAG, "🔄 ICE restart offer received")
+            Log.d(TAG, "ICE restart offer received")
             val sessionDesc = SessionDescription(SessionDescription.Type.OFFER, sdp)
             webRTCManager.setRemoteDescription(sessionDesc) {
                 webRTCManager.createAnswer { answer ->
@@ -202,10 +213,10 @@ class CallManager @Inject constructor(
         }
 
         signaling.onIceRestartAnswer = { callId, sdp ->
-            Log.d(TAG, "🔄 ICE restart answer received")
+            Log.d(TAG, "ICE restart answer received")
             val sessionDesc = SessionDescription(SessionDescription.Type.ANSWER, sdp)
             webRTCManager.setRemoteDescription(sessionDesc) {
-                Log.d(TAG, "✅ ICE restart complete")
+                Log.d(TAG, "ICE restart complete")
             }
         }
     }
@@ -216,7 +227,6 @@ class CallManager @Inject constructor(
 
     private fun setupWebRTCCallbacks() {
 
-        // ── ICE candidate generated → send to remote ──
         webRTCManager.onIceCandidate = { candidate ->
             val callId = _callState.value.callId
             if (callId.isNotEmpty()) {
@@ -224,62 +234,50 @@ class CallManager @Inject constructor(
                     signaling.sendIceCandidate(callId, candidate.sdp, candidate.sdpMid, candidate.sdpMLineIndex)
                 }
             } else {
-                Log.w(TAG, "ICE candidate but no callId yet")
+                Log.w(TAG, "ICE candidate generated but no callId yet — dropping")
             }
         }
 
-        // ── Remote video track (Unified Plan onTrack) ──
         webRTCManager.onRemoteVideoTrack = { track ->
-            Log.d(TAG, "🎬 Remote video track received")
+            Log.d(TAG, "Remote video track received")
             _remoteVideoTrack.value = track
         }
 
-        // ── Remote audio track ──
         webRTCManager.onRemoteAudioTrack = { track ->
-            Log.d(TAG, "🔊 Remote audio track received, enabled=${track.enabled()}")
-            track.setEnabled(true) // Ensure audio is enabled
+            Log.d(TAG, "Remote audio track received, enabled=${track.enabled()}")
+            track.setEnabled(true)
         }
 
-        // ── Local video track ──
         webRTCManager.onLocalVideoTrack = { track ->
             _localVideoTrack.value = track
         }
 
-        // ── ICE connection state ──
         webRTCManager.onConnectionStateChange = { state ->
-            Log.d(TAG, "🧊 ICE: $state (callState=${_callState.value.state})")
+            Log.d(TAG, "ICE: $state (callState=${_callState.value.state})")
             handleIceConnectionState(state)
         }
 
-        // ── PeerConnection state (more reliable than ICE state) ──
         webRTCManager.onPeerConnectionStateChange = { state ->
-            Log.d(TAG, "🔌 PeerConnection: $state")
+            Log.d(TAG, "PeerConnection: $state")
             when (state) {
-                PeerConnection.PeerConnectionState.CONNECTED -> {
-                    onCallConnected()
-                }
-                PeerConnection.PeerConnectionState.FAILED -> {
-                    handleConnectionFailed()
-                }
+                PeerConnection.PeerConnectionState.CONNECTED -> onCallConnected()
+                PeerConnection.PeerConnectionState.FAILED -> handleConnectionFailed()
                 else -> {}
             }
         }
 
-        // ── Network change → ICE restart ──
         webRTCManager.onNetworkChanged = {
-            Log.d(TAG, "🌐 Network changed during call")
+            Log.d(TAG, "Network changed during call")
             if (_callState.value.state == CallState.CONNECTED ||
                 _callState.value.state == CallState.RECONNECTING) {
                 performIceRestart()
             }
         }
 
-        // ── Heartbeat timeout → end call ──
         webRTCManager.onHeartbeatTimeout = {
-            Log.e(TAG, "💀 Heartbeat timeout — remote peer unreachable")
+            Log.e(TAG, "Heartbeat timeout — remote peer unreachable")
             if (_callState.value.state == CallState.CONNECTED ||
                 _callState.value.state == CallState.RECONNECTING) {
-                // Try ICE restart first before ending
                 if (iceRestartCount < MAX_ICE_RESTART_ATTEMPTS) {
                     performIceRestart()
                 } else {
@@ -296,7 +294,7 @@ class CallManager @Inject constructor(
     private fun handleIceConnectionState(state: PeerConnection.IceConnectionState) {
         when (state) {
             PeerConnection.IceConnectionState.CHECKING -> {
-                Log.d(TAG, "🔍 ICE checking candidates...")
+                Log.d(TAG, "ICE checking candidates...")
             }
 
             PeerConnection.IceConnectionState.CONNECTED,
@@ -305,9 +303,7 @@ class CallManager @Inject constructor(
             }
 
             PeerConnection.IceConnectionState.DISCONNECTED -> {
-                // DON'T end immediately — network might recover
-                // Start a timer, then try ICE restart
-                Log.w(TAG, "⚠️ ICE DISCONNECTED — starting recovery timer (${DISCONNECTED_TIMEOUT_MS}ms)")
+                Log.w(TAG, "ICE DISCONNECTED — starting recovery timer")
                 if (_callState.value.state == CallState.CONNECTED) {
                     _callState.value = _callState.value.copy(state = CallState.RECONNECTING)
                 }
@@ -315,7 +311,7 @@ class CallManager @Inject constructor(
                 disconnectedJob = scope.launch {
                     delay(DISCONNECTED_TIMEOUT_MS)
                     if (_callState.value.state == CallState.RECONNECTING) {
-                        Log.w(TAG, "⏱️ Disconnected timeout — attempting ICE restart")
+                        Log.w(TAG, "Disconnected timeout — attempting ICE restart")
                         performIceRestart()
                     }
                 }
@@ -334,9 +330,9 @@ class CallManager @Inject constructor(
     }
 
     private fun onCallConnected() {
-        if (_callState.value.state == CallState.CONNECTED) return // Already connected
+        if (_callState.value.state == CallState.CONNECTED) return
 
-        Log.d(TAG, "✅ CALL CONNECTED!")
+        Log.d(TAG, "CALL CONNECTED!")
         disconnectedJob?.cancel()
         iceRestartCount = 0
         _callState.value = _callState.value.copy(state = CallState.CONNECTED)
@@ -348,23 +344,23 @@ class CallManager @Inject constructor(
     }
 
     private fun handleConnectionFailed() {
-        Log.e(TAG, "❌ Connection FAILED (restart attempt ${iceRestartCount + 1}/$MAX_ICE_RESTART_ATTEMPTS)")
+        Log.e(TAG, "Connection FAILED (restart attempt ${iceRestartCount + 1}/$MAX_ICE_RESTART_ATTEMPTS)")
         if (iceRestartCount < MAX_ICE_RESTART_ATTEMPTS) {
             performIceRestart()
         } else {
-            Log.e(TAG, "❌ All ICE restart attempts exhausted — ending call")
+            Log.e(TAG, "All ICE restart attempts exhausted — ending call")
             endCall()
         }
     }
 
     // ═══════════════════════════════════════════════════════════
-    // ICE RESTART (network recovery)
+    // ICE RESTART
     // ═══════════════════════════════════════════════════════════
 
     private fun performIceRestart() {
         iceRestartCount++
         _callState.value = _callState.value.copy(state = CallState.RECONNECTING)
-        Log.d(TAG, "🔄 ICE restart #$iceRestartCount/$MAX_ICE_RESTART_ATTEMPTS")
+        Log.d(TAG, "ICE restart #$iceRestartCount/$MAX_ICE_RESTART_ATTEMPTS")
 
         scope.launch {
             delay(ICE_RESTART_DELAY_MS)
@@ -402,10 +398,10 @@ class CallManager @Inject constructor(
 
     /**
      * Start an outgoing call.
-     * Creates PeerConnection → SDP offer → Firestore doc (with offer) → waits for answer
+     * Flow: setupCallbacks → createPeerConnection → createOffer → Firestore doc → wait for answer
      */
     fun startCall(calleeUid: String, callerNom: String, calleeNom: String, isVideo: Boolean) {
-        Log.d(TAG, "📞 Starting ${if (isVideo) "VIDEO" else "AUDIO"} call to $calleeNom ($calleeUid)")
+        Log.d(TAG, "Starting ${if (isVideo) "VIDEO" else "AUDIO"} call to $calleeNom ($calleeUid)")
 
         _callState.value = CallInfo(
             remoteUid = calleeUid,
@@ -419,15 +415,15 @@ class CallManager @Inject constructor(
         pendingIceCandidates.clear()
         iceRestartCount = 0
 
-        // 1. Setup WebRTC callbacks
+        // 1. Setup WebRTC callbacks FIRST
         setupWebRTCCallbacks()
 
-        // 2. Create PeerConnection (adds local tracks)
+        // 2. Create PeerConnection (adds local audio + video tracks)
         webRTCManager.createPeerConnection(isVideo)
 
-        // 3. Create offer → initiate call with offer in Firestore
+        // 3. Create offer → initiateCall with offer in Firestore
         webRTCManager.createOffer { sdp ->
-            Log.d(TAG, "✅ Offer created, initiating Firestore call")
+            Log.d(TAG, "Offer created, initiating Firestore call")
             scope.launch {
                 try {
                     val callId = signaling.initiateCall(
@@ -438,21 +434,20 @@ class CallManager @Inject constructor(
                         offer = sdp.description
                     )
                     _callState.value = _callState.value.copy(callId = callId)
-                    Log.d(TAG, "✅ Call created: $callId")
+                    Log.d(TAG, "Call created: $callId — waiting for answer...")
 
-                    // Listen for ICE candidates from remote
-                    signaling.listenToIceCandidates(callId)
+                    // Note: ICE candidates listener already started in initiateCall()
 
-                    // Timeout
+                    // Timeout for unanswered calls
                     timeoutJob = scope.launch {
                         delay(CALL_TIMEOUT_MS)
                         if (_callState.value.state == CallState.CALLING) {
-                            Log.w(TAG, "⏱️ Call timeout — no answer after ${CALL_TIMEOUT_MS / 1000}s")
+                            Log.w(TAG, "Call timeout — no answer after ${CALL_TIMEOUT_MS / 1000}s")
                             endCall()
                         }
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "❌ Failed to initiate call", e)
+                    Log.e(TAG, "Failed to initiate call", e)
                     cleanupCallResources()
                 }
             }
@@ -464,11 +459,14 @@ class CallManager @Inject constructor(
 
     /**
      * Accept an incoming call (callee side).
-     * Creates PeerConnection → signals acceptance → processes offer → creates answer
+     * Flow: setupCallbacks → createPeerConnection → acceptCall → offer arrives → answer created
+     *
+     * CRITICAL: We setup WebRTC and create PeerConnection BEFORE calling signaling.acceptCall().
+     * This ensures the PeerConnection is ready when the offer is processed.
      */
     fun acceptCall() {
         val call = _callState.value
-        Log.d(TAG, "✅ Accepting call ${call.callId}")
+        Log.d(TAG, "Accepting call ${call.callId}")
 
         stopRingtone()
         remoteDescriptionSet = false
@@ -476,24 +474,31 @@ class CallManager @Inject constructor(
         iceRestartCount = 0
         _callState.value = call.copy(state = CallState.CONNECTING)
 
-        // 1. Setup WebRTC
+        // 1. Setup WebRTC callbacks FIRST
         setupWebRTCCallbacks()
+
+        // 2. Create PeerConnection (adds local audio + video tracks)
         webRTCManager.createPeerConnection(call.isVideo)
 
-        // 2. Signal acceptance → listenToCall will fire → offer will be processed
+        // 3. Accept call — this starts Firestore listeners which will deliver the offer
+        // The offer callback (onRemoteOffer) will fire, set remote desc, and create answer
         scope.launch {
             try {
                 signaling.acceptCall(call.callId)
+                Log.d(TAG, "Call acceptance signaled — waiting for offer delivery...")
             } catch (e: Exception) {
-                Log.e(TAG, "❌ Failed to accept call", e)
+                Log.e(TAG, "Failed to accept call", e)
                 cleanupCallResources()
             }
         }
+
+        // Request audio focus
+        requestAudioFocus()
     }
 
     fun rejectCall() {
         val call = _callState.value
-        Log.d(TAG, "❌ Rejecting call ${call.callId}")
+        Log.d(TAG, "Rejecting call ${call.callId}")
         stopRingtone()
         scope.launch { signaling.rejectCall(call.callId) }
         _callState.value = CallInfo()
@@ -501,7 +506,7 @@ class CallManager @Inject constructor(
 
     fun endCall() {
         val call = _callState.value
-        Log.d(TAG, "📴 Ending call ${call.callId}")
+        Log.d(TAG, "Ending call ${call.callId}")
         if (call.callId.isNotEmpty()) {
             scope.launch { signaling.endCall(call.callId) }
         }
@@ -543,14 +548,17 @@ class CallManager @Inject constructor(
 
     private fun drainPendingIceCandidates() {
         if (pendingIceCandidates.isNotEmpty()) {
-            Log.d(TAG, "🧊 Draining ${pendingIceCandidates.size} buffered ICE candidates")
-            pendingIceCandidates.forEach { webRTCManager.addIceCandidate(it) }
+            Log.d(TAG, "Draining ${pendingIceCandidates.size} buffered ICE candidates")
+            pendingIceCandidates.forEach {
+                val added = webRTCManager.addIceCandidate(it)
+                Log.d(TAG, "  Buffered ICE added: $added (sdpMid=${it.sdpMid})")
+            }
             pendingIceCandidates.clear()
         }
     }
 
     private fun cleanupCallResources() {
-        Log.d(TAG, "🧹 Cleaning up call resources")
+        Log.d(TAG, "Cleaning up call resources")
         timeoutJob?.cancel()
         timeoutJob = null
         durationJob?.cancel()
@@ -561,6 +569,7 @@ class CallManager @Inject constructor(
         stopRingtone()
         releaseAudioFocus()
         webRTCManager.dispose()
+        signaling.cleanup()
         _localVideoTrack.value = null
         _remoteVideoTrack.value = null
         _callState.value = CallInfo()
@@ -595,10 +604,9 @@ class CallManager @Inject constructor(
             .build()
         audioManager?.requestAudioFocus(audioFocusRequest!!)
         audioManager?.mode = AudioManager.MODE_IN_COMMUNICATION
-        // Ensure audio routing is correct
         @Suppress("DEPRECATION")
-        audioManager?.isSpeakerphoneOn = _callState.value.isVideo // Speaker on for video, ear for audio
-        Log.d(TAG, "🔊 Audio focus acquired, mode=IN_COMMUNICATION, speaker=${_callState.value.isVideo}")
+        audioManager?.isSpeakerphoneOn = _callState.value.isVideo
+        Log.d(TAG, "Audio focus acquired, mode=IN_COMMUNICATION, speaker=${_callState.value.isVideo}")
     }
 
     private fun releaseAudioFocus() {

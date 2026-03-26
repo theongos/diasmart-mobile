@@ -9,17 +9,18 @@ import kotlinx.coroutines.tasks.await
 
 /**
  * Production-grade Firestore-based signaling for WebRTC.
- * No external server needed — uses Firestore real-time listeners.
  *
  * Collection structure:
- *   calls/{callId} → { callerUid, calleeUid, callerNom, calleeNom, type, status, offer, answer,
- *                       iceRestartOffer, iceRestartAnswer }
+ *   calls/{callId} → { callerUid, calleeUid, callerNom, calleeNom, type, status, offer, answer }
  *   calls/{callId}/iceCandidates/{id} → { candidate, sdpMid, sdpMLineIndex, fromUid }
  *
  * Status flow: calling → accepted → connected → ended
  *
- * ICE restart: uses separate fields (iceRestartOffer/iceRestartAnswer) so they don't
- * interfere with the initial offer/answer and can be triggered multiple times.
+ * Key fixes over previous version:
+ * ─ Offer is always available when callee processes it (no race condition)
+ * ─ ICE candidates are listened IMMEDIATELY after call creation (both sides)
+ * ─ FCM push notification sent via Cloud Function trigger on call creation
+ * ─ ICE restart uses versioned fields to support multiple restarts
  */
 class FirestoreSignaling {
 
@@ -68,19 +69,19 @@ class FirestoreSignaling {
     fun listenForIncomingCalls() {
         val uid = currentUid
         if (uid.isEmpty()) {
-            Log.w(TAG, "⚠️ Cannot listen — no current user")
+            Log.w(TAG, "Cannot listen — no current user")
             return
         }
 
         incomingCallListener?.remove()
-        Log.d(TAG, "👂 Listening for incoming calls (uid=$uid)")
+        Log.d(TAG, "Listening for incoming calls (uid=$uid)")
 
         incomingCallListener = db.collection(CALLS_COLLECTION)
             .whereEqualTo("calleeUid", uid)
             .whereEqualTo("status", "calling")
             .addSnapshotListener { snapshots, error ->
                 if (error != null) {
-                    Log.e(TAG, "❌ Incoming call listen error", error)
+                    Log.e(TAG, "Incoming call listen error", error)
                     return@addSnapshotListener
                 }
                 snapshots?.documentChanges?.forEach { change ->
@@ -96,7 +97,7 @@ class FirestoreSignaling {
                             status = doc.getString("status") ?: "calling",
                             offer = doc.getString("offer")
                         )
-                        Log.d(TAG, "📞 Incoming: ${callDoc.callId} from ${callDoc.callerNom} hasOffer=${callDoc.offer != null}")
+                        Log.d(TAG, "Incoming: ${callDoc.callId} from ${callDoc.callerNom} hasOffer=${callDoc.offer != null}")
                         onCallIncoming?.invoke(callDoc)
                     }
                 }
@@ -107,6 +108,10 @@ class FirestoreSignaling {
     // CALL LIFECYCLE
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * Create a new call document with the SDP offer already included.
+     * The callee will find the offer immediately when they read the document.
+     */
     suspend fun initiateCall(
         calleeUid: String,
         callerNom: String,
@@ -127,27 +132,43 @@ class FirestoreSignaling {
 
         val docRef = db.collection(CALLS_COLLECTION).add(callDoc).await()
         val callId = docRef.id
-        Log.d(TAG, "✅ Call created: $callId (with offer)")
+        Log.d(TAG, "Call created: $callId (with offer)")
 
+        // Start listening for status/answer changes AND ICE candidates immediately
         listenToCall(callId)
+        listenToIceCandidates(callId)
         return callId
     }
 
+    /**
+     * Callee accepts the call:
+     * 1. Start listening to the call document FIRST (to get the offer)
+     * 2. Start listening for ICE candidates
+     * 3. Update status to "accepted"
+     *
+     * The order matters: we must be listening BEFORE we update status,
+     * so we don't miss the offer that's already in the document.
+     */
     suspend fun acceptCall(callId: String) {
+        // Step 1: Start listening BEFORE updating status
+        listenToCall(callId)
+        listenToIceCandidates(callId)
+
+        // Step 2: Small delay to ensure listeners are attached
+        delay(100)
+
+        // Step 3: Update status — this triggers the caller's listener
         db.collection(CALLS_COLLECTION).document(callId)
             .update("status", "accepted")
             .await()
-        Log.d(TAG, "✅ Call accepted: $callId")
-
-        listenToCall(callId)
-        listenToIceCandidates(callId)
+        Log.d(TAG, "Call accepted: $callId")
     }
 
     suspend fun sendAnswer(callId: String, sdp: String) {
         db.collection(CALLS_COLLECTION).document(callId)
             .update("answer", sdp, "status", "connected")
             .await()
-        Log.d(TAG, "✅ Answer sent: $callId → status=connected")
+        Log.d(TAG, "Answer sent: $callId → status=connected")
     }
 
     suspend fun rejectCall(callId: String) {
@@ -191,7 +212,7 @@ class FirestoreSignaling {
     fun listenToIceCandidates(callId: String) {
         if (callId.isEmpty()) return
         iceListener?.remove()
-        Log.d(TAG, "🧊 Listening for ICE candidates: $callId")
+        Log.d(TAG, "Listening for ICE candidates: $callId")
 
         iceListener = db.collection(CALLS_COLLECTION).document(callId)
             .collection(ICE_COLLECTION)
@@ -208,6 +229,7 @@ class FirestoreSignaling {
                             val candidate = doc.getString("candidate") ?: return@forEach
                             val sdpMid = doc.getString("sdpMid") ?: return@forEach
                             val sdpMLineIndex = doc.getLong("sdpMLineIndex")?.toInt() ?: return@forEach
+                            Log.d(TAG, "ICE from remote: sdpMid=$sdpMid")
                             onRemoteIceCandidate?.invoke(candidate, sdpMid, sdpMLineIndex)
                         }
                     }
@@ -216,12 +238,9 @@ class FirestoreSignaling {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // ICE RESTART (network recovery without full reconnection)
+    // ICE RESTART
     // ═══════════════════════════════════════════════════════════
 
-    /**
-     * Send ICE restart offer. Uses a versioned field to handle multiple restarts.
-     */
     suspend fun sendIceRestartOffer(callId: String, sdp: String) {
         val restartId = System.currentTimeMillis().toString()
         try {
@@ -232,21 +251,18 @@ class FirestoreSignaling {
                     "iceRestartFromUid", currentUid
                 )
                 .await()
-            Log.d(TAG, "🔄 ICE restart offer sent (id=$restartId)")
+            Log.d(TAG, "ICE restart offer sent (id=$restartId)")
         } catch (e: Exception) {
             Log.e(TAG, "ICE restart offer error", e)
         }
     }
 
-    /**
-     * Send ICE restart answer.
-     */
     suspend fun sendIceRestartAnswer(callId: String, sdp: String) {
         try {
             db.collection(CALLS_COLLECTION).document(callId)
                 .update("iceRestartAnswer", sdp)
                 .await()
-            Log.d(TAG, "🔄 ICE restart answer sent")
+            Log.d(TAG, "ICE restart answer sent")
         } catch (e: Exception) {
             Log.e(TAG, "ICE restart answer error", e)
         }
@@ -284,7 +300,16 @@ class FirestoreSignaling {
                 val iceRestartId = snapshot.getString("iceRestartId")
                 val iceRestartFromUid = snapshot.getString("iceRestartFromUid")
 
-                Log.d(TAG, "📄 Doc update: status=$status hasOffer=${offer != null} hasAnswer=${answer != null} isCallee=$isCallee")
+                Log.d(TAG, "Doc update: status=$status hasOffer=${offer != null} hasAnswer=${answer != null} isCallee=$isCallee offerProcessed=$offerProcessed answerProcessed=$answerProcessed")
+
+                // ── CRITICAL: Process offer for callee FIRST, before status handling ──
+                // The offer is in the document from the start (set during initiateCall).
+                // We process it as soon as we see it, regardless of status.
+                if (!offerProcessed && offer != null && isCallee) {
+                    offerProcessed = true
+                    Log.d(TAG, "Processing offer for callee (status=$status)")
+                    onRemoteOffer?.invoke(callId, offer)
+                }
 
                 // ── Status handling ──
                 when (status) {
@@ -295,9 +320,10 @@ class FirestoreSignaling {
                         }
                     }
                     "connected" -> {
+                        // Process answer for caller
                         if (!answerProcessed && answer != null && !isCallee) {
                             answerProcessed = true
-                            Log.d(TAG, "📩 Processing answer for caller")
+                            Log.d(TAG, "Processing answer for caller")
                             onRemoteAnswer?.invoke(callId, answer)
                         }
                     }
@@ -309,29 +335,19 @@ class FirestoreSignaling {
                     }
                 }
 
-                // ── Initial offer for callee (only once) ──
-                if (!offerProcessed && offer != null && isCallee &&
-                    (status == "accepted" || status == "calling")) {
-                    offerProcessed = true
-                    Log.d(TAG, "📩 Processing offer for callee")
-                    onRemoteOffer?.invoke(callId, offer)
-                }
-
                 // ── ICE restart handling ──
-                // Only process if the restart is from the OTHER peer and is a new restart
                 if (iceRestartOffer != null && iceRestartId != null &&
                     iceRestartFromUid != currentUid && iceRestartId != lastIceRestartId) {
                     lastIceRestartId = iceRestartId
                     lastIceRestartAnswerProcessed = false
-                    Log.d(TAG, "🔄 Processing ICE restart offer (id=$iceRestartId)")
+                    Log.d(TAG, "Processing ICE restart offer (id=$iceRestartId)")
                     onIceRestartOffer?.invoke(callId, iceRestartOffer)
                 }
 
-                // Process ICE restart answer (for the peer who initiated the restart)
                 if (iceRestartAnswer != null && iceRestartFromUid == currentUid &&
                     !lastIceRestartAnswerProcessed) {
                     lastIceRestartAnswerProcessed = true
-                    Log.d(TAG, "🔄 Processing ICE restart answer")
+                    Log.d(TAG, "Processing ICE restart answer")
                     onIceRestartAnswer?.invoke(callId, iceRestartAnswer)
                 }
             }

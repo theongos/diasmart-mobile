@@ -49,25 +49,25 @@ class WebRTCManager @Inject constructor(
                 .createIceServer(),
 
             // TURN - UDP (fastest, works in most cases)
-            PeerConnection.IceServer.builder("turn:a]relay.metered.ca:80?transport=udp")
+            PeerConnection.IceServer.builder("turn:a.relay.metered.ca:80?transport=udp")
                 .setUsername("83eebabf8b4cce9d5dbcb649")
                 .setPassword("2D7JvfkOQtBdYW3R")
                 .createIceServer(),
 
             // TURN - TCP (firewall bypass when UDP is blocked)
-            PeerConnection.IceServer.builder("turn:a]relay.metered.ca:80?transport=tcp")
+            PeerConnection.IceServer.builder("turn:a.relay.metered.ca:80?transport=tcp")
                 .setUsername("83eebabf8b4cce9d5dbcb649")
                 .setPassword("2D7JvfkOQtBdYW3R")
                 .createIceServer(),
 
             // TURN - TLS on 443 (maximum firewall bypass — looks like HTTPS traffic)
-            PeerConnection.IceServer.builder("turn:a]relay.metered.ca:443?transport=tcp")
+            PeerConnection.IceServer.builder("turn:a.relay.metered.ca:443?transport=tcp")
                 .setUsername("83eebabf8b4cce9d5dbcb649")
                 .setPassword("2D7JvfkOQtBdYW3R")
                 .createIceServer(),
 
             // TURNS - secure relay (last resort, works through most corporate firewalls)
-            PeerConnection.IceServer.builder("turns:a]relay.metered.ca:443?transport=tcp")
+            PeerConnection.IceServer.builder("turns:a.relay.metered.ca:443?transport=tcp")
                 .setUsername("83eebabf8b4cce9d5dbcb649")
                 .setPassword("2D7JvfkOQtBdYW3R")
                 .createIceServer(),

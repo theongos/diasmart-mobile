@@ -70,3 +70,7 @@ website/public/DiaSmart.bin
 website/DiaSmart.apk
 website/nul
 website/.firebaserc
+
+# Node modules
+node_modules/
+functions/node_modules/
