@@ -81,6 +81,17 @@ val CardInsulin = Color(0xFFFFF3D6)        // Doré pâle
 val CardActivity = Color(0xFFD6EFFF)       // Bleu ciel
 val CardNutrition = Color(0xFFFFEBCC)      // Pêche
 
+// Rolly card (dashboard)
+val RollyCardColor = Color(0xFF6771E4)
+
+// Cartes de fonctionnalités — couleurs vives pour le mode sombre
+val CardGlucoseDark = Color(0xFF3D3A8C)         // Lavande profond
+val CardMedicationDark = Color(0xFF8C2E4A)      // Rose profond
+val CardAppointmentDark = Color(0xFF1A6B5A)     // Menthe profond
+val CardInsulinDark = Color(0xFF8C7A2E)         // Doré profond
+val CardActivityDark = Color(0xFF1A5A8C)        // Bleu profond
+val CardNutritionDark = Color(0xFF8C5A1A)       // Pêche profond
+
 // Navigation bar
 val NavBarBackground = Color(0xFFFFFFFF)
 val NavBarSelected = Color(0xFF5B4CFF)

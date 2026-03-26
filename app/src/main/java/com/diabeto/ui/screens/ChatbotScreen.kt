@@ -15,6 +15,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -65,13 +66,26 @@ fun ChatbotScreen(
         }
     }
 
+    val isDarkTheme = isSystemInDarkTheme()
+    // Theme-aware colors: light mode = clean white, dark mode = keep current dark style
+    val chatBg = if (isDarkTheme) Color(0xFF0D0D1A) else Background
+    val chatTopBar = if (isDarkTheme) OnBackground else RollyCardColor
+    val chatChipBg = if (isDarkTheme) Color(0xFF141428) else SurfaceVariant
+    val chatInputBg = if (isDarkTheme) Color(0xFF141428) else Surface
+    val chatInputBorder = if (isDarkTheme) Color.White.copy(alpha = 0.15f) else Outline
+    val chatTopBarText = Color.White  // Always white on indigo/dark bars
+    val chatSuggestionBg = if (isDarkTheme) Color(0xFF1E1E30) else PrimaryContainer.copy(alpha = 0.5f)
+    val chatSuggestionBorder = if (isDarkTheme) Color.White.copy(alpha = 0.1f) else Outline
+    val chatSuggestionText = if (isDarkTheme) Color.White.copy(alpha = 0.8f) else TextPrimary
+    val chatHistoryText = if (isDarkTheme) Color.White.copy(alpha = 0.5f) else TextSecondary
+
     Box(modifier = Modifier.fillMaxSize()) {
     Scaffold(
         topBar = {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shadowElevation = 2.dp,
-                color = OnBackground
+                color = chatTopBar
             ) {
                 Row(
                     modifier = Modifier
@@ -81,11 +95,11 @@ fun ChatbotScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Retour", tint = Color.White)
+                        Icon(Icons.Default.ArrowBack, "Retour", tint = chatTopBarText)
                     }
                     // Hamburger menu for sessions
                     IconButton(onClick = { viewModel.toggleSessionDrawer() }) {
-                        Icon(Icons.Default.Menu, "Discussions", tint = Color.White.copy(alpha = 0.8f))
+                        Icon(Icons.Default.Menu, "Discussions", tint = chatTopBarText.copy(alpha = 0.8f))
                     }
                     RollyIcon(size = 34.dp, showBackground = true)
                     Spacer(modifier = Modifier.width(10.dp))
@@ -94,25 +108,25 @@ fun ChatbotScreen(
                             "ROLLY",
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp,
-                            color = Color.White
+                            color = chatTopBarText
                         )
                         Text(
                             uiState.currentSessionTitle,
                             fontSize = 11.sp,
-                            color = Color.White.copy(alpha = 0.6f),
+                            color = chatTopBarText.copy(alpha = 0.6f),
                             maxLines = 1
                         )
                     }
                     // New session button
                     IconButton(onClick = { viewModel.createNewSession() }) {
-                        Icon(Icons.Default.Add, "Nouvelle discussion", tint = Primary)
+                        Icon(Icons.Default.Add, "Nouvelle discussion", tint = if (isDarkTheme) Primary else Color.White)
                     }
                     // Badge quota
                     Surface(
                         shape = RoundedCornerShape(16.dp),
                         color = if (uiState.quotaStatus.remaining <= 2)
                             Color(0xFFFF5252).copy(alpha = 0.2f)
-                        else Primary.copy(alpha = 0.15f)
+                        else Color.White.copy(alpha = 0.2f)
                     ) {
                         Text(
                             "${uiState.quotaStatus.remaining}/${uiState.quotaStatus.limit}",
@@ -120,21 +134,21 @@ fun ChatbotScreen(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = if (uiState.quotaStatus.remaining <= 2)
-                                Color(0xFFFF5252) else Primary
+                                Color(0xFFFF5252) else chatTopBarText
                         )
                     }
                     // Menu options
                     Box {
                         var showMenu by remember { mutableStateOf(false) }
                         IconButton(onClick = { showMenu = true }) {
-                            Icon(Icons.Default.MoreVert, "Options", tint = Color.White.copy(alpha = 0.7f))
+                            Icon(Icons.Default.MoreVert, "Options", tint = chatTopBarText.copy(alpha = 0.7f))
                         }
                         DropdownMenu(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false }
                         ) {
                             DropdownMenuItem(
-                                text = { Text("🗑️ Effacer tout l'historique") },
+                                text = { Text("Effacer tout l'historique") },
                                 onClick = {
                                     viewModel.effacerHistorique()
                                     showMenu = false
@@ -146,7 +160,7 @@ fun ChatbotScreen(
             }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = Color(0xFF0D0D1A)
+        containerColor = chatBg
     ) { padding ->
         Column(
             modifier = Modifier
@@ -158,7 +172,7 @@ fun ChatbotScreen(
                 LazyRow(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFF141428))
+                        .background(chatChipBg)
                         .padding(horizontal = 12.dp, vertical = 10.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -186,11 +200,11 @@ fun ChatbotScreen(
                 }
             }
 
-            // Dialog résultat analyse rapide - style Gemini
+            // Dialog résultat analyse rapide
             if (uiState.showAnalyse && uiState.analyseRapide != null) {
                 AlertDialog(
                     onDismissRequest = viewModel::dismissAnalyse,
-                    containerColor = Color(0xFF1E1E30),
+                    containerColor = Color.White,
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             RollyIcon(size = 28.dp, showBackground = true)
@@ -198,7 +212,7 @@ fun ChatbotScreen(
                             Text(
                                 "Analyse ROLLY",
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = TextPrimary
                             )
                         }
                     },
@@ -207,7 +221,7 @@ fun ChatbotScreen(
                             item {
                                 RichMarkdownText(
                                     text = uiState.analyseRapide ?: "",
-                                    textColor = Color.White.copy(alpha = 0.9f)
+                                    textColor = TextPrimary
                                 )
                             }
                         }
@@ -219,7 +233,7 @@ fun ChatbotScreen(
                                 containerColor = Primary
                             ),
                             shape = RoundedCornerShape(20.dp)
-                        ) { Text("Fermer", color = Color(0xFF0D0D1A)) }
+                        ) { Text("Fermer", color = Color.White) }
                     }
                 )
             }
@@ -228,7 +242,7 @@ fun ChatbotScreen(
             if (uiState.showValidationDialog && uiState.availableDoctors.isNotEmpty()) {
                 AlertDialog(
                     onDismissRequest = viewModel::dismissValidation,
-                    containerColor = Color(0xFF1E1E30),
+                    containerColor = Color.White,
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             RollyIcon(size = 28.dp, showBackground = true)
@@ -237,7 +251,7 @@ fun ChatbotScreen(
                                 Text(
                                     "Validation médicale",
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    color = TextPrimary
                                 )
                                 Text(
                                     "Collaboration IA-Médecin",
@@ -252,7 +266,7 @@ fun ChatbotScreen(
                             Text(
                                 "ROLLY recommande de faire valider cette réponse par votre médecin pour une meilleure prise en charge.",
                                 fontSize = 13.sp,
-                                color = Color.White.copy(alpha = 0.7f),
+                                color = TextSecondary,
                                 lineHeight = 19.sp
                             )
                             Spacer(Modifier.height(16.dp))
@@ -268,9 +282,9 @@ fun ChatbotScreen(
                                     Surface(
                                         onClick = { viewModel.submitForValidation(medecin) },
                                         shape = RoundedCornerShape(12.dp),
-                                        color = Color(0xFF141428),
+                                        color = SurfaceVariant,
                                         border = androidx.compose.foundation.BorderStroke(
-                                            1.dp, Color.White.copy(alpha = 0.1f)
+                                            1.dp, Outline
                                         ),
                                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
                                     ) {
@@ -296,13 +310,13 @@ fun ChatbotScreen(
                                                 Text(
                                                     "Dr. ${medecin.nomComplet}",
                                                     fontWeight = FontWeight.SemiBold,
-                                                    color = Color.White,
+                                                    color = TextPrimary,
                                                     fontSize = 14.sp
                                                 )
                                                 Text(
                                                     medecin.email,
                                                     fontSize = 12.sp,
-                                                    color = Color.White.copy(alpha = 0.5f)
+                                                    color = TextSecondary
                                                 )
                                             }
                                         }
@@ -340,7 +354,7 @@ fun ChatbotScreen(
                         Text(
                             "Chargement de l'historique...",
                             fontSize = 13.sp,
-                            color = Color.White.copy(alpha = 0.5f)
+                            color = chatHistoryText
                         )
                     }
                 }
@@ -379,7 +393,7 @@ fun ChatbotScreen(
                             Text(
                                 "Suggestions",
                                 style = MaterialTheme.typography.labelLarge,
-                                color = Color.White.copy(alpha = 0.5f),
+                                color = chatHistoryText,
                                 modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
                             )
                             viewModel.suggestionsRapides.forEach { suggestion ->
@@ -389,9 +403,9 @@ fun ChatbotScreen(
                                         viewModel.envoyerMessage()
                                     },
                                     shape = RoundedCornerShape(16.dp),
-                                    color = Color(0xFF1E1E30),
+                                    color = chatSuggestionBg,
                                     border = androidx.compose.foundation.BorderStroke(
-                                        1.dp, Color.White.copy(alpha = 0.1f)
+                                        1.dp, chatSuggestionBorder
                                     ),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
@@ -399,7 +413,7 @@ fun ChatbotScreen(
                                         suggestion,
                                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                                         fontSize = 13.sp,
-                                        color = Color.White.copy(alpha = 0.8f)
+                                        color = chatSuggestionText
                                     )
                                 }
                             }
@@ -442,9 +456,9 @@ fun ChatbotScreen(
                 }
             }
 
-            // Zone de saisie style Gemini
+            // Zone de saisie
             Surface(
-                color = OnBackground,
+                color = if (isDarkTheme) OnBackground else Surface,
                 shadowElevation = 8.dp
             ) {
                 Row(
@@ -462,7 +476,7 @@ fun ChatbotScreen(
                             Text(
                                 "Demandez à ROLLY...",
                                 fontSize = 14.sp,
-                                color = Color.White.copy(alpha = 0.35f)
+                                color = if (isDarkTheme) Color.White.copy(alpha = 0.35f) else TextTertiary
                             )
                         },
                         modifier = Modifier.weight(1f),
@@ -472,11 +486,11 @@ fun ChatbotScreen(
                         shape = RoundedCornerShape(24.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Primary,
-                            unfocusedBorderColor = Color.White.copy(alpha = 0.15f),
-                            focusedContainerColor = Color(0xFF141428),
-                            unfocusedContainerColor = Color(0xFF141428),
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
+                            unfocusedBorderColor = chatInputBorder,
+                            focusedContainerColor = chatInputBg,
+                            unfocusedContainerColor = chatInputBg,
+                            focusedTextColor = if (isDarkTheme) Color.White else TextPrimary,
+                            unfocusedTextColor = if (isDarkTheme) Color.White else TextPrimary,
                             cursorColor = Primary
                         )
                     )
@@ -487,7 +501,7 @@ fun ChatbotScreen(
                         containerColor = when {
                             uiState.quotaStatus.isExceeded -> Color(0xFFFF5252).copy(alpha = 0.4f)
                             uiState.inputText.isNotBlank() -> Primary
-                            else -> Color.White.copy(alpha = 0.15f)
+                            else -> if (isDarkTheme) Color.White.copy(alpha = 0.15f) else SurfaceVariant
                         },
                         elevation = FloatingActionButtonDefaults.elevation(0.dp)
                     ) {
@@ -501,8 +515,8 @@ fun ChatbotScreen(
                             Icon(
                                 Icons.Default.Send,
                                 "Envoyer",
-                                tint = if (uiState.inputText.isNotBlank()) Color(0xFF0D0D1A)
-                                       else Color.White.copy(alpha = 0.5f)
+                                tint = if (uiState.inputText.isNotBlank()) Color.White
+                                       else if (isDarkTheme) Color.White.copy(alpha = 0.5f) else TextTertiary
                             )
                         }
                     }
@@ -532,6 +546,7 @@ fun ChatbotScreen(
 @Composable
 private fun RollyMessageBubble(message: ChatbotMessage) {
     val isUser = message.estUtilisateur
+    val isDark = isSystemInDarkTheme()
 
     if (isUser) {
         // Message utilisateur - bulle droite
@@ -542,13 +557,13 @@ private fun RollyMessageBubble(message: ChatbotMessage) {
         ) {
             Surface(
                 shape = RoundedCornerShape(20.dp, 6.dp, 20.dp, 20.dp),
-                color = Primary.copy(alpha = 0.15f),
+                color = if (isDark) Primary.copy(alpha = 0.15f) else RollyCardColor,
                 modifier = Modifier.widthIn(max = 300.dp)
             ) {
                 Text(
                     text = message.contenu,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                    color = PrimaryContainer,
+                    color = if (isDark) PrimaryContainer else Color.White,
                     fontSize = 14.sp,
                     lineHeight = 21.sp
                 )
@@ -556,7 +571,7 @@ private fun RollyMessageBubble(message: ChatbotMessage) {
             Spacer(Modifier.width(8.dp))
             Surface(
                 shape = CircleShape,
-                color = Primary.copy(alpha = 0.2f),
+                color = if (isDark) Primary.copy(alpha = 0.2f) else PrimaryContainer,
                 modifier = Modifier.size(32.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -565,7 +580,7 @@ private fun RollyMessageBubble(message: ChatbotMessage) {
             }
         }
     } else {
-        // Message IA ROLLY - style Gemini full-width
+        // Message IA ROLLY
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Start,
@@ -579,13 +594,11 @@ private fun RollyMessageBubble(message: ChatbotMessage) {
 
             Column(modifier = Modifier.weight(1f)) {
                 if (message.enChargement) {
-                    // Animation de chargement style Gemini
                     LoadingDots()
                 } else {
-                    // Rendu riche du texte IA
                     RichMarkdownText(
                         text = message.contenu,
-                        textColor = Color.White.copy(alpha = 0.9f)
+                        textColor = if (isDark) Color.White.copy(alpha = 0.9f) else TextPrimary
                     )
                 }
             }
@@ -603,11 +616,12 @@ fun RichMarkdownText(
     textColor: Color = Color.White.copy(alpha = 0.9f)
 ) {
     val lines = text.split("\n")
+    val isDark = isSystemInDarkTheme()
     val headerColor = Primary
-    val boldColor = Color.White
-    val bulletColor = PrimaryContainer
-    val tableHeaderBg = Color(0xFF1E3A5F)
-    val tableBorderColor = Color.White.copy(alpha = 0.15f)
+    val boldColor = if (isDark) Color.White else TextPrimary
+    val bulletColor = if (isDark) PrimaryContainer else Primary
+    val tableHeaderBg = if (isDark) Color(0xFF1E3A5F) else PrimaryContainer
+    val tableBorderColor = if (isDark) Color.White.copy(alpha = 0.15f) else Outline
 
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         var i = 0
@@ -666,7 +680,7 @@ fun RichMarkdownText(
                         text = content,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = Color.White,
+                        color = boldColor,
                         modifier = Modifier.padding(top = 12.dp, bottom = 4.dp)
                     )
                 }

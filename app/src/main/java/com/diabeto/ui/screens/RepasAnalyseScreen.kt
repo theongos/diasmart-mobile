@@ -260,9 +260,9 @@ fun RepasAnalyseScreen(
     if (uiState.showConfirmationDialog) {
         AlertDialog(
             onDismissRequest = viewModel::annulerConfirmation,
-            containerColor = DarkSurface,
-            titleContentColor = Color.White,
-            textContentColor = Color.White.copy(alpha = 0.85f),
+            containerColor = Color.White,
+            titleContentColor = TextPrimary,
+            textContentColor = TextSecondary,
             icon = { Icon(Icons.Default.Warning, null, tint = AccentOrange) },
             title = { Text("Validation medicale", fontWeight = FontWeight.Bold) },
             text = {
@@ -272,13 +272,13 @@ fun RepasAnalyseScreen(
                         fontWeight = FontWeight.Medium,
                         color = AccentOrange
                     )
-                    HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
-                    Text("Avant d'enregistrer, veuillez verifier que :", color = Color.White.copy(alpha = 0.85f))
-                    Text("- Le nom du repas est correct", color = DimWhite)
-                    Text("- Les glucides estimes vous semblent corrects", color = DimWhite)
-                    Text("- L'index glycemique est coherent", color = DimWhite)
-                    Text("- Vous avez corrige les valeurs si necessaire", color = DimWhite)
-                    HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+                    HorizontalDivider(color = Outline)
+                    Text("Avant d'enregistrer, veuillez verifier que :", color = TextPrimary)
+                    Text("- Le nom du repas est correct", color = TextSecondary)
+                    Text("- Les glucides estimes vous semblent corrects", color = TextSecondary)
+                    Text("- L'index glycemique est coherent", color = TextSecondary)
+                    Text("- Vous avez corrige les valeurs si necessaire", color = TextSecondary)
+                    HorizontalDivider(color = Outline)
                     Text(
                         "L'analyse sera aussi enregistree dans l'historique ROLLY.",
                         style = MaterialTheme.typography.bodySmall,
@@ -288,7 +288,7 @@ fun RepasAnalyseScreen(
                     Text(
                         "Ces donnees ne remplacent pas l'avis de votre medecin ou dieteticien.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MutedWhite
+                        color = TextTertiary
                     )
                 }
             },
@@ -296,7 +296,7 @@ fun RepasAnalyseScreen(
                 Button(
                     onClick = viewModel::confirmerEtSauvegarder,
                     colors = ButtonDefaults.buttonColors(containerColor = AccentGreen)
-                ) { Text("Je confirme les valeurs") }
+                ) { Text("Je confirme les valeurs", color = Color.White) }
             },
             dismissButton = {
                 TextButton(onClick = viewModel::annulerConfirmation) {
@@ -309,9 +309,9 @@ fun RepasAnalyseScreen(
     if (uiState.showIntegrerGlycemieDialog) {
         AlertDialog(
             onDismissRequest = viewModel::refuserIntegrationGlycemie,
-            containerColor = DarkSurface,
-            titleContentColor = Color.White,
-            textContentColor = Color.White.copy(alpha = 0.85f),
+            containerColor = Color.White,
+            titleContentColor = TextPrimary,
+            textContentColor = TextSecondary,
             icon = { Icon(Icons.Default.ShowChart, null, tint = AccentCyan) },
             title = { Text("Integrer la glycemie ?", fontWeight = FontWeight.Bold) },
             text = {
@@ -343,11 +343,11 @@ fun RepasAnalyseScreen(
                         )
                     }
                     Spacer(Modifier.height(4.dp))
-                    Text("Ajouter ces valeurs dans votre courbe predictive ?", color = Color.White.copy(alpha = 0.85f))
+                    Text("Ajouter ces valeurs dans votre courbe predictive ?", color = TextPrimary)
                     Text(
                         "ROLLY pourra mieux predire les risques d'hypo/hyperglycemie et analyser votre metabolisme post-repas.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MutedWhite
+                        color = TextTertiary
                     )
                 }
             },
@@ -356,14 +356,14 @@ fun RepasAnalyseScreen(
                     onClick = viewModel::integrerGlycemiePrediction,
                     colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)
                 ) {
-                    Icon(Icons.Default.AddChart, null, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.AddChart, null, modifier = Modifier.size(18.dp), tint = Color.White)
                     Spacer(Modifier.width(6.dp))
-                    Text("Oui, integrer", color = DarkBg)
+                    Text("Oui, integrer", color = Color.White)
                 }
             },
             dismissButton = {
                 TextButton(onClick = viewModel::refuserIntegrationGlycemie) {
-                    Text("Non, pas maintenant", color = DimWhite)
+                    Text("Non, pas maintenant", color = TextTertiary)
                 }
             }
         )

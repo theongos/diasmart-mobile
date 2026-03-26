@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.lifecycle.Lifecycle
@@ -454,7 +455,7 @@ fun DashboardScreen(
                             subtitle = "Assistant IA",
                             icon = null,
                             isRolly = true,
-                            cardColor = OnBackground,
+                            cardColor = RollyCardColor,
                             isOnline = uiState.isOnline,
                             onClick = { if (uiState.isOnline) onNavigateToChatbot() },
                             modifier = Modifier.weight(1f)
@@ -761,11 +762,24 @@ private fun FeatureCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isDark = cardColor == OnBackground
-    val textColor = if (isDark) Color.White else TextPrimary
-    val subColor = if (isDark) Color.White.copy(alpha = 0.7f) else TextSecondary
+    val isSystemDark = isSystemInDarkTheme()
+    val isDarkCard = cardColor == OnBackground || cardColor == RollyCardColor
+    // In dark mode, map pastel card colors to vivid dark equivalents
+    val darkModeCardColor = when (cardColor) {
+        CardGlucose -> CardGlucoseDark
+        CardMedication -> CardMedicationDark
+        CardAppointment -> CardAppointmentDark
+        CardInsulin -> CardInsulinDark
+        CardActivity -> CardActivityDark
+        CardNutrition -> CardNutritionDark
+        Color(0xFFF0E6FF) -> Color(0xFF4A2D7A) // Carnet de bord purple
+        else -> cardColor
+    }
+    val resolvedCardColor = if (isSystemDark && !isDarkCard) darkModeCardColor else cardColor
+    val textColor = if (isDarkCard || isSystemDark) Color.White else TextPrimary
+    val subColor = if (isDarkCard || isSystemDark) Color.White.copy(alpha = 0.7f) else TextSecondary
     val actualCardColor = if (!isOnline && (isRolly || icon == Icons.Outlined.Forum || icon == Icons.Outlined.Restaurant))
-        SurfaceVariant else cardColor
+        SurfaceVariant else resolvedCardColor
 
     Card(
         modifier = modifier
@@ -773,7 +787,7 @@ private fun FeatureCard(
             .clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = actualCardColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 6.dp else 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isDarkCard || isSystemDark) 6.dp else 1.dp)
     ) {
         Column(
             modifier = Modifier
@@ -785,19 +799,19 @@ private fun FeatureCard(
                 RollyIcon(
                     size = 36.dp,
                     showBackground = false,
-                    tint = if (isOnline) Primary else Color(0xFF666666)
+                    tint = if (isOnline) Color.White else Color(0xFF666666)
                 )
             } else if (icon != null) {
                 Box(
                     modifier = Modifier
                         .size(36.dp)
                         .background(
-                            if (isDark) Color.White.copy(alpha = 0.15f) else iconTint.copy(alpha = 0.12f),
+                            if (isDarkCard || isSystemDark) Color.White.copy(alpha = 0.15f) else iconTint.copy(alpha = 0.12f),
                             RoundedCornerShape(10.dp)
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(icon, null, tint = if (isDark) Color.White else iconTint, modifier = Modifier.size(20.dp))
+                    Icon(icon, null, tint = if (isDarkCard || isSystemDark) Color.White else iconTint, modifier = Modifier.size(20.dp))
                 }
             }
             Column {
