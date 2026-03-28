@@ -84,13 +84,13 @@ val CardNutrition = Color(0xFFFFEBCC)      // Pêche
 // Rolly card (dashboard)
 val RollyCardColor = Color(0xFF6771E4)
 
-// Cartes de fonctionnalités — couleurs vives pour le mode sombre
-val CardGlucoseDark = Color(0xFF3D3A8C)         // Lavande profond
-val CardMedicationDark = Color(0xFF8C2E4A)      // Rose profond
-val CardAppointmentDark = Color(0xFF1A6B5A)     // Menthe profond
-val CardInsulinDark = Color(0xFF8C7A2E)         // Doré profond
-val CardActivityDark = Color(0xFF1A5A8C)        // Bleu profond
-val CardNutritionDark = Color(0xFF8C5A1A)       // Pêche profond
+// Cartes de fonctionnalités — couleurs VIVES pour le mode sombre
+val CardGlucoseDark = Color(0xFF5650B8)         // Lavande vif
+val CardMedicationDark = Color(0xFFB83A5E)      // Rose vif
+val CardAppointmentDark = Color(0xFF1E9E7E)     // Menthe vif
+val CardInsulinDark = Color(0xFFBFA834)         // Doré vif
+val CardActivityDark = Color(0xFF2478B8)        // Bleu vif
+val CardNutritionDark = Color(0xFFBF7824)       // Pêche vif
 
 // Navigation bar
 val NavBarBackground = Color(0xFFFFFFFF)

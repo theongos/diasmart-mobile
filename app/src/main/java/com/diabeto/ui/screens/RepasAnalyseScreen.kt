@@ -42,12 +42,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.diabeto.data.model.RepasAnalyse
 import com.diabeto.data.model.RepasDocument
 import com.diabeto.ui.components.RollyIconInline
+import androidx.compose.foundation.isSystemInDarkTheme
 import com.diabeto.ui.theme.*
 import com.diabeto.ui.viewmodel.RepasViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
-// ── Dark theme colors (identiques au ChatbotScreen / ROLLY) ─────────────
+// ── Theme colors ─────────────────────────────────────────────────────────
 private val DarkBg = Color(0xFF0D0D1A)
 private val DarkSurface = OnBackground
 private val DarkCard = Color(0xFF16213E)
@@ -60,6 +61,14 @@ private val AccentOrange = Color(0xFFFF9800)
 private val AccentRed = Color(0xFFFF5252)
 private val DimWhite = Color.White.copy(alpha = 0.6f)
 private val MutedWhite = Color.White.copy(alpha = 0.4f)
+
+// ── Light theme equivalents ──────────────────────────────────────────────
+private val LightBg = Background
+private val LightCard = Surface
+private val LightInput = SurfaceVariant
+private val LightDrawerBg = Surface
+private val LightDimText = TextSecondary
+private val LightMutedText = TextTertiary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,24 +94,35 @@ fun RepasAnalyseScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(DarkBg)) {
+    val isDark = isSystemInDarkTheme()
+    val screenBg = if (isDark) DarkBg else LightBg
+    val cardBg = if (isDark) DarkCard else LightCard
+    val inputBg = if (isDark) DarkInput else LightInput
+    val titleColor = if (isDark) Color.White else TextPrimary
+    val bodyColor = if (isDark) DimWhite else TextSecondary
+    val mutedColor = if (isDark) MutedWhite else LightMutedText
+    val topBarBg = if (isDark) DarkSurface else RollyCardColor
+    val topBarText = Color.White  // Always white on colored bar
+    val dividerColor = if (isDark) Color.White.copy(alpha = 0.1f) else Outline
+
+    Box(modifier = Modifier.fillMaxSize().background(screenBg)) {
         // ── Main Scaffold ────────────────────────────────────────────────
         Scaffold(
-            containerColor = DarkBg,
+            containerColor = screenBg,
             topBar = {
                 TopAppBar(
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Surface(
                                 shape = CircleShape,
-                                color = AccentCyan.copy(alpha = 0.15f),
+                                color = if (isDark) AccentCyan.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.2f),
                                 modifier = Modifier.size(36.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         Icons.Default.Restaurant,
                                         contentDescription = null,
-                                        tint = AccentCyan,
+                                        tint = if (isDark) AccentCyan else Color.White,
                                         modifier = Modifier.size(20.dp)
                                     )
                                 }
@@ -113,35 +133,33 @@ fun RepasAnalyseScreen(
                                     "Analyse Repas",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp,
-                                    color = Color.White
+                                    color = topBarText
                                 )
                                 Text(
                                     "ROLLY - Nutritionniste IA",
                                     fontSize = 11.sp,
-                                    color = AccentCyan.copy(alpha = 0.7f)
+                                    color = topBarText.copy(alpha = 0.7f)
                                 )
                             }
                         }
                     },
                     navigationIcon = {
-                        // Hamburger menu pour ouvrir le drawer (comme ChatbotScreen)
                         IconButton(onClick = { showDrawer = true }) {
-                            Icon(Icons.Default.Menu, "Menu", tint = Color.White)
+                            Icon(Icons.Default.Menu, "Menu", tint = topBarText)
                         }
                     },
                     actions = {
-                        // Bouton retour
                         IconButton(onClick = onNavigateBack) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Retour",
-                                tint = DimWhite
+                                tint = topBarText.copy(alpha = 0.6f)
                             )
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = DarkSurface,
-                        titleContentColor = Color.White
+                        containerColor = topBarBg,
+                        titleContentColor = topBarText
                     )
                 )
             },
@@ -165,14 +183,21 @@ fun RepasAnalyseScreen(
                     onClearImage = viewModel::clearImage,
                     capturedBitmap = uiState.capturedBitmap,
                     isImageMode = uiState.isImageMode,
-                    isAnalysing = uiState.isAnalysing
+                    isAnalysing = uiState.isAnalysing,
+                    isDark = isDark,
+                    cardBg = cardBg,
+                    inputBg = inputBg,
+                    titleColor = titleColor,
+                    bodyColor = bodyColor,
+                    mutedColor = mutedColor,
+                    dividerColor = dividerColor
                 )
 
                 // Chargement
                 if (uiState.isAnalysing) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = DarkCard),
+                        colors = CardDefaults.cardColors(containerColor = cardBg),
                         shape = RoundedCornerShape(16.dp)
                     ) {
                         Row(
@@ -195,9 +220,21 @@ fun RepasAnalyseScreen(
                 uiState.analyseResult?.let { analyse ->
                     DarkNomRepasEditableCard(
                         nomRepas = uiState.nomRepasEdite,
-                        onNomChange = viewModel::onNomRepasChange
+                        onNomChange = viewModel::onNomRepasChange,
+                        isDark = isDark,
+                        cardBg = cardBg,
+                        inputBg = inputBg,
+                        mutedColor = mutedColor
                     )
-                    DarkResultatAnalyseCard(analyse = analyse)
+                    DarkResultatAnalyseCard(
+                        analyse = analyse,
+                        isDark = isDark,
+                        cardBg = cardBg,
+                        titleColor = titleColor,
+                        bodyColor = bodyColor,
+                        mutedColor = mutedColor,
+                        dividerColor = dividerColor
+                    )
                     DarkValidationMedicaleCard(
                         glucides = uiState.glucidesEdites,
                         onGlucidesChange = viewModel::onGlucidesChange,
@@ -214,10 +251,21 @@ fun RepasAnalyseScreen(
                         glycemieAvant = uiState.glycemieAvant,
                         onGlycemieAvantChange = viewModel::onGlycemieAvantChange,
                         glycemieApres = uiState.glycemieApres,
-                        onGlycemieApresChange = viewModel::onGlycemieApresChange
+                        onGlycemieApresChange = viewModel::onGlycemieApresChange,
+                        isDark = isDark,
+                        cardBg = cardBg,
+                        inputBg = inputBg,
+                        mutedColor = mutedColor,
+                        dividerColor = dividerColor
                     )
                     if (analyse.recommandations.isNotEmpty()) {
-                        DarkRecommandationsCard(analyse = analyse)
+                        DarkRecommandationsCard(
+                            analyse = analyse,
+                            isDark = isDark,
+                            cardBg = cardBg,
+                            bodyColor = bodyColor,
+                            dividerColor = dividerColor
+                        )
                     }
                     Button(
                         onClick = viewModel::demanderConfirmation,
@@ -707,12 +755,17 @@ private fun MiniNutrient(label: String, value: String, color: Color) {
 @Composable
 private fun DarkNomRepasEditableCard(
     nomRepas: String,
-    onNomChange: (String) -> Unit
+    onNomChange: (String) -> Unit,
+    isDark: Boolean = true,
+    cardBg: Color = DarkCard,
+    inputBg: Color = DarkInput,
+    mutedColor: Color = MutedWhite
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = DarkCard),
-        shape = RoundedCornerShape(16.dp)
+        colors = CardDefaults.cardColors(containerColor = cardBg),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 0.dp else 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -725,11 +778,11 @@ private fun DarkNomRepasEditableCard(
                 onValueChange = onNomChange,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                placeholder = { Text("Nom du repas", color = MutedWhite) },
+                placeholder = { Text("Nom du repas", color = mutedColor) },
                 shape = RoundedCornerShape(12.dp),
-                leadingIcon = { Icon(Icons.Default.Edit, null, Modifier.size(18.dp), tint = DimWhite) },
-                supportingText = { Text("Modifiez si le nom ne correspond pas", fontSize = 11.sp, color = MutedWhite) },
-                colors = darkFieldColors()
+                leadingIcon = { Icon(Icons.Default.Edit, null, Modifier.size(18.dp), tint = if (isDark) DimWhite else TextSecondary) },
+                supportingText = { Text("Modifiez si le nom ne correspond pas", fontSize = 11.sp, color = mutedColor) },
+                colors = themedFieldColors(isDark, inputBg)
             )
         }
     }
@@ -745,7 +798,14 @@ private fun DarkSaisieRepasCard(
     onClearImage: () -> Unit,
     capturedBitmap: android.graphics.Bitmap?,
     isImageMode: Boolean,
-    isAnalysing: Boolean
+    isAnalysing: Boolean,
+    isDark: Boolean = true,
+    cardBg: Color = DarkCard,
+    inputBg: Color = DarkInput,
+    titleColor: Color = Color.White,
+    bodyColor: Color = DimWhite,
+    mutedColor: Color = MutedWhite,
+    dividerColor: Color = Color.White.copy(alpha = 0.15f)
 ) {
     val context = LocalContext.current
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -782,16 +842,16 @@ private fun DarkSaisieRepasCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = DarkCard),
+        colors = CardDefaults.cardColors(containerColor = cardBg),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 4.dp else 2.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Analysez votre repas", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 16.sp)
-            Text("Prenez une photo ou decrivez votre repas pour une analyse nutritionnelle IA.", style = MaterialTheme.typography.bodySmall, color = MutedWhite)
+            Text("Analysez votre repas", fontWeight = FontWeight.Bold, color = titleColor, fontSize = 16.sp)
+            Text("Prenez une photo ou decrivez votre repas pour une analyse nutritionnelle IA.", style = MaterialTheme.typography.bodySmall, color = mutedColor)
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -861,21 +921,21 @@ private fun DarkSaisieRepasCard(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    HorizontalDivider(Modifier.weight(1f), color = Color.White.copy(alpha = 0.15f))
-                    Text("  ou decrivez  ", fontSize = 11.sp, color = MutedWhite)
-                    HorizontalDivider(Modifier.weight(1f), color = Color.White.copy(alpha = 0.15f))
+                    HorizontalDivider(Modifier.weight(1f), color = dividerColor)
+                    Text("  ou decrivez  ", fontSize = 11.sp, color = mutedColor)
+                    HorizontalDivider(Modifier.weight(1f), color = dividerColor)
                 }
                 OutlinedTextField(
                     value = description,
                     onValueChange = onDescriptionChange,
-                    placeholder = { Text("Ex: Couscous avec legumes, poulet grille, et un verre de lben", fontSize = 13.sp, color = MutedWhite) },
+                    placeholder = { Text("Ex: Couscous avec legumes, poulet grille, et un verre de lben", fontSize = 13.sp, color = mutedColor) },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3,
                     maxLines = 6,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { onAnalyser() }),
                     shape = RoundedCornerShape(12.dp),
-                    colors = darkFieldColors()
+                    colors = themedFieldColors(isDark, inputBg)
                 )
                 Button(
                     onClick = onAnalyser,
@@ -884,9 +944,9 @@ private fun DarkSaisieRepasCard(
                     colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    RollyIconInline(size = 18.dp, tint = DarkBg)
+                    RollyIconInline(size = 18.dp, tint = Color.White)
                     Spacer(Modifier.width(8.dp))
-                    Text("Analyser avec ROLLY", fontWeight = FontWeight.Bold, color = DarkBg)
+                    Text("Analyser avec ROLLY", fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
         }
@@ -894,12 +954,20 @@ private fun DarkSaisieRepasCard(
 }
 
 @Composable
-private fun DarkResultatAnalyseCard(analyse: RepasAnalyse) {
+private fun DarkResultatAnalyseCard(
+    analyse: RepasAnalyse,
+    isDark: Boolean = true,
+    cardBg: Color = DarkCard,
+    titleColor: Color = Color.White,
+    bodyColor: Color = DimWhite,
+    mutedColor: Color = MutedWhite,
+    dividerColor: Color = Color.White.copy(alpha = 0.1f)
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = DarkCard),
+        colors = CardDefaults.cardColors(containerColor = cardBg),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 4.dp else 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(
@@ -908,23 +976,22 @@ private fun DarkResultatAnalyseCard(analyse: RepasAnalyse) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text(analyse.nomRepas, fontWeight = FontWeight.Bold, color = Color.White, fontSize = 16.sp)
-                    Text(analyse.description, style = MaterialTheme.typography.bodySmall, color = MutedWhite, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(analyse.nomRepas, fontWeight = FontWeight.Bold, color = titleColor, fontSize = 16.sp)
+                    Text(analyse.description, style = MaterialTheme.typography.bodySmall, color = mutedColor, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
                 DarkScoreBadge(analyse.scoreDiabete)
             }
-            HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+            HorizontalDivider(color = dividerColor)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                DarkNutrientChip("Glucides", "${analyse.glucidesEstimes.toInt()}g", AccentCyan)
-                DarkNutrientChip("Proteines", "${analyse.proteinesEstimees.toInt()}g", AccentPurple)
-                DarkNutrientChip("Lipides", "${analyse.lipidesEstimes.toInt()}g", AccentOrange)
+                DarkNutrientChip("Glucides", "${analyse.glucidesEstimes.toInt()}g", AccentCyan, mutedColor)
+                DarkNutrientChip("Proteines", "${analyse.proteinesEstimees.toInt()}g", AccentPurple, mutedColor)
+                DarkNutrientChip("Lipides", "${analyse.lipidesEstimes.toInt()}g", AccentOrange, mutedColor)
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                DarkNutrientChip("Calories", "${analyse.caloriesEstimees}", AccentOrange)
-                DarkNutrientChip("IG", "${analyse.indexGlycemique}", darkIgColor(analyse.categorieIG))
-                DarkNutrientChip("Fibres", "${analyse.fibresEstimees.toInt()}g", AccentGreen)
+                DarkNutrientChip("Calories", "${analyse.caloriesEstimees}", AccentOrange, mutedColor)
+                DarkNutrientChip("IG", "${analyse.indexGlycemique}", darkIgColor(analyse.categorieIG), mutedColor)
+                DarkNutrientChip("Fibres", "${analyse.fibresEstimees.toInt()}g", AccentGreen, mutedColor)
             }
-            // Impact glycemique
             Card(
                 colors = CardDefaults.cardColors(containerColor = darkIgColor(analyse.categorieIG).copy(alpha = 0.1f)),
                 shape = RoundedCornerShape(8.dp)
@@ -934,7 +1001,7 @@ private fun DarkResultatAnalyseCard(analyse: RepasAnalyse) {
                     Spacer(Modifier.width(8.dp))
                     Column {
                         Text("Index Glycemique : ${analyse.categorieIG.uppercase()}", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = darkIgColor(analyse.categorieIG))
-                        Text(analyse.impactGlycemique, style = MaterialTheme.typography.bodySmall, color = DimWhite)
+                        Text(analyse.impactGlycemique, style = MaterialTheme.typography.bodySmall, color = bodyColor)
                     }
                 }
             }
@@ -951,13 +1018,19 @@ private fun DarkValidationMedicaleCard(
     lipides: String, onLipidesChange: (String) -> Unit,
     fibres: String, onFibresChange: (String) -> Unit,
     glycemieAvant: String, onGlycemieAvantChange: (String) -> Unit,
-    glycemieApres: String, onGlycemieApresChange: (String) -> Unit
+    glycemieApres: String, onGlycemieApresChange: (String) -> Unit,
+    isDark: Boolean = true,
+    cardBg: Color = DarkCard,
+    inputBg: Color = DarkInput,
+    mutedColor: Color = MutedWhite,
+    dividerColor: Color = Color.White.copy(alpha = 0.1f)
 ) {
-    val fc = darkFieldColors()
+    val fc = themedFieldColors(isDark, inputBg)
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = DarkCard),
-        shape = RoundedCornerShape(16.dp)
+        colors = CardDefaults.cardColors(containerColor = cardBg),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 0.dp else 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -965,7 +1038,7 @@ private fun DarkValidationMedicaleCard(
                 Spacer(Modifier.width(8.dp))
                 Text("Verification & correction", fontWeight = FontWeight.Bold, color = AccentOrange)
             }
-            Text("Verifiez et corrigez les valeurs estimees par ROLLY.", style = MaterialTheme.typography.bodySmall, color = MutedWhite)
+            Text("Verifiez et corrigez les valeurs estimees par ROLLY.", style = MaterialTheme.typography.bodySmall, color = mutedColor)
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(value = glucides, onValueChange = onGlucidesChange, label = { Text("Glucides (g)") }, modifier = Modifier.weight(1f), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true, colors = fc)
@@ -980,40 +1053,48 @@ private fun DarkValidationMedicaleCard(
                 OutlinedTextField(value = indexGlycemique, onValueChange = onIndexGlycemiqueChange, label = { Text("Index Glycemique") }, modifier = Modifier.weight(1f), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), singleLine = true, colors = fc)
             }
 
-            HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+            HorizontalDivider(color = dividerColor)
             Text("Glycemie (optionnel - pour la courbe de prediction)", color = AccentCyan, fontWeight = FontWeight.Medium, fontSize = 13.sp)
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(value = glycemieAvant, onValueChange = onGlycemieAvantChange, label = { Text("Avant repas (mg/dL)") }, modifier = Modifier.weight(1f), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true, colors = fc)
                 OutlinedTextField(value = glycemieApres, onValueChange = onGlycemieApresChange, label = { Text("Apres repas (mg/dL)") }, modifier = Modifier.weight(1f), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true, colors = fc)
             }
-            Text("Si vous ajoutez une glycemie, ROLLY vous proposera de l'integrer dans votre courbe de prediction.", style = MaterialTheme.typography.bodySmall, color = MutedWhite, fontSize = 11.sp)
+            Text("Si vous ajoutez une glycemie, ROLLY vous proposera de l'integrer dans votre courbe de prediction.", style = MaterialTheme.typography.bodySmall, color = mutedColor, fontSize = 11.sp)
         }
     }
 }
 
 @Composable
-private fun DarkRecommandationsCard(analyse: RepasAnalyse) {
+private fun DarkRecommandationsCard(
+    analyse: RepasAnalyse,
+    isDark: Boolean = true,
+    cardBg: Color = DarkCard,
+    bodyColor: Color = DimWhite,
+    dividerColor: Color = Color.White.copy(alpha = 0.1f)
+) {
+    val titleColor = if (isDark) Color.White else TextPrimary
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = DarkCard),
-        shape = RoundedCornerShape(16.dp)
+        colors = CardDefaults.cardColors(containerColor = cardBg),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 0.dp else 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Recommandations ROLLY", fontWeight = FontWeight.Bold, color = Color.White)
+            Text("Recommandations ROLLY", fontWeight = FontWeight.Bold, color = titleColor)
             analyse.recommandations.forEach { r ->
                 Row {
                     Text("- ", color = AccentCyan, fontWeight = FontWeight.Bold)
-                    Text(r, style = MaterialTheme.typography.bodySmall, color = DimWhite)
+                    Text(r, style = MaterialTheme.typography.bodySmall, color = bodyColor)
                 }
             }
             if (analyse.alternativesSaines.isNotEmpty()) {
-                HorizontalDivider(color = Color.White.copy(alpha = 0.1f), modifier = Modifier.padding(vertical = 4.dp))
+                HorizontalDivider(color = dividerColor, modifier = Modifier.padding(vertical = 4.dp))
                 Text("Alternatives plus saines", fontWeight = FontWeight.Bold, color = AccentGreen, fontSize = 13.sp)
                 analyse.alternativesSaines.forEach { a ->
                     Row {
                         Text("-> ", color = AccentGreen, fontWeight = FontWeight.Bold)
-                        Text(a, style = MaterialTheme.typography.bodySmall, color = DimWhite)
+                        Text(a, style = MaterialTheme.typography.bodySmall, color = bodyColor)
                     }
                 }
             }
@@ -1026,23 +1107,26 @@ private fun DarkRecommandationsCard(analyse: RepasAnalyse) {
 // =============================================================================
 
 @Composable
-private fun darkFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedTextColor = Color.White,
-    unfocusedTextColor = Color.White,
+private fun darkFieldColors() = themedFieldColors(true, DarkInput)
+
+@Composable
+private fun themedFieldColors(isDark: Boolean, inputBg: Color) = OutlinedTextFieldDefaults.colors(
+    focusedTextColor = if (isDark) Color.White else TextPrimary,
+    unfocusedTextColor = if (isDark) Color.White else TextPrimary,
     focusedBorderColor = AccentCyan,
-    unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
+    unfocusedBorderColor = if (isDark) Color.White.copy(alpha = 0.2f) else Outline,
     cursorColor = AccentCyan,
-    focusedContainerColor = DarkInput,
-    unfocusedContainerColor = DarkInput,
+    focusedContainerColor = inputBg,
+    unfocusedContainerColor = inputBg,
     focusedLabelColor = AccentCyan,
-    unfocusedLabelColor = DimWhite
+    unfocusedLabelColor = if (isDark) DimWhite else TextSecondary
 )
 
 @Composable
-private fun DarkNutrientChip(label: String, value: String, color: Color) {
+private fun DarkNutrientChip(label: String, value: String, color: Color, labelColor: Color = MutedWhite) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, fontWeight = FontWeight.Bold, color = color, fontSize = 15.sp)
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MutedWhite)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = labelColor)
     }
 }
 

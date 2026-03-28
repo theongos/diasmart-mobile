@@ -226,6 +226,16 @@ fun DashboardScreen(
         }
     }
 
+    val isDark = isSystemInDarkTheme()
+    val screenBg = if (isDark) Color(0xFF0D0D1A) else Background
+    val cardSurface = if (isDark) Color(0xFF141428) else Surface
+    val textPri = if (isDark) Color(0xFFE8E5FF) else TextPrimary
+    val textSec = if (isDark) Color(0xFFB8B5C8) else TextSecondary
+    val textTer = if (isDark) Color(0xFF8A87A8) else TextTertiary
+    val navBg = if (isDark) Color(0xFF141428) else NavBarBackground
+    val outlineCol = if (isDark) Color(0xFF2A2940) else OutlineVariant
+    val primaryContainerCol = if (isDark) Color(0xFF3D2FCC) else PrimaryContainer
+
     Scaffold(
         bottomBar = {
             DiaSmartBottomBar(
@@ -235,11 +245,12 @@ fun DashboardScreen(
                 onNavigateToChatbot = { selectedNavIndex = 3; onNavigateToChatbot() },
                 onNavigateToMessagerie = { selectedNavIndex = 4; onNavigateToMessagerie() },
                 onDashboard = { selectedNavIndex = 0 },
-                isMedecin = uiState.userRole == UserRole.MEDECIN
+                isMedecin = uiState.userRole == UserRole.MEDECIN,
+                navBarBg = navBg
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = Background
+        containerColor = screenBg
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -405,25 +416,34 @@ fun DashboardScreen(
                         value = uiState.totalPatients.toString(),
                         label = "Patients",
                         icon = Icons.Outlined.People,
-                        iconBg = CardGlucose,
-                        iconTint = Primary,
-                        modifier = Modifier.weight(1f)
+                        iconBg = if (isDark) CardGlucoseDark else CardGlucose,
+                        iconTint = if (isDark) Color(0xFF9D91FF) else Primary,
+                        modifier = Modifier.weight(1f),
+                        cardSurface = cardSurface,
+                        textPri = textPri,
+                        textSec = textSec
                     )
                     MiniStatCard(
                         value = uiState.todayRendezVous.toString(),
                         label = "RDV",
                         icon = Icons.Outlined.CalendarMonth,
-                        iconBg = CardAppointment,
-                        iconTint = Tertiary,
-                        modifier = Modifier.weight(1f)
+                        iconBg = if (isDark) CardAppointmentDark else CardAppointment,
+                        iconTint = if (isDark) Color(0xFF66E3CE) else Tertiary,
+                        modifier = Modifier.weight(1f),
+                        cardSurface = cardSurface,
+                        textPri = textPri,
+                        textSec = textSec
                     )
                     MiniStatCard(
                         value = uiState.upcomingMedicaments.toString(),
                         label = "Rappels",
                         icon = Icons.Outlined.Medication,
-                        iconBg = CardMedication,
-                        iconTint = Secondary,
-                        modifier = Modifier.weight(1f)
+                        iconBg = if (isDark) CardMedicationDark else CardMedication,
+                        iconTint = if (isDark) Color(0xFFFFB3C6) else Secondary,
+                        modifier = Modifier.weight(1f),
+                        cardSurface = cardSurface,
+                        textPri = textPri,
+                        textSec = textSec
                     )
                 }
             }
@@ -438,7 +458,7 @@ fun DashboardScreen(
                     "Actions rapides",
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(horizontal = 20.dp),
-                    color = TextPrimary
+                    color = textPri
                 )
             }
             item { Spacer(modifier = Modifier.height(12.dp)) }
@@ -633,22 +653,26 @@ fun DashboardScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp),
                     shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    colors = CardDefaults.cardColors(containerColor = cardSurface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 6.dp else 2.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         if (uiState.upcomingRendezVous.isEmpty()) {
-                            EmptyStateMessage("Aucun rendez-vous à venir", Icons.Outlined.CalendarMonth)
+                            EmptyStateMessage("Aucun rendez-vous à venir", Icons.Outlined.CalendarMonth, textSec = textSec, textTer = textTer, surfaceVar = if (isDark) Color(0xFF2A2940) else SurfaceVariant)
                         } else {
                             uiState.upcomingRendezVous.take(3).forEachIndexed { index, rdv ->
                                 ModernRendezVousItem(
                                     rdv = rdv,
-                                    onClick = { onNavigateToPatientDetail(rdv.patient.id) }
+                                    onClick = { onNavigateToPatientDetail(rdv.patient.id) },
+                                    textPri = textPri,
+                                    textSec = textSec,
+                                    textTer = textTer,
+                                    primaryContainerCol = primaryContainerCol
                                 )
                                 if (index < minOf(2, uiState.upcomingRendezVous.size - 1)) {
                                     HorizontalDivider(
                                         modifier = Modifier.padding(vertical = 8.dp),
-                                        color = OutlineVariant
+                                        color = outlineCol
                                     )
                                 }
                             }
@@ -674,10 +698,10 @@ fun DashboardScreen(
                     Card(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
                         shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = Surface),
-                        elevation = CardDefaults.cardElevation(2.dp)
+                        colors = CardDefaults.cardColors(containerColor = cardSurface),
+                        elevation = CardDefaults.cardElevation(if (isDark) 6.dp else 2.dp)
                     ) {
-                        EmptyStateMessage("Aucun patient enregistré", Icons.Outlined.People)
+                        EmptyStateMessage("Aucun patient enregistré", Icons.Outlined.People, textSec = textSec, textTer = textTer, surfaceVar = if (isDark) Color(0xFF2A2940) else SurfaceVariant)
                     }
                 } else {
                     LazyRow(
@@ -712,13 +736,17 @@ private fun MiniStatCard(
     icon: ImageVector,
     iconBg: Color,
     iconTint: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    cardSurface: Color = Surface,
+    textPri: Color = TextPrimary,
+    textSec: Color = TextSecondary
 ) {
+    val isDark = isSystemInDarkTheme()
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = cardSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 6.dp else 2.dp)
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
@@ -738,12 +766,12 @@ private fun MiniStatCard(
                 value,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary
+                color = textPri
             )
             Text(
                 label,
                 fontSize = 11.sp,
-                color = TextSecondary,
+                color = textSec,
                 maxLines = 1
             )
         }
@@ -841,6 +869,8 @@ private fun SectionHeader(
     action: String? = null,
     onAction: (() -> Unit)? = null
 ) {
+    val isDark = isSystemInDarkTheme()
+    val titleCol = if (isDark) Color(0xFFE8E5FF) else TextPrimary
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -851,7 +881,7 @@ private fun SectionHeader(
         Text(
             title,
             style = MaterialTheme.typography.titleLarge,
-            color = TextPrimary
+            color = titleCol
         )
         if (action != null && onAction != null) {
             TextButton(onClick = onAction) {
@@ -871,7 +901,11 @@ private fun SectionHeader(
 @Composable
 private fun ModernRendezVousItem(
     rdv: RendezVousAvecPatient,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    textPri: Color = TextPrimary,
+    textSec: Color = TextSecondary,
+    textTer: Color = TextTertiary,
+    primaryContainerCol: Color = PrimaryContainer
 ) {
     val isToday = rdv.rendezVous.estAujourdhui()
 
@@ -887,7 +921,7 @@ private fun ModernRendezVousItem(
             modifier = Modifier
                 .size(44.dp)
                 .background(
-                    if (isToday) Warning.copy(alpha = 0.12f) else PrimaryContainer,
+                    if (isToday) Warning.copy(alpha = 0.12f) else primaryContainerCol,
                     RoundedCornerShape(14.dp)
                 ),
             contentAlignment = Alignment.Center
@@ -901,11 +935,11 @@ private fun ModernRendezVousItem(
         }
         Spacer(modifier = Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(rdv.patient.nomComplet, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = TextPrimary)
-            Text(rdv.rendezVous.titre, fontSize = 12.sp, color = TextSecondary)
+            Text(rdv.patient.nomComplet, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = textPri)
+            Text(rdv.rendezVous.titre, fontSize = 12.sp, color = textSec)
             Text(
                 rdv.rendezVous.dateHeure.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")),
-                fontSize = 11.sp, color = TextTertiary
+                fontSize = 11.sp, color = textTer
             )
         }
         if (rdv.rendezVous.estConfirme) {
@@ -925,17 +959,22 @@ private fun PatientChip(
     subtitle: String,
     onClick: () -> Unit
 ) {
+    val isDark = isSystemInDarkTheme()
     val initials = name.split(" ").filter { it.isNotBlank() }
         .mapNotNull { it.firstOrNull()?.uppercaseChar() }
         .take(2).joinToString("")
+    val chipSurface = if (isDark) Color(0xFF141428) else Surface
+    val chipTextPri = if (isDark) Color(0xFFE8E5FF) else TextPrimary
+    val chipTextSec = if (isDark) Color(0xFFB8B5C8) else TextSecondary
+    val chipPrimaryContainer = if (isDark) Color(0xFF3D2FCC) else PrimaryContainer
 
     Card(
         modifier = Modifier
             .width(140.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Surface),
-        elevation = CardDefaults.cardElevation(2.dp)
+        colors = CardDefaults.cardColors(containerColor = chipSurface),
+        elevation = CardDefaults.cardElevation(if (isDark) 6.dp else 2.dp)
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
@@ -944,28 +983,34 @@ private fun PatientChip(
             Box(
                 modifier = Modifier
                     .size(44.dp)
-                    .background(PrimaryContainer, CircleShape),
+                    .background(chipPrimaryContainer, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Text(initials, color = Primary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(initials, color = if (isDark) Color(0xFF9D91FF) else Primary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
             Spacer(Modifier.height(8.dp))
             Text(
                 name,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 13.sp,
-                color = TextPrimary,
+                color = chipTextPri,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center
             )
-            Text(subtitle, fontSize = 11.sp, color = TextSecondary)
+            Text(subtitle, fontSize = 11.sp, color = chipTextSec)
         }
     }
 }
 
 @Composable
-private fun EmptyStateMessage(message: String, icon: ImageVector = Icons.Outlined.Info) {
+private fun EmptyStateMessage(
+    message: String,
+    icon: ImageVector = Icons.Outlined.Info,
+    textSec: Color = TextSecondary,
+    textTer: Color = TextTertiary,
+    surfaceVar: Color = SurfaceVariant
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -976,16 +1021,16 @@ private fun EmptyStateMessage(message: String, icon: ImageVector = Icons.Outline
             Box(
                 modifier = Modifier
                     .size(52.dp)
-                    .background(SurfaceVariant, CircleShape),
+                    .background(surfaceVar, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, null, tint = TextTertiary, modifier = Modifier.size(26.dp))
+                Icon(icon, null, tint = textTer, modifier = Modifier.size(26.dp))
             }
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 message,
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary,
+                color = textSec,
                 textAlign = TextAlign.Center
             )
         }
@@ -1003,12 +1048,13 @@ private fun DiaSmartBottomBar(
     onNavigateToRendezVous: () -> Unit,
     onNavigateToChatbot: () -> Unit,
     onNavigateToMessagerie: () -> Unit,
-    isMedecin: Boolean = false
+    isMedecin: Boolean = false,
+    navBarBg: Color = NavBarBackground
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shadowElevation = 12.dp,
-        color = NavBarBackground,
+        color = navBarBg,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
     ) {
         NavigationBar(
