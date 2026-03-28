@@ -325,7 +325,24 @@ class RendezVousViewModel @Inject constructor(
     fun toggleConfirmation(rendezVous: RendezVousEntity) {
         viewModelScope.launch {
             try {
+                val newStatus = !rendezVous.estConfirme
                 rendezVousRepository.toggleConfirmation(rendezVous.id, rendezVous.estConfirme)
+
+                // Sync confirmation status to Firestore rdv_shared
+                val selectedOption = _uiState.value.patientOptions.find { it.id == rendezVous.patientId }
+                val patientUid = selectedOption?.uid
+                if (!patientUid.isNullOrBlank()) {
+                    try {
+                        firestore.collection("rdv_shared")
+                            .document(patientUid)
+                            .collection("rendezvous")
+                            .document(rendezVous.id.toString())
+                            .update("estConfirme", newStatus).await()
+                        Log.d(TAG, "RDV confirmation synced to Firestore: $newStatus")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to sync RDV confirmation to Firestore", e)
+                    }
+                }
                 loadData()
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = e.message) }
@@ -337,6 +354,21 @@ class RendezVousViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 rendezVousRepository.deleteRendezVous(rendezVous)
+
+                // Also delete from Firestore rdv_shared
+                val selectedOption = _uiState.value.patientOptions.find { it.id == rendezVous.patientId }
+                val patientUid = selectedOption?.uid
+                if (!patientUid.isNullOrBlank()) {
+                    try {
+                        firestore.collection("rdv_shared")
+                            .document(patientUid)
+                            .collection("rendezvous")
+                            .document(rendezVous.id.toString())
+                            .delete().await()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to delete RDV from Firestore", e)
+                    }
+                }
                 loadData()
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = e.message) }

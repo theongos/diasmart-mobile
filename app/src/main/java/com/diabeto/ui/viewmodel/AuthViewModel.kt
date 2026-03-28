@@ -5,7 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.diabeto.data.model.UserProfile
 import com.diabeto.data.model.UserRole
+import android.util.Log
 import com.diabeto.data.repository.AuthRepository
+import com.diabeto.data.repository.CloudBackupRepository
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.PhoneAuthCredential
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -50,7 +52,8 @@ data class AuthUiState(
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val cloudBackupRepository: CloudBackupRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AuthUiState())
@@ -109,6 +112,8 @@ class AuthViewModel @Inject constructor(
             result.fold(
                 onSuccess = { user ->
                     val profile = authRepository.getCurrentUserProfile()
+                    // Auto-restore cloud data if local DB is empty (reinstall)
+                    tryAutoRestore()
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -180,6 +185,7 @@ class AuthViewModel @Inject constructor(
             result.fold(
                 onSuccess = { user ->
                     val profile = authRepository.getCurrentUserProfile()
+                    tryAutoRestore()
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -252,6 +258,7 @@ class AuthViewModel @Inject constructor(
             result.fold(
                 onSuccess = { user ->
                     val profile = authRepository.getCurrentUserProfile()
+                    tryAutoRestore()
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -277,6 +284,7 @@ class AuthViewModel @Inject constructor(
             result.fold(
                 onSuccess = { user ->
                     val profile = authRepository.getCurrentUserProfile()
+                    tryAutoRestore()
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -327,6 +335,31 @@ class AuthViewModel @Inject constructor(
     }
 
     fun clearError() = _uiState.update { it.copy(error = null) }
+
+    /**
+     * Auto-restore cloud backup if local DB is empty (e.g. after reinstall).
+     * Runs silently in background — does not block login.
+     */
+    private fun tryAutoRestore() {
+        viewModelScope.launch {
+            try {
+                if (cloudBackupRepository.isLocalDbEmpty() && cloudBackupRepository.hasCloudBackup()) {
+                    Log.d("AuthVM", "Local DB empty + cloud backup found → restoring...")
+                    val result = cloudBackupRepository.performFullRestore()
+                    result.fold(
+                        onSuccess = { count ->
+                            Log.d("AuthVM", "Auto-restore complete: $count documents restored")
+                        },
+                        onFailure = { e ->
+                            Log.e("AuthVM", "Auto-restore failed", e)
+                        }
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("AuthVM", "Auto-restore check failed", e)
+            }
+        }
+    }
 
     private fun traduitErreurFirebase(message: String?): String = when {
         message == null -> "Erreur inconnue"

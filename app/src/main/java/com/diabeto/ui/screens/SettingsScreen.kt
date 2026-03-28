@@ -165,7 +165,7 @@ fun SettingsScreen(
                     SettingsInfoItem(
                         icon = Icons.Default.Info,
                         title = "Version",
-                        subtitle = "1.7.0"
+                        subtitle = "1.9.0"
                     )
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                     SettingsInfoItem(
@@ -199,7 +199,7 @@ fun SettingsScreen(
                         title = "Politique de confidentialité",
                         subtitle = "RGPD - Protection des données",
                         onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://public-ochre-gamma.vercel.app/privacy.html"))
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://website-omega-umber-20.vercel.app/privacy.html"))
                             context.startActivity(intent)
                         }
                     )
@@ -209,7 +209,7 @@ fun SettingsScreen(
                         title = "Licence",
                         subtitle = "Licence propriétaire - NGOS THEODORE",
                         onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://public-ochre-gamma.vercel.app/license.html"))
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://website-omega-umber-20.vercel.app/license.html"))
                             context.startActivity(intent)
                         }
                     )
@@ -219,7 +219,7 @@ fun SettingsScreen(
                         title = "Conditions d'utilisation",
                         subtitle = "Termes et conditions",
                         onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://public-ochre-gamma.vercel.app/privacy.html"))
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://website-omega-umber-20.vercel.app/terms.html"))
                             context.startActivity(intent)
                         }
                     )
