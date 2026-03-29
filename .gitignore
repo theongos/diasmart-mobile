@@ -74,3 +74,5 @@ website/.firebaserc
 # Node modules
 node_modules/
 functions/node_modules/
+
+.vercel
