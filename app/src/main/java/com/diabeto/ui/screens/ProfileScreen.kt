@@ -209,26 +209,35 @@ fun ProfileScreen(
         if (t > 0) String.format("%.1f", p / ((t / 100.0) * (t / 100.0))) else null
     }
 
+    val isDark = isSystemInDarkTheme()
+    val screenBg = if (isDark) Color(0xFF0D0D1A) else Color(0xFFF7F8FC)
+    val cardBg = if (isDark) Color(0xFF1A1A2E) else Color.White
+    val headerGradient = listOf(
+        if (isDark) Color(0xFF2A2B55) else Color(0xFF6771E4),
+        if (isDark) Color(0xFF1A1A3E) else Color(0xFF8B93F0)
+    )
+    val titleColor = if (isDark) Color(0xFFE8E5FF) else TextPrimary
+    val subtitleColor = if (isDark) Color(0xFFB8B5C8) else TextSecondary
+
     Scaffold(
         topBar = {
-            Surface(modifier = Modifier.fillMaxWidth(), shadowElevation = 4.dp) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Brush.horizontalGradient(listOf(GradientStart, GradientMid, GradientEnd)))
-                        .padding(horizontal = 4.dp, vertical = 8.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Retour", tint = Color.White)
-                        }
-                        Text("Mon Profil", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Brush.horizontalGradient(headerGradient))
+                    .statusBarsPadding()
+                    .padding(horizontal = 4.dp, vertical = 12.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Retour", tint = Color.White)
                     }
+                    Text("Mon Profil", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = Background
+        containerColor = screenBg
     ) { padding ->
         if (isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -387,7 +396,7 @@ fun ProfileScreen(
             }
 
             Spacer(Modifier.height(24.dp))
-            Text("DiaSmart v1.6.0", fontSize = 11.sp, color = OnSurfaceVariant)
+            Text("DiaSmart v1.9.0", fontSize = 11.sp, color = subtitleColor)
         }
     }
 
@@ -427,19 +436,41 @@ private fun ProfileSection(
     icon: ImageVector,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val isDark = isSystemInDarkTheme()
+    val cardBg = if (isDark) Color(0xFF1A1A2E) else Color.White
+    val sectionColor = if (isDark) Color(0xFF8B93F0) else Primary
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(2.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(0.dp),
+        colors = CardDefaults.cardColors(containerColor = cardBg),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (isDark) Color(0xFF2A2A40) else Color(0xFFF0EFF5)
+        )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, null, tint = Primary, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(title, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Primary)
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(sectionColor.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(icon, null, tint = sectionColor, modifier = Modifier.size(18.dp))
+                }
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    title.uppercase(),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                    color = sectionColor,
+                    letterSpacing = 1.sp
+                )
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(14.dp))
             content()
         }
     }
@@ -447,23 +478,41 @@ private fun ProfileSection(
 
 @Composable
 private fun ProfileField(label: String, value: String, onEdit: (() -> Unit)? = null) {
+    val isDark = isSystemInDarkTheme()
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(label, fontSize = 12.sp, color = OnSurfaceVariant)
-            Text(value, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            Text(
+                label,
+                fontSize = 12.sp,
+                color = if (isDark) Color(0xFFB8B5C8) else OnSurfaceVariant,
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                value,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = if (isDark) Color(0xFFE8E5FF) else TextPrimary
+            )
         }
         if (onEdit != null) {
-            TextButton(onClick = onEdit) {
-                Text("Modifier", fontSize = 13.sp, color = Primary)
+            TextButton(
+                onClick = onEdit,
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Text("Modifier", fontSize = 13.sp, color = Primary, fontWeight = FontWeight.SemiBold)
             }
         }
     }
-    HorizontalDivider(color = OutlineVariant)
+    HorizontalDivider(
+        color = if (isDark) Color(0xFF2A2A40) else Color(0xFFF0EFF5),
+        thickness = 0.5.dp
+    )
 }
 
 @Composable
@@ -475,18 +524,36 @@ private fun MorphoCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
+    val isDark = isSystemInDarkTheme()
     Card(
         modifier = modifier.clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Background)
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(0.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDark) Color(0xFF252540) else Color(0xFFF7F8FC)
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (isDark) Color(0xFF2A2A40) else Color(0xFFEDEBF5)
+        )
     ) {
         Column(
             modifier = Modifier.padding(14.dp).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(emoji, fontSize = 24.sp)
-            Text(value, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            Text("$label ($unit)", fontSize = 11.sp, color = OnSurfaceVariant)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                value,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (isDark) Color(0xFFE8E5FF) else TextPrimary
+            )
+            Text(
+                "$label ($unit)",
+                fontSize = 11.sp,
+                color = if (isDark) Color(0xFFB8B5C8) else OnSurfaceVariant
+            )
         }
     }
 }

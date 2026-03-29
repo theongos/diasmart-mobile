@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -22,12 +23,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.diabeto.data.repository.AppLanguage
 import com.diabeto.data.repository.ThemeMode
 import com.diabeto.ui.theme.*
 import com.diabeto.ui.viewmodel.SettingsViewModel
+
+// ══════════════════════════════════════════════════════════════════
+//  DayLife-inspired Settings — Clean medical wellness UI
+//  Soft cards, colored icon circles, generous spacing
+// ══════════════════════════════════════════════════════════════════
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,407 +44,832 @@ fun SettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val isDark = isSystemInDarkTheme()
+
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
+    var showUnitDialog by remember { mutableStateOf(false) }
+    var showMeasureTypeDialog by remember { mutableStateOf(false) }
+    var showExportDialog by remember { mutableStateOf(false) }
+
+    // DayLife-inspired colors
+    val screenBg = if (isDark) Color(0xFF0D0D1A) else Color(0xFFF7F8FC)
+    val cardBg = if (isDark) Color(0xFF1A1A2E) else Color.White
+    val headerGradient = listOf(
+        if (isDark) Color(0xFF2A2B55) else Color(0xFF6771E4),
+        if (isDark) Color(0xFF1A1A3E) else Color(0xFF8B93F0)
+    )
+    val sectionTextColor = if (isDark) Color(0xFF8B93F0) else Primary
+    val titleColor = if (isDark) Color(0xFFE8E5FF) else TextPrimary
+    val subtitleColor = if (isDark) Color(0xFFB8B5C8) else TextSecondary
+    val dividerColor = if (isDark) Color(0xFF2A2A40) else Color(0xFFF0EFF5)
 
     Scaffold(
         topBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shadowElevation = 4.dp
+            // DayLife clean gradient header
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Brush.horizontalGradient(headerGradient))
+                    .statusBarsPadding()
+                    .padding(horizontal = 4.dp, vertical = 12.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.horizontalGradient(
-                                colors = listOf(GradientStart, GradientMid, GradientEnd)
-                            )
-                        )
-                        .padding(horizontal = 4.dp, vertical = 8.dp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(onClick = onNavigateBack) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Retour",
-                                tint = Color.White
-                            )
-                        }
-                        Text(
-                            "Paramètres",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Retour",
+                            tint = Color.White
                         )
                     }
+                    Text(
+                        "Paramètres",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
                 }
             }
         },
-        containerColor = Background
+        containerColor = screenBg
     ) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            item { Spacer(modifier = Modifier.height(4.dp)) }
+            item { Spacer(modifier = Modifier.height(8.dp)) }
 
-            // ── Apparence ───────────────────────────────────────
+            // ── Apparence ─────────────────────────────────────
             item {
-                SettingsSectionTitle("Apparence")
+                DayLifeSectionHeader(
+                    title = "Apparence",
+                    color = sectionTextColor,
+                    isDark = isDark
+                )
             }
             item {
-                SettingsCard {
-                    SettingsClickableItem(
+                DayLifeSettingsCard(cardBg = cardBg) {
+                    DayLifeSettingsItem(
                         icon = Icons.Default.Palette,
+                        iconBg = Color(0xFF6771E4),
                         title = "Thème",
                         subtitle = when (uiState.themeMode) {
                             ThemeMode.SYSTEM -> "Système"
                             ThemeMode.LIGHT -> "Clair"
                             ThemeMode.DARK -> "Sombre"
                         },
+                        titleColor = titleColor,
+                        subtitleColor = subtitleColor,
                         onClick = { showThemeDialog = true }
                     )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                    SettingsClickableItem(
+                    DayLifeDivider(dividerColor)
+                    DayLifeSettingsItem(
                         icon = Icons.Default.Language,
+                        iconBg = Color(0xFF00C9A7),
                         title = "Langue",
                         subtitle = uiState.language.displayName,
+                        titleColor = titleColor,
+                        subtitleColor = subtitleColor,
                         onClick = { showLanguageDialog = true }
                     )
                 }
             }
 
-            // ── Notifications ───────────────────────────────────
+            // ── Mesures & Unités ──────────────────────────────
             item {
-                SettingsSectionTitle("Notifications")
+                DayLifeSectionHeader(
+                    title = "Mesures & Unités",
+                    color = sectionTextColor,
+                    isDark = isDark
+                )
             }
             item {
-                SettingsCard {
-                    SettingsSwitchItem(
+                DayLifeSettingsCard(cardBg = cardBg) {
+                    DayLifeSettingsItem(
+                        icon = Icons.Default.Straighten,
+                        iconBg = Color(0xFF3B82F6),
+                        title = "Unité de glycémie",
+                        subtitle = "mg/dL",
+                        titleColor = titleColor,
+                        subtitleColor = subtitleColor,
+                        onClick = { showUnitDialog = true }
+                    )
+                    DayLifeDivider(dividerColor)
+                    DayLifeSettingsItem(
+                        icon = Icons.Default.MonitorHeart,
+                        iconBg = Color(0xFFEF4444),
+                        title = "Type de mesure",
+                        subtitle = "Capillaire (doigt)",
+                        titleColor = titleColor,
+                        subtitleColor = subtitleColor,
+                        onClick = { showMeasureTypeDialog = true }
+                    )
+                    DayLifeDivider(dividerColor)
+                    DayLifeSettingsItem(
+                        icon = Icons.Default.Analytics,
+                        iconBg = Color(0xFF8B5CF6),
+                        title = "Objectif glycémique",
+                        subtitle = "70 - 180 mg/dL",
+                        titleColor = titleColor,
+                        subtitleColor = subtitleColor,
+                        onClick = { }
+                    )
+                }
+            }
+
+            // ── Notifications ─────────────────────────────────
+            item {
+                DayLifeSectionHeader(
+                    title = "Notifications",
+                    color = sectionTextColor,
+                    isDark = isDark
+                )
+            }
+            item {
+                DayLifeSettingsCard(cardBg = cardBg) {
+                    DayLifeToggleItem(
                         icon = Icons.Default.Notifications,
+                        iconBg = Color(0xFFFF8C42),
                         title = "Notifications",
                         subtitle = "Activer les notifications push",
                         checked = uiState.notificationsEnabled,
-                        onCheckedChange = viewModel::setNotificationsEnabled
+                        onCheckedChange = viewModel::setNotificationsEnabled,
+                        titleColor = titleColor,
+                        subtitleColor = subtitleColor,
+                        isDark = isDark
                     )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                    SettingsSwitchItem(
+                    DayLifeDivider(dividerColor)
+                    DayLifeToggleItem(
                         icon = Icons.Default.Medication,
+                        iconBg = Color(0xFFEF4444),
                         title = "Rappels médicaments",
                         subtitle = "Rappel avant chaque prise",
                         checked = uiState.medicationReminders,
                         onCheckedChange = viewModel::setMedicationReminders,
-                        enabled = uiState.notificationsEnabled
+                        enabled = uiState.notificationsEnabled,
+                        titleColor = titleColor,
+                        subtitleColor = subtitleColor,
+                        isDark = isDark
                     )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                    SettingsSwitchItem(
+                    DayLifeDivider(dividerColor)
+                    DayLifeToggleItem(
                         icon = Icons.Default.MonitorHeart,
-                        title = "Rappels mesure glycémie",
+                        iconBg = Color(0xFF6771E4),
+                        title = "Rappels glycémie",
                         subtitle = "Rappel de mesure quotidien",
                         checked = uiState.measurementReminders,
                         onCheckedChange = viewModel::setMeasurementReminders,
-                        enabled = uiState.notificationsEnabled
+                        enabled = uiState.notificationsEnabled,
+                        titleColor = titleColor,
+                        subtitleColor = subtitleColor,
+                        isDark = isDark
                     )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                    SettingsSwitchItem(
+                    DayLifeDivider(dividerColor)
+                    DayLifeToggleItem(
                         icon = Icons.Default.CalendarMonth,
+                        iconBg = Color(0xFF14B8A6),
                         title = "Rappels rendez-vous",
                         subtitle = "Rappel 1h avant le RDV",
                         checked = uiState.appointmentReminders,
                         onCheckedChange = viewModel::setAppointmentReminders,
-                        enabled = uiState.notificationsEnabled
+                        enabled = uiState.notificationsEnabled,
+                        titleColor = titleColor,
+                        subtitleColor = subtitleColor,
+                        isDark = isDark
                     )
                 }
             }
 
-            // ── À propos ───────────────────────────────────────
+            // ── Export & Données ──────────────────────────────
             item {
-                SettingsSectionTitle("À propos")
+                DayLifeSectionHeader(
+                    title = "Export & Données",
+                    color = sectionTextColor,
+                    isDark = isDark
+                )
             }
             item {
-                SettingsCard {
-                    SettingsInfoItem(
+                DayLifeSettingsCard(cardBg = cardBg) {
+                    DayLifeSettingsItem(
+                        icon = Icons.Default.FileDownload,
+                        iconBg = Color(0xFF10B981),
+                        title = "Exporter mes données",
+                        subtitle = "CSV, PDF — Glycémie, repas, médicaments",
+                        titleColor = titleColor,
+                        subtitleColor = subtitleColor,
+                        onClick = { showExportDialog = true }
+                    )
+                    DayLifeDivider(dividerColor)
+                    DayLifeSettingsItem(
+                        icon = Icons.Default.CloudSync,
+                        iconBg = Color(0xFF3B82F6),
+                        title = "Sauvegarde cloud",
+                        subtitle = "Dernière sauvegarde : automatique",
+                        titleColor = titleColor,
+                        subtitleColor = subtitleColor,
+                        onClick = { }
+                    )
+                    DayLifeDivider(dividerColor)
+                    DayLifeSettingsItem(
+                        icon = Icons.Default.Share,
+                        iconBg = Color(0xFF8B5CF6),
+                        title = "Partager avec mon médecin",
+                        subtitle = "Envoyer un rapport par email",
+                        titleColor = titleColor,
+                        subtitleColor = subtitleColor,
+                        onClick = { }
+                    )
+                }
+            }
+
+            // ── À propos ─────────────────────────────────────
+            item {
+                DayLifeSectionHeader(
+                    title = "À propos",
+                    color = sectionTextColor,
+                    isDark = isDark
+                )
+            }
+            item {
+                DayLifeSettingsCard(cardBg = cardBg) {
+                    DayLifeInfoItem(
                         icon = Icons.Default.Info,
+                        iconBg = Color(0xFF6771E4),
                         title = "Version",
-                        subtitle = "1.9.0"
+                        subtitle = "1.9.0",
+                        titleColor = titleColor,
+                        subtitleColor = subtitleColor
                     )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                    SettingsInfoItem(
+                    DayLifeDivider(dividerColor)
+                    DayLifeInfoItem(
                         icon = Icons.Default.LocalHospital,
+                        iconBg = Color(0xFFEF4444),
                         title = "DiaSmart",
-                        subtitle = "Diabétologie Intelligente"
+                        subtitle = "Diabétologie Intelligente",
+                        titleColor = titleColor,
+                        subtitleColor = subtitleColor
                     )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                    SettingsInfoItem(
+                    DayLifeDivider(dividerColor)
+                    DayLifeInfoItem(
                         icon = Icons.Default.Person,
+                        iconBg = Color(0xFF14B8A6),
                         title = "Développeur",
-                        subtitle = "NGOS THEODORE"
+                        subtitle = "NGOS THEODORE",
+                        titleColor = titleColor,
+                        subtitleColor = subtitleColor
                     )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                    SettingsInfoItem(
+                    DayLifeDivider(dividerColor)
+                    DayLifeInfoItem(
                         icon = Icons.Default.Email,
+                        iconBg = Color(0xFFFF8C42),
                         title = "Contact",
-                        subtitle = "ngostheo30@gmail.com"
+                        subtitle = "ngostheo30@gmail.com",
+                        titleColor = titleColor,
+                        subtitleColor = subtitleColor
                     )
                 }
             }
 
-            // ── Légal ───────────────────────────────────────
+            // ── Légal ────────────────────────────────────────
             item {
-                SettingsSectionTitle("Légal")
+                DayLifeSectionHeader(
+                    title = "Légal",
+                    color = sectionTextColor,
+                    isDark = isDark
+                )
             }
             item {
-                SettingsCard {
-                    SettingsClickableItem(
+                DayLifeSettingsCard(cardBg = cardBg) {
+                    DayLifeSettingsItem(
                         icon = Icons.Default.Policy,
+                        iconBg = Color(0xFF6771E4),
                         title = "Politique de confidentialité",
                         subtitle = "RGPD - Protection des données",
+                        titleColor = titleColor,
+                        subtitleColor = subtitleColor,
                         onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://website-omega-umber-20.vercel.app/privacy.html"))
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://public-one-omega-88.vercel.app/privacy.html"))
                             context.startActivity(intent)
                         }
                     )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                    SettingsClickableItem(
+                    DayLifeDivider(dividerColor)
+                    DayLifeSettingsItem(
                         icon = Icons.Default.Gavel,
+                        iconBg = Color(0xFF8B5CF6),
                         title = "Licence",
                         subtitle = "Licence propriétaire - NGOS THEODORE",
+                        titleColor = titleColor,
+                        subtitleColor = subtitleColor,
                         onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://website-omega-umber-20.vercel.app/license.html"))
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://public-one-omega-88.vercel.app/license.html"))
                             context.startActivity(intent)
                         }
                     )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                    SettingsClickableItem(
+                    DayLifeDivider(dividerColor)
+                    DayLifeSettingsItem(
                         icon = Icons.Default.Description,
+                        iconBg = Color(0xFF14B8A6),
                         title = "Conditions d'utilisation",
                         subtitle = "Termes et conditions",
+                        titleColor = titleColor,
+                        subtitleColor = subtitleColor,
                         onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://website-omega-umber-20.vercel.app/terms.html"))
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://public-one-omega-88.vercel.app/terms.html"))
                             context.startActivity(intent)
                         }
                     )
                 }
             }
 
-            item { Spacer(modifier = Modifier.height(16.dp)) }
+            item { Spacer(modifier = Modifier.height(24.dp)) }
         }
     }
 
     // ── Dialogs ─────────────────────────────────────────────────
+
+    // Theme Dialog
     if (showThemeDialog) {
-        AlertDialog(
-            onDismissRequest = { showThemeDialog = false },
-            title = { Text("Choisir le thème") },
-            text = {
-                Column {
-                    ThemeMode.entries.forEach { mode ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    viewModel.setThemeMode(mode)
-                                    showThemeDialog = false
-                                }
-                                .padding(vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = uiState.themeMode == mode,
-                                onClick = {
-                                    viewModel.setThemeMode(mode)
-                                    showThemeDialog = false
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                when (mode) {
-                                    ThemeMode.SYSTEM -> "Système (automatique)"
-                                    ThemeMode.LIGHT -> "Mode clair"
-                                    ThemeMode.DARK -> "Mode sombre"
-                                }
-                            )
-                        }
-                    }
+        DayLifeSelectionDialog(
+            title = "Choisir le thème",
+            options = ThemeMode.entries.map { mode ->
+                when (mode) {
+                    ThemeMode.SYSTEM -> "Système (automatique)" to (uiState.themeMode == mode)
+                    ThemeMode.LIGHT -> "Mode clair" to (uiState.themeMode == mode)
+                    ThemeMode.DARK -> "Mode sombre" to (uiState.themeMode == mode)
                 }
             },
-            confirmButton = {
-                TextButton(onClick = { showThemeDialog = false }) {
-                    Text("Fermer")
-                }
-            }
+            onSelect = { index ->
+                viewModel.setThemeMode(ThemeMode.entries[index])
+                showThemeDialog = false
+            },
+            onDismiss = { showThemeDialog = false }
         )
     }
 
+    // Language Dialog
     if (showLanguageDialog) {
-        AlertDialog(
-            onDismissRequest = { showLanguageDialog = false },
-            title = { Text("Choisir la langue") },
-            text = {
-                Column {
-                    AppLanguage.entries.forEach { lang ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    viewModel.setLanguage(lang)
-                                    showLanguageDialog = false
-                                }
-                                .padding(vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = uiState.language == lang,
-                                onClick = {
-                                    viewModel.setLanguage(lang)
-                                    showLanguageDialog = false
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(lang.displayName)
-                        }
-                    }
-                }
+        DayLifeSelectionDialog(
+            title = "Choisir la langue",
+            options = AppLanguage.entries.map { lang ->
+                lang.displayName to (uiState.language == lang)
             },
-            confirmButton = {
-                TextButton(onClick = { showLanguageDialog = false }) {
-                    Text("Fermer")
-                }
-            }
+            onSelect = { index ->
+                viewModel.setLanguage(AppLanguage.entries[index])
+                showLanguageDialog = false
+            },
+            onDismiss = { showLanguageDialog = false }
+        )
+    }
+
+    // Unit Dialog
+    if (showUnitDialog) {
+        DayLifeSelectionDialog(
+            title = "Unité de glycémie",
+            options = listOf(
+                "mg/dL (milligrammes par décilitre)" to true,
+                "mmol/L (millimoles par litre)" to false
+            ),
+            onSelect = { showUnitDialog = false },
+            onDismiss = { showUnitDialog = false }
+        )
+    }
+
+    // Measure Type Dialog
+    if (showMeasureTypeDialog) {
+        DayLifeSelectionDialog(
+            title = "Type de mesure",
+            options = listOf(
+                "Capillaire (doigt)" to true,
+                "CGM (capteur continu)" to false,
+                "Veineux (laboratoire)" to false
+            ),
+            onSelect = { showMeasureTypeDialog = false },
+            onDismiss = { showMeasureTypeDialog = false }
+        )
+    }
+
+    // Export Dialog
+    if (showExportDialog) {
+        DayLifeExportDialog(
+            onDismiss = { showExportDialog = false }
         )
     }
 }
 
-// ── Composants Settings ─────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+//  DayLife Design System Components
+// ══════════════════════════════════════════════════════════════════
 
 @Composable
-private fun SettingsSectionTitle(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleSmall,
-        fontWeight = FontWeight.Bold,
-        color = Primary,
-        modifier = Modifier.padding(start = 4.dp, top = 8.dp)
-    )
+private fun DayLifeSectionHeader(
+    title: String,
+    color: Color,
+    isDark: Boolean
+) {
+    Row(
+        modifier = Modifier.padding(start = 4.dp, top = 12.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .width(3.dp)
+                .height(16.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(color)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = title.uppercase(),
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            color = color,
+            letterSpacing = 1.2.sp
+        )
+    }
 }
 
 @Composable
-private fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
+private fun DayLifeSettingsCard(
+    cardBg: Color,
+    content: @Composable ColumnScope.() -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(containerColor = cardBg),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (cardBg == Color.White) Color(0xFFF0EFF5) else Color(0xFF2A2A40)
+        )
     ) {
-        Column(content = content)
+        Column(
+            modifier = Modifier.padding(vertical = 4.dp),
+            content = content
+        )
     }
 }
 
 @Composable
-private fun SettingsClickableItem(
+private fun DayLifeSettingsItem(
     icon: ImageVector,
+    iconBg: Color,
     title: String,
     subtitle: String,
+    titleColor: Color,
+    subtitleColor: Color,
     onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            icon,
-            contentDescription = null,
-            tint = Primary,
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
+        // DayLife colored icon circle
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(iconBg.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = iconBg,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, fontWeight = FontWeight.Medium, fontSize = 15.sp)
-            Text(subtitle, fontSize = 13.sp, color = OnSurfaceVariant)
+            Text(
+                title,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+                color = titleColor
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                subtitle,
+                fontSize = 13.sp,
+                color = subtitleColor,
+                lineHeight = 16.sp
+            )
         }
         Icon(
             Icons.Default.ChevronRight,
             contentDescription = null,
-            tint = OnSurfaceVariant,
+            tint = subtitleColor.copy(alpha = 0.5f),
             modifier = Modifier.size(20.dp)
         )
     }
 }
 
 @Composable
-private fun SettingsSwitchItem(
+private fun DayLifeToggleItem(
     icon: ImageVector,
+    iconBg: Color,
     title: String,
     subtitle: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    titleColor: Color,
+    subtitleColor: Color,
+    isDark: Boolean
 ) {
+    val alpha = if (enabled) 1f else 0.4f
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            icon,
-            contentDescription = null,
-            tint = if (enabled) Primary else OnSurfaceVariant.copy(alpha = 0.5f),
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
+        // DayLife colored icon circle
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(iconBg.copy(alpha = 0.12f * alpha)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = iconBg.copy(alpha = alpha),
+                modifier = Modifier.size(22.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 title,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp,
-                color = if (enabled) MaterialTheme.colorScheme.onSurface else OnSurfaceVariant.copy(alpha = 0.5f)
+                color = titleColor.copy(alpha = alpha)
             )
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 subtitle,
                 fontSize = 13.sp,
-                color = if (enabled) OnSurfaceVariant else OnSurfaceVariant.copy(alpha = 0.4f)
+                color = subtitleColor.copy(alpha = alpha),
+                lineHeight = 16.sp
             )
         }
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            enabled = enabled
+            enabled = enabled,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = Primary,
+                uncheckedThumbColor = if (isDark) Color(0xFF4A4A60) else Color(0xFFD4D2E0),
+                uncheckedTrackColor = if (isDark) Color(0xFF2A2A40) else Color(0xFFF0EFF5)
+            )
         )
     }
 }
 
 @Composable
-private fun SettingsInfoItem(
+private fun DayLifeInfoItem(
     icon: ImageVector,
+    iconBg: Color,
     title: String,
-    subtitle: String
+    subtitle: String,
+    titleColor: Color,
+    subtitleColor: Color
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            icon,
-            contentDescription = null,
-            tint = Primary,
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(iconBg.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = iconBg,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, fontWeight = FontWeight.Medium, fontSize = 15.sp)
-            Text(subtitle, fontSize = 13.sp, color = OnSurfaceVariant)
+            Text(
+                title,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+                color = titleColor
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                subtitle,
+                fontSize = 13.sp,
+                color = subtitleColor,
+                lineHeight = 16.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun DayLifeDivider(color: Color) {
+    HorizontalDivider(
+        modifier = Modifier.padding(horizontal = 70.dp),
+        thickness = 0.5.dp,
+        color = color
+    )
+}
+
+// ── DayLife-styled Dialogs ──────────────────────────────────────
+
+@Composable
+private fun DayLifeSelectionDialog(
+    title: String,
+    options: List<Pair<String, Boolean>>,
+    onSelect: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val isDark = isSystemInDarkTheme()
+    val dialogBg = if (isDark) Color(0xFF1A1A2E) else Color.White
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = dialogBg,
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            Text(
+                title,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = if (isDark) Color(0xFFE8E5FF) else TextPrimary
+            )
+        },
+        text = {
+            Column {
+                options.forEachIndexed { index, (label, selected) ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(
+                                if (selected) Primary.copy(alpha = 0.1f)
+                                else Color.Transparent
+                            )
+                            .clickable { onSelect(index) }
+                            .padding(horizontal = 12.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = selected,
+                            onClick = { onSelect(index) },
+                            colors = RadioButtonDefaults.colors(
+                                selectedColor = Primary,
+                                unselectedColor = if (isDark) Color(0xFF6E6B7B) else TextSecondary
+                            )
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            label,
+                            fontSize = 15.sp,
+                            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                            color = if (selected) Primary
+                                   else if (isDark) Color(0xFFE8E5FF) else TextPrimary
+                        )
+                    }
+                    if (index < options.lastIndex) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    "Fermer",
+                    color = Primary,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    )
+}
+
+@Composable
+private fun DayLifeExportDialog(
+    onDismiss: () -> Unit
+) {
+    val isDark = isSystemInDarkTheme()
+    val dialogBg = if (isDark) Color(0xFF1A1A2E) else Color.White
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = dialogBg,
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            Text(
+                "Exporter mes données",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = if (isDark) Color(0xFFE8E5FF) else TextPrimary
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                ExportOptionCard(
+                    icon = Icons.Default.TableChart,
+                    iconBg = Color(0xFF10B981),
+                    title = "Export CSV",
+                    subtitle = "Tableur compatible Excel, Google Sheets",
+                    isDark = isDark
+                )
+                ExportOptionCard(
+                    icon = Icons.Default.PictureAsPdf,
+                    iconBg = Color(0xFFEF4444),
+                    title = "Export PDF",
+                    subtitle = "Rapport médical formaté avec graphiques",
+                    isDark = isDark
+                )
+                ExportOptionCard(
+                    icon = Icons.Default.Email,
+                    iconBg = Color(0xFF3B82F6),
+                    title = "Envoyer par email",
+                    subtitle = "Partager directement avec votre médecin",
+                    isDark = isDark
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    "Fermer",
+                    color = Primary,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    )
+}
+
+@Composable
+private fun ExportOptionCard(
+    icon: ImageVector,
+    iconBg: Color,
+    title: String,
+    subtitle: String,
+    isDark: Boolean
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(if (isDark) Color(0xFF252540) else Color(0xFFF7F8FC))
+            .clickable { }
+            .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(42.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(iconBg.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = iconBg,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column {
+            Text(
+                title,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                color = if (isDark) Color(0xFFE8E5FF) else TextPrimary
+            )
+            Text(
+                subtitle,
+                fontSize = 12.sp,
+                color = if (isDark) Color(0xFFB8B5C8) else TextSecondary
+            )
         }
     }
 }

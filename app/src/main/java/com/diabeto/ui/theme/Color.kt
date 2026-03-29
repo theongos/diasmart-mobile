@@ -8,7 +8,7 @@ import androidx.compose.ui.graphics.Color
 // ══════════════════════════════════════════════════════════════════
 
 // Couleurs principales
-val Primary = Color(0xFF5B4CFF)          // Indigo vibrant
+val Primary = Color(0xFF6771E4)          // DayLife indigo
 val OnPrimary = Color(0xFFFFFFFF)
 val PrimaryContainer = Color(0xFFE8E5FF)  // Indigo très clair
 val OnPrimaryContainer = Color(0xFF1A0066)
@@ -33,7 +33,7 @@ val GlucoseSevere = Color(0xFFFF4757)     // Rouge vif — Sévère > 250 ou < 5
 val Success = Color(0xFF00C9A7)
 val Warning = Color(0xFFFFB547)
 val Error = Color(0xFFFF4757)
-val Info = Color(0xFF5B4CFF)
+val Info = Color(0xFF6771E4)
 
 // Couleurs de fond — tons chauds et doux
 val Background = Color(0xFFF8F7FC)         // Lavande très très clair
@@ -57,13 +57,13 @@ val ChartGradientTop = Primary.copy(alpha = 0.3f)
 val ChartGradientBottom = Primary.copy(alpha = 0.02f)
 
 // Gradients DiaSmart
-val GradientStart = Color(0xFF7C6AFF)      // Indigo clair
-val GradientMid = Color(0xFF5B4CFF)        // Indigo primaire
-val GradientEnd = Color(0xFF3D2FCC)         // Indigo profond
+val GradientStart = Color(0xFF8B93F0)      // Indigo clair
+val GradientMid = Color(0xFF6771E4)        // Indigo primaire
+val GradientEnd = Color(0xFF4F58C2)         // Indigo profond
 
 // Gradient header doux (purple → bleu)
-val HeaderGradientStart = Color(0xFF6C5CE7)
-val HeaderGradientEnd = Color(0xFF4834D4)
+val HeaderGradientStart = Color(0xFF6771E4)
+val HeaderGradientEnd = Color(0xFF4F58C2)
 
 // Gradient accent (coral → rose)
 val AccentGradientStart = Color(0xFFFF6B8A)
@@ -94,7 +94,7 @@ val CardNutritionDark = Color(0xFFBF7824)       // Pêche vif
 
 // Navigation bar
 val NavBarBackground = Color(0xFFFFFFFF)
-val NavBarSelected = Color(0xFF5B4CFF)
+val NavBarSelected = Color(0xFF6771E4)
 val NavBarUnselected = Color(0xFFB8B5C8)
 
 // Texte

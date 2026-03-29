@@ -1,6 +1,7 @@
 package com.diabeto.ui.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -273,7 +274,8 @@ fun DashboardScreen(
                             ),
                             shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
                         )
-                        .padding(top = 48.dp, bottom = 28.dp, start = 24.dp, end = 24.dp)
+                        .statusBarsPadding()
+                        .padding(top = 12.dp, bottom = 28.dp, start = 24.dp, end = 24.dp)
                 ) {
                     Column {
                         // Top row: greeting + icons
@@ -454,12 +456,25 @@ fun DashboardScreen(
             //  ACTIONS RAPIDES — Grille de fonctionnalités
             // ═══════════════════════════════════════════════════════
             item {
-                Text(
-                    "Actions rapides",
-                    style = MaterialTheme.typography.titleLarge,
+                Row(
                     modifier = Modifier.padding(horizontal = 20.dp),
-                    color = textPri
-                )
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(3.dp)
+                            .height(18.dp)
+                            .background(Primary, RoundedCornerShape(2.dp))
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        "ACTIONS RAPIDES",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = textPri,
+                        letterSpacing = 1.sp
+                    )
+                }
             }
             item { Spacer(modifier = Modifier.height(12.dp)) }
 
@@ -654,7 +669,8 @@ fun DashboardScreen(
                         .padding(horizontal = 20.dp),
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(containerColor = cardSurface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 6.dp else 2.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    border = BorderStroke(1.dp, outlineCol)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         if (uiState.upcomingRendezVous.isEmpty()) {
@@ -699,7 +715,8 @@ fun DashboardScreen(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
                         shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(containerColor = cardSurface),
-                        elevation = CardDefaults.cardElevation(if (isDark) 6.dp else 2.dp)
+                        elevation = CardDefaults.cardElevation(0.dp),
+                        border = BorderStroke(1.dp, outlineCol)
                     ) {
                         EmptyStateMessage("Aucun patient enregistré", Icons.Outlined.People, textSec = textSec, textTer = textTer, surfaceVar = if (isDark) Color(0xFF2A2940) else SurfaceVariant)
                     }
@@ -742,11 +759,13 @@ private fun MiniStatCard(
     textSec: Color = TextSecondary
 ) {
     val isDark = isSystemInDarkTheme()
+    val borderCol = if (isDark) Color(0xFF2A2940) else OutlineVariant
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = cardSurface),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 6.dp else 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(1.dp, borderCol)
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
@@ -809,13 +828,15 @@ private fun FeatureCard(
     val actualCardColor = if (!isOnline && (isRolly || icon == Icons.Outlined.Forum || icon == Icons.Outlined.Restaurant))
         SurfaceVariant else resolvedCardColor
 
+    val featureBorderCol = if (isSystemDark) Color(0xFF2A2940) else OutlineVariant
     Card(
         modifier = modifier
             .height(110.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = actualCardColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isDarkCard || isSystemDark) 6.dp else 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = if (!isDarkCard) BorderStroke(1.dp, featureBorderCol) else null
     ) {
         Column(
             modifier = Modifier
@@ -878,11 +899,22 @@ private fun SectionHeader(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            title,
-            style = MaterialTheme.typography.titleLarge,
-            color = titleCol
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .width(3.dp)
+                    .height(18.dp)
+                    .background(Primary, RoundedCornerShape(2.dp))
+            )
+            Spacer(Modifier.width(10.dp))
+            Text(
+                title.uppercase(),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                color = titleCol,
+                letterSpacing = 1.sp
+            )
+        }
         if (action != null && onAction != null) {
             TextButton(onClick = onAction) {
                 Text(
@@ -968,13 +1000,15 @@ private fun PatientChip(
     val chipTextSec = if (isDark) Color(0xFFB8B5C8) else TextSecondary
     val chipPrimaryContainer = if (isDark) Color(0xFF3D2FCC) else PrimaryContainer
 
+    val chipBorderCol = if (isDark) Color(0xFF2A2940) else OutlineVariant
     Card(
         modifier = Modifier
             .width(140.dp)
             .clickable { onClick() },
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = chipSurface),
-        elevation = CardDefaults.cardElevation(if (isDark) 6.dp else 2.dp)
+        elevation = CardDefaults.cardElevation(0.dp),
+        border = BorderStroke(1.dp, chipBorderCol)
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
@@ -1051,11 +1085,14 @@ private fun DiaSmartBottomBar(
     isMedecin: Boolean = false,
     navBarBg: Color = NavBarBackground
 ) {
+    val isDark = isSystemInDarkTheme()
+    val navBorderCol = if (isDark) Color(0xFF2A2940) else OutlineVariant
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shadowElevation = 12.dp,
+        shadowElevation = 0.dp,
         color = navBarBg,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        border = BorderStroke(1.dp, navBorderCol)
     ) {
         NavigationBar(
             containerColor = Color.Transparent,
