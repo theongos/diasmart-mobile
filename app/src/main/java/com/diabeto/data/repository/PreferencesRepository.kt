@@ -21,6 +21,25 @@ enum class AppLanguage(val code: String, val displayName: String) {
     ENGLISH("en", "English"),
     ARABIC("ar", "العربية")
 }
+enum class GlucoseUnit(val label: String, val shortLabel: String) {
+    MG_DL("mg/dL", "mg/dL"),
+    MMOL_L("mmol/L", "mmol/L");
+
+    fun convert(valueInMgDl: Double): Double = when (this) {
+        MG_DL -> valueInMgDl
+        MMOL_L -> valueInMgDl / 18.0182
+    }
+
+    fun format(valueInMgDl: Double): String = when (this) {
+        MG_DL -> "${valueInMgDl.toInt()}"
+        MMOL_L -> "%.1f".format(valueInMgDl / 18.0182)
+    }
+}
+enum class MeasureType(val displayName: String) {
+    CAPILLARY("Capillaire (doigt)"),
+    CGM("CGM (capteur continu)"),
+    VENOUS("Veineux (laboratoire)")
+}
 
 @Singleton
 class PreferencesRepository @Inject constructor(
@@ -33,6 +52,10 @@ class PreferencesRepository @Inject constructor(
         val MEDICATION_REMINDERS = booleanPreferencesKey("medication_reminders")
         val MEASUREMENT_REMINDERS = booleanPreferencesKey("measurement_reminders")
         val APPOINTMENT_REMINDERS = booleanPreferencesKey("appointment_reminders")
+        val GLUCOSE_UNIT = stringPreferencesKey("glucose_unit")
+        val MEASURE_TYPE = stringPreferencesKey("measure_type")
+        val TARGET_MIN = stringPreferencesKey("glycemic_target_min")
+        val TARGET_MAX = stringPreferencesKey("glycemic_target_max")
     }
 
     val themeMode: Flow<ThemeMode> = context.dataStore.data.map { prefs ->
@@ -89,5 +112,40 @@ class PreferencesRepository @Inject constructor(
 
     suspend fun setAppointmentReminders(enabled: Boolean) {
         context.dataStore.edit { it[Keys.APPOINTMENT_REMINDERS] = enabled }
+    }
+
+    val glucoseUnit: Flow<GlucoseUnit> = context.dataStore.data.map { prefs ->
+        try {
+            GlucoseUnit.valueOf(prefs[Keys.GLUCOSE_UNIT] ?: GlucoseUnit.MG_DL.name)
+        } catch (_: Exception) { GlucoseUnit.MG_DL }
+    }
+
+    val measureType: Flow<MeasureType> = context.dataStore.data.map { prefs ->
+        try {
+            MeasureType.valueOf(prefs[Keys.MEASURE_TYPE] ?: MeasureType.CAPILLARY.name)
+        } catch (_: Exception) { MeasureType.CAPILLARY }
+    }
+
+    val targetMin: Flow<Double> = context.dataStore.data.map { prefs ->
+        prefs[Keys.TARGET_MIN]?.toDoubleOrNull() ?: 70.0
+    }
+
+    val targetMax: Flow<Double> = context.dataStore.data.map { prefs ->
+        prefs[Keys.TARGET_MAX]?.toDoubleOrNull() ?: 180.0
+    }
+
+    suspend fun setGlucoseUnit(unit: GlucoseUnit) {
+        context.dataStore.edit { it[Keys.GLUCOSE_UNIT] = unit.name }
+    }
+
+    suspend fun setMeasureType(type: MeasureType) {
+        context.dataStore.edit { it[Keys.MEASURE_TYPE] = type.name }
+    }
+
+    suspend fun setGlycemicTarget(min: Double, max: Double) {
+        context.dataStore.edit {
+            it[Keys.TARGET_MIN] = min.toString()
+            it[Keys.TARGET_MAX] = max.toString()
+        }
     }
 }

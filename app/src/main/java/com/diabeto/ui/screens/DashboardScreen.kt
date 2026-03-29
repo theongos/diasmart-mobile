@@ -340,14 +340,14 @@ fun DashboardScreen(
                                     Spacer(Modifier.height(4.dp))
                                     Row(verticalAlignment = Alignment.Bottom) {
                                         Text(
-                                            text = if (uiState.avgGlucose > 0) "${uiState.avgGlucose.toInt()}" else "--",
+                                            text = if (uiState.avgGlucose > 0) uiState.glucoseUnit.format(uiState.avgGlucose) else "--",
                                             fontSize = 38.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = Color.White
                                         )
                                         Spacer(Modifier.width(6.dp))
                                         Text(
-                                            "mg/dL",
+                                            uiState.glucoseUnit.shortLabel,
                                             fontSize = 14.sp,
                                             color = Color.White.copy(alpha = 0.7f),
                                             modifier = Modifier.padding(bottom = 6.dp)

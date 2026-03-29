@@ -2,12 +2,14 @@ package com.diabeto.ui.screens
 
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -21,15 +23,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.diabeto.data.repository.AppLanguage
+import com.diabeto.data.repository.CloudBackupRepository
+import com.diabeto.data.repository.GlucoseUnit
+import com.diabeto.data.repository.MeasureType
 import com.diabeto.data.repository.ThemeMode
 import com.diabeto.ui.theme.*
 import com.diabeto.ui.viewmodel.SettingsViewModel
+import kotlinx.coroutines.launch
 
 // ══════════════════════════════════════════════════════════════════
 //  DayLife-inspired Settings — Clean medical wellness UI
@@ -45,12 +52,15 @@ fun SettingsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val isDark = isSystemInDarkTheme()
+    val scope = rememberCoroutineScope()
 
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showUnitDialog by remember { mutableStateOf(false) }
     var showMeasureTypeDialog by remember { mutableStateOf(false) }
     var showExportDialog by remember { mutableStateOf(false) }
+    var showTargetDialog by remember { mutableStateOf(false) }
+    var isBackingUp by remember { mutableStateOf(false) }
 
     // DayLife-inspired colors
     val screenBg = if (isDark) Color(0xFF0D0D1A) else Color(0xFFF7F8FC)
@@ -155,7 +165,7 @@ fun SettingsScreen(
                         icon = Icons.Default.Straighten,
                         iconBg = Color(0xFF3B82F6),
                         title = "Unité de glycémie",
-                        subtitle = "mg/dL",
+                        subtitle = uiState.glucoseUnit.label,
                         titleColor = titleColor,
                         subtitleColor = subtitleColor,
                         onClick = { showUnitDialog = true }
@@ -165,7 +175,7 @@ fun SettingsScreen(
                         icon = Icons.Default.MonitorHeart,
                         iconBg = Color(0xFFEF4444),
                         title = "Type de mesure",
-                        subtitle = "Capillaire (doigt)",
+                        subtitle = uiState.measureType.displayName,
                         titleColor = titleColor,
                         subtitleColor = subtitleColor,
                         onClick = { showMeasureTypeDialog = true }
@@ -175,10 +185,13 @@ fun SettingsScreen(
                         icon = Icons.Default.Analytics,
                         iconBg = Color(0xFF8B5CF6),
                         title = "Objectif glycémique",
-                        subtitle = "70 - 180 mg/dL",
+                        subtitle = if (uiState.glucoseUnit == GlucoseUnit.MG_DL)
+                            "${uiState.targetMin.toInt()} - ${uiState.targetMax.toInt()} mg/dL"
+                        else
+                            "${"%.1f".format(uiState.targetMin / 18.0182)} - ${"%.1f".format(uiState.targetMax / 18.0182)} mmol/L",
                         titleColor = titleColor,
                         subtitleColor = subtitleColor,
-                        onClick = { }
+                        onClick = { showTargetDialog = true }
                     )
                 }
             }
@@ -270,10 +283,24 @@ fun SettingsScreen(
                         icon = Icons.Default.CloudSync,
                         iconBg = Color(0xFF3B82F6),
                         title = "Sauvegarde cloud",
-                        subtitle = "Dernière sauvegarde : automatique",
+                        subtitle = if (isBackingUp) "Sauvegarde en cours..." else "Sauvegarder maintenant",
                         titleColor = titleColor,
                         subtitleColor = subtitleColor,
-                        onClick = { }
+                        onClick = {
+                            if (!isBackingUp) {
+                                isBackingUp = true
+                                scope.launch {
+                                    try {
+                                        viewModel.performCloudBackup()
+                                        Toast.makeText(context, "Sauvegarde cloud réussie !", Toast.LENGTH_SHORT).show()
+                                    } catch (_: Exception) {
+                                        Toast.makeText(context, "Erreur de sauvegarde", Toast.LENGTH_SHORT).show()
+                                    } finally {
+                                        isBackingUp = false
+                                    }
+                                }
+                            }
+                        }
                     )
                     DayLifeDivider(dividerColor)
                     DayLifeSettingsItem(
@@ -283,7 +310,14 @@ fun SettingsScreen(
                         subtitle = "Envoyer un rapport par email",
                         titleColor = titleColor,
                         subtitleColor = subtitleColor,
-                        onClick = { }
+                        onClick = {
+                            val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
+                                data = Uri.parse("mailto:")
+                                putExtra(Intent.EXTRA_SUBJECT, "Rapport DiaSmart - Données patient")
+                                putExtra(Intent.EXTRA_TEXT, "Bonjour,\n\nVeuillez trouver ci-joint mon rapport DiaSmart.\n\nCordialement")
+                            }
+                            context.startActivity(Intent.createChooser(emailIntent, "Envoyer par email"))
+                        }
                     )
                 }
             }
@@ -431,11 +465,17 @@ fun SettingsScreen(
     if (showUnitDialog) {
         DayLifeSelectionDialog(
             title = "Unité de glycémie",
-            options = listOf(
-                "mg/dL (milligrammes par décilitre)" to true,
-                "mmol/L (millimoles par litre)" to false
-            ),
-            onSelect = { showUnitDialog = false },
+            options = GlucoseUnit.entries.map { unit ->
+                val desc = when (unit) {
+                    GlucoseUnit.MG_DL -> "mg/dL (milligrammes par décilitre)"
+                    GlucoseUnit.MMOL_L -> "mmol/L (millimoles par litre)"
+                }
+                desc to (uiState.glucoseUnit == unit)
+            },
+            onSelect = { index ->
+                viewModel.setGlucoseUnit(GlucoseUnit.entries[index])
+                showUnitDialog = false
+            },
             onDismiss = { showUnitDialog = false }
         )
     }
@@ -444,19 +484,45 @@ fun SettingsScreen(
     if (showMeasureTypeDialog) {
         DayLifeSelectionDialog(
             title = "Type de mesure",
-            options = listOf(
-                "Capillaire (doigt)" to true,
-                "CGM (capteur continu)" to false,
-                "Veineux (laboratoire)" to false
-            ),
-            onSelect = { showMeasureTypeDialog = false },
+            options = MeasureType.entries.map { type ->
+                type.displayName to (uiState.measureType == type)
+            },
+            onSelect = { index ->
+                viewModel.setMeasureType(MeasureType.entries[index])
+                showMeasureTypeDialog = false
+            },
             onDismiss = { showMeasureTypeDialog = false }
+        )
+    }
+
+    // Glycemic Target Dialog
+    if (showTargetDialog) {
+        DayLifeTargetDialog(
+            currentMin = uiState.targetMin,
+            currentMax = uiState.targetMax,
+            onConfirm = { min, max ->
+                viewModel.setGlycemicTarget(min, max)
+                showTargetDialog = false
+            },
+            onDismiss = { showTargetDialog = false }
         )
     }
 
     // Export Dialog
     if (showExportDialog) {
         DayLifeExportDialog(
+            onExportCsv = {
+                showExportDialog = false
+                viewModel.exportData(context, "csv")
+            },
+            onExportPdf = {
+                showExportDialog = false
+                viewModel.exportData(context, "pdf")
+            },
+            onExportEmail = {
+                showExportDialog = false
+                viewModel.exportData(context, "email")
+            },
             onDismiss = { showExportDialog = false }
         )
     }
@@ -772,6 +838,9 @@ private fun DayLifeSelectionDialog(
 
 @Composable
 private fun DayLifeExportDialog(
+    onExportCsv: () -> Unit,
+    onExportPdf: () -> Unit,
+    onExportEmail: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val isDark = isSystemInDarkTheme()
@@ -796,21 +865,24 @@ private fun DayLifeExportDialog(
                     iconBg = Color(0xFF10B981),
                     title = "Export CSV",
                     subtitle = "Tableur compatible Excel, Google Sheets",
-                    isDark = isDark
+                    isDark = isDark,
+                    onClick = onExportCsv
                 )
                 ExportOptionCard(
                     icon = Icons.Default.PictureAsPdf,
                     iconBg = Color(0xFFEF4444),
                     title = "Export PDF",
                     subtitle = "Rapport médical formaté avec graphiques",
-                    isDark = isDark
+                    isDark = isDark,
+                    onClick = onExportPdf
                 )
                 ExportOptionCard(
                     icon = Icons.Default.Email,
                     iconBg = Color(0xFF3B82F6),
                     title = "Envoyer par email",
                     subtitle = "Partager directement avec votre médecin",
-                    isDark = isDark
+                    isDark = isDark,
+                    onClick = onExportEmail
                 )
             }
         },
@@ -832,14 +904,15 @@ private fun ExportOptionCard(
     iconBg: Color,
     title: String,
     subtitle: String,
-    isDark: Boolean
+    isDark: Boolean,
+    onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
             .background(if (isDark) Color(0xFF252540) else Color(0xFFF7F8FC))
-            .clickable { }
+            .clickable { onClick() }
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -872,4 +945,76 @@ private fun ExportOptionCard(
             )
         }
     }
+}
+
+@Composable
+private fun DayLifeTargetDialog(
+    currentMin: Double,
+    currentMax: Double,
+    onConfirm: (Double, Double) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val isDark = isSystemInDarkTheme()
+    val dialogBg = if (isDark) Color(0xFF1A1A2E) else Color.White
+    var minText by remember { mutableStateOf(currentMin.toInt().toString()) }
+    var maxText by remember { mutableStateOf(currentMax.toInt().toString()) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = dialogBg,
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            Text(
+                "Objectif glycémique",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = if (isDark) Color(0xFFE8E5FF) else TextPrimary
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(
+                    "Définissez votre plage cible (mg/dL)",
+                    fontSize = 14.sp,
+                    color = if (isDark) Color(0xFFB8B5C8) else TextSecondary
+                )
+                OutlinedTextField(
+                    value = minText,
+                    onValueChange = { minText = it.filter { c -> c.isDigit() } },
+                    label = { Text("Minimum (mg/dL)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = maxText,
+                    onValueChange = { maxText = it.filter { c -> c.isDigit() } },
+                    label = { Text("Maximum (mg/dL)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val min = minText.toDoubleOrNull() ?: 70.0
+                    val max = maxText.toDoubleOrNull() ?: 180.0
+                    onConfirm(min.coerceIn(40.0, 200.0), max.coerceIn(100.0, 400.0))
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Primary),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Text("Enregistrer")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Annuler", color = Primary, fontWeight = FontWeight.SemiBold)
+            }
+        }
+    )
 }

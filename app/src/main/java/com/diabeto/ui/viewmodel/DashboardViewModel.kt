@@ -18,7 +18,7 @@ import javax.inject.Inject
  */
 data class DashboardUiState(
     val totalPatients: Int = 0,
-    val avgGlucose: Double = 0.0,
+    val avgGlucose: Double = 0.0, // always stored in mg/dL
     val todayRendezVous: Int = 0,
     val todayConfirmed: Int = 0,
     val pendingConfirmations: Int = 0,
@@ -28,7 +28,8 @@ data class DashboardUiState(
     val isLoading: Boolean = false,
     val isOnline: Boolean = true,
     val error: String? = null,
-    val userRole: UserRole = UserRole.PATIENT
+    val userRole: UserRole = UserRole.PATIENT,
+    val glucoseUnit: com.diabeto.data.repository.GlucoseUnit = com.diabeto.data.repository.GlucoseUnit.MG_DL
 )
 
 @HiltViewModel
@@ -39,7 +40,8 @@ class DashboardViewModel @Inject constructor(
     private val medicamentRepository: MedicamentRepository,
     private val authRepository: AuthRepository,
     private val connectivityObserver: ConnectivityObserver,
-    private val cloudBackupRepository: CloudBackupRepository
+    private val cloudBackupRepository: CloudBackupRepository,
+    private val preferencesRepository: PreferencesRepository
 ) : ViewModel() {
 
     companion object {
@@ -54,6 +56,15 @@ class DashboardViewModel @Inject constructor(
         checkAndRestoreFromCloud()
         loadDashboardData()
         observeConnectivity()
+        observeGlucoseUnit()
+    }
+
+    private fun observeGlucoseUnit() {
+        viewModelScope.launch {
+            preferencesRepository.glucoseUnit.collect { unit ->
+                _uiState.update { it.copy(glucoseUnit = unit) }
+            }
+        }
     }
 
     /**

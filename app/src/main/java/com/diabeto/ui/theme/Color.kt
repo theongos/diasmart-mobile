@@ -35,17 +35,17 @@ val Warning = Color(0xFFFFB547)
 val Error = Color(0xFFFF4757)
 val Info = Color(0xFF6771E4)
 
-// Couleurs de fond — tons chauds et doux
-val Background = Color(0xFFF8F7FC)         // Lavande très très clair
+// Couleurs de fond — tons chauds et doux (light mode: softer)
+val Background = Color(0xFFF9F8FD)         // Lavande très doux
 val OnBackground = Color(0xFF1A1A2E)       // Bleu nuit profond
 val Surface = Color(0xFFFFFFFF)
 val OnSurface = Color(0xFF1A1A2E)
-val SurfaceVariant = Color(0xFFF0EFF5)     // Gris lavande
+val SurfaceVariant = Color(0xFFF2F1F7)     // Gris lavande doux
 val OnSurfaceVariant = Color(0xFF6E6B7B)   // Gris moyen violet
 
 // Couleurs d'outline
-val Outline = Color(0xFFD4D2E0)
-val OutlineVariant = Color(0xFFEDEBF5)
+val Outline = Color(0xFFDBD9E8)
+val OutlineVariant = Color(0xFFEFEDF7)
 
 // Couleurs pour les graphiques
 val ChartLine = Primary
@@ -73,24 +73,24 @@ val AccentGradientEnd = Color(0xFFFF8E72)
 val TealGradientStart = Color(0xFF00C9A7)
 val TealGradientEnd = Color(0xFF00B4D8)
 
-// Cartes de fonctionnalités — couleurs pastels douces
-val CardGlucose = Color(0xFFE8E5FF)        // Lavande
-val CardMedication = Color(0xFFFFE0E8)     // Rose pâle
-val CardAppointment = Color(0xFFCCF5EC)    // Menthe
-val CardInsulin = Color(0xFFFFF3D6)        // Doré pâle
-val CardActivity = Color(0xFFD6EFFF)       // Bleu ciel
-val CardNutrition = Color(0xFFFFEBCC)      // Pêche
+// Cartes de fonctionnalités — couleurs pastels très douces (light mode)
+val CardGlucose = Color(0xFFECEAFF)        // Lavande très doux
+val CardMedication = Color(0xFFFFE8EF)     // Rose pâle doux
+val CardAppointment = Color(0xFFD4F7EF)    // Menthe doux
+val CardInsulin = Color(0xFFFFF6DE)        // Doré pâle doux
+val CardActivity = Color(0xFFDEF2FF)       // Bleu ciel doux
+val CardNutrition = Color(0xFFFFF0D6)      // Pêche doux
 
 // Rolly card (dashboard)
 val RollyCardColor = Color(0xFF6771E4)
 
-// Cartes de fonctionnalités — couleurs VIVES pour le mode sombre
-val CardGlucoseDark = Color(0xFF5650B8)         // Lavande vif
-val CardMedicationDark = Color(0xFFB83A5E)      // Rose vif
-val CardAppointmentDark = Color(0xFF1E9E7E)     // Menthe vif
-val CardInsulinDark = Color(0xFFBFA834)         // Doré vif
-val CardActivityDark = Color(0xFF2478B8)        // Bleu vif
-val CardNutritionDark = Color(0xFFBF7824)       // Pêche vif
+// Cartes de fonctionnalités — couleurs DENSES pour le mode sombre
+val CardGlucoseDark = Color(0xFF4A45A8)         // Lavande dense
+val CardMedicationDark = Color(0xFFA63050)      // Rose dense
+val CardAppointmentDark = Color(0xFF178A6E)     // Menthe dense
+val CardInsulinDark = Color(0xFFAD952C)         // Doré dense
+val CardActivityDark = Color(0xFF1C6AA6)        // Bleu dense
+val CardNutritionDark = Color(0xFFAD6A1C)       // Pêche dense
 
 // Navigation bar
 val NavBarBackground = Color(0xFFFFFFFF)

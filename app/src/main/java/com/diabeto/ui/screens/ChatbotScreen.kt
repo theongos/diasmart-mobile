@@ -204,7 +204,7 @@ fun ChatbotScreen(
             if (uiState.showAnalyse && uiState.analyseRapide != null) {
                 AlertDialog(
                     onDismissRequest = viewModel::dismissAnalyse,
-                    containerColor = Color.White,
+                    containerColor = if (isDarkTheme) Color(0xFF1A1A2E) else Color.White,
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             RollyIcon(size = 28.dp, showBackground = true)
@@ -212,7 +212,7 @@ fun ChatbotScreen(
                             Text(
                                 "Analyse ROLLY",
                                 fontWeight = FontWeight.Bold,
-                                color = TextPrimary
+                                color = if (isDarkTheme) Color(0xFFE8E5FF) else TextPrimary
                             )
                         }
                     },
@@ -221,7 +221,7 @@ fun ChatbotScreen(
                             item {
                                 RichMarkdownText(
                                     text = uiState.analyseRapide ?: "",
-                                    textColor = TextPrimary
+                                    textColor = if (isDarkTheme) Color(0xFFE8E5FF) else TextPrimary
                                 )
                             }
                         }
@@ -242,7 +242,7 @@ fun ChatbotScreen(
             if (uiState.showValidationDialog && uiState.availableDoctors.isNotEmpty()) {
                 AlertDialog(
                     onDismissRequest = viewModel::dismissValidation,
-                    containerColor = Color.White,
+                    containerColor = if (isDarkTheme) Color(0xFF1A1A2E) else Color.White,
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             RollyIcon(size = 28.dp, showBackground = true)
@@ -251,7 +251,7 @@ fun ChatbotScreen(
                                 Text(
                                     "Validation médicale",
                                     fontWeight = FontWeight.Bold,
-                                    color = TextPrimary
+                                    color = if (isDarkTheme) Color(0xFFE8E5FF) else TextPrimary
                                 )
                                 Text(
                                     "Collaboration IA-Médecin",
