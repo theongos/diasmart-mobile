@@ -340,7 +340,14 @@ class ChatbotViewModel @Inject constructor(
                     latestHbA1c = latestHbA1c,
                     hba1cEstimee = hba1cEstimee,
                     historiqueChat = cachedHistoryContext
-                ).collect { chunk -> reponse = chunk }
+                ).collect { chunk ->
+                    reponse = chunk
+                    // Update UI progressively — replace loading message with accumulated text
+                    _uiState.update { state ->
+                        val streamingMsg = ChatbotMessage(contenu = reponse, estUtilisateur = false)
+                        state.copy(messages = state.messages.dropLast(1) + streamingMsg)
+                    }
+                }
 
                 val msgIA = ChatbotMessage(contenu = reponse, estUtilisateur = false)
                 chatHistoryRepository.saveExchange(msgUtilisateur, msgIA)
@@ -416,7 +423,13 @@ class ChatbotViewModel @Inject constructor(
                     val est = com.diabeto.data.entity.HbA1cEntity.estimerDepuisGlycemieMoyenne(stats.moyenne)
                     (est * 10).toInt() / 10.0
                 } else null
-                val analyse = chatbotRepository.analyserGlycemie(patient, lectures, latestHbA1c, hba1cEstimee)
+
+                var analyse = ""
+                chatbotRepository.analyserGlycemieStream(patient, lectures, latestHbA1c, hba1cEstimee)
+                    .collect { chunk ->
+                        analyse = chunk
+                        _uiState.update { it.copy(analyseRapide = analyse, showAnalyse = true) }
+                    }
                 refreshQuota()
 
                 val userMsg = ChatbotMessage(contenu = "[Analyse glycémique demandée]", estUtilisateur = true)
@@ -440,7 +453,13 @@ class ChatbotViewModel @Inject constructor(
                 val patient = patientRepository.getPatientById(pid) ?: return@launch
                 val lectures = glucoseRepository.getLast7DaysLectures(pid)
                 val latestHbA1c = glucoseRepository.getHbA1cByPatientList(pid).firstOrNull { !it.estEstimation }
-                val prevision = chatbotRepository.previsionRisque(patient, lectures, latestHbA1c)
+
+                var prevision = ""
+                chatbotRepository.previsionRisqueStream(patient, lectures, latestHbA1c)
+                    .collect { chunk ->
+                        prevision = chunk
+                        _uiState.update { it.copy(analyseRapide = prevision, showAnalyse = true) }
+                    }
                 refreshQuota()
 
                 val userMsg = ChatbotMessage(contenu = "[Prévision de risque demandée]", estUtilisateur = true)
@@ -464,7 +483,13 @@ class ChatbotViewModel @Inject constructor(
                 val patient = patientRepository.getPatientById(pid) ?: return@launch
                 val dernier = glucoseRepository.getLatestReading(pid)
                 val latestHbA1c = glucoseRepository.getHbA1cByPatientList(pid).firstOrNull { !it.estEstimation }
-                val conseils = chatbotRepository.conseilsNutritionnels(patient, dernier, latestHbA1c)
+
+                var conseils = ""
+                chatbotRepository.conseilsNutritionnelsStream(patient, dernier, latestHbA1c)
+                    .collect { chunk ->
+                        conseils = chunk
+                        _uiState.update { it.copy(analyseRapide = conseils, showAnalyse = true) }
+                    }
                 refreshQuota()
 
                 val userMsg = ChatbotMessage(contenu = "[Conseils nutritionnels demandés]", estUtilisateur = true)

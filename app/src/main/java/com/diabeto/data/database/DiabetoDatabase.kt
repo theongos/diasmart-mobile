@@ -18,9 +18,10 @@ import com.diabeto.data.entity.*
         MedicamentEntity::class,
         RendezVousEntity::class,
         HbA1cEntity::class,
-        JournalEntity::class
+        JournalEntity::class,
+        AiCacheEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -32,6 +33,7 @@ abstract class DiabetoDatabase : RoomDatabase() {
     abstract fun rendezVousDao(): RendezVousDao
     abstract fun hbA1cDao(): HbA1cDao
     abstract fun journalDao(): JournalDao
+    abstract fun aiCacheDao(): AiCacheDao
     
     companion object {
         const val DATABASE_NAME = "diabeto_database.db"

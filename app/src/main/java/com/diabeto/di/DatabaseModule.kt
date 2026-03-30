@@ -52,4 +52,9 @@ object DatabaseModule {
     fun provideJournalDao(database: DiabetoDatabase): JournalDao {
         return database.journalDao()
     }
+
+    @Provides
+    fun provideAiCacheDao(database: DiabetoDatabase): AiCacheDao {
+        return database.aiCacheDao()
+    }
 }

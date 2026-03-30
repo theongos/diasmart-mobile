@@ -2,6 +2,8 @@ package com.diabeto.data.repository
 
 import android.graphics.Bitmap
 import android.util.Log
+import com.diabeto.data.dao.AiCacheDao
+import com.diabeto.data.entity.AiCacheEntity
 import com.diabeto.data.entity.HbA1cEntity
 import com.diabeto.data.entity.LectureGlucoseEntity
 import com.diabeto.data.entity.PatientEntity
@@ -9,6 +11,7 @@ import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import java.security.MessageDigest
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -17,30 +20,112 @@ private const val TAG = "ChatbotRepository"
 
 /**
  * Repository pour les interactions avec Gemini AI (ROLLY)
- * Prompts durcis : anti-hallucination, ton professionnel, périmètre diabète strict
+ * - Streaming : réponses mot-à-mot via sendMessageStream / generateContentStream
+ * - Cache local Room : évite les appels redondants pour questions génériques
  */
 @Singleton
 class ChatbotRepository @Inject constructor(
-    private val geminiModel: GenerativeModel
+    private val geminiModel: GenerativeModel,
+    private val aiCacheDao: AiCacheDao
 ) {
     private var chatSession = geminiModel.startChat()
 
     // ─────────────────────────────────────────────────────────────────────────
-    // CONVERSATION LIBRE
+    // CACHE HELPERS
     // ─────────────────────────────────────────────────────────────────────────
 
+    private fun hashQuery(text: String): String {
+        val normalized = text.trim().lowercase()
+            .replace(Regex("\\s+"), " ")
+            .replace(Regex("[,.!?;:]+"), "")
+        val digest = MessageDigest.getInstance("SHA-256")
+        return digest.digest(normalized.toByteArray()).joinToString("") { "%02x".format(it) }
+    }
+
+    /**
+     * Détecte si une question est "générique" (cacheable) vs patient-spécifique.
+     * Questions génériques : définitions, conseils généraux, symptômes
+     * Questions spécifiques : celles avec données patient, glycémie perso, etc.
+     */
+    private fun isCacheableQuestion(message: String): Boolean {
+        val lower = message.lowercase()
+        val genericPatterns = listOf(
+            "qu'est-ce que", "c'est quoi", "définition", "definition",
+            "qu'est ce que", "explique", "comment fonctionne",
+            "symptômes", "symptomes", "signes", "causes",
+            "différence entre", "difference entre",
+            "aliments", "manger", "éviter", "régime", "regime",
+            "exercice", "sport", "activité physique",
+            "hypoglycémie", "hypoglycemie", "hyperglycémie", "hyperglycemie",
+            "hba1c", "insuline", "glycémie", "glycemie",
+            "diabète type 1", "diabete type 1", "diabète type 2", "diabete type 2",
+            "conseils", "recommandations", "prévenir", "prevenir"
+        )
+        return genericPatterns.any { lower.contains(it) }
+    }
+
+    private suspend fun getCachedResponse(query: String): String? {
+        val hash = hashQuery(query)
+        val cached = aiCacheDao.getCached(hash)
+        if (cached != null) {
+            aiCacheDao.incrementHitCount(hash)
+            Log.d(TAG, "Cache HIT for: ${query.take(50)}... (hits: ${cached.hitCount + 1})")
+            return cached.response
+        }
+        return null
+    }
+
+    private suspend fun cacheResponse(query: String, response: String, category: String = "general") {
+        val hash = hashQuery(query)
+        aiCacheDao.insert(
+            AiCacheEntity(
+                queryHash = hash,
+                query = query.take(200),
+                response = response,
+                category = category,
+                expiresAt = System.currentTimeMillis() + 24 * 60 * 60 * 1000 // 24h
+            )
+        )
+        Log.d(TAG, "Cached response for: ${query.take(50)}...")
+    }
+
+    /** Purge expired cache entries. Call periodically. */
+    suspend fun purgeCache() {
+        aiCacheDao.purgeExpired()
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // CONVERSATION LIBRE — STREAMING
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Envoie un message et stream la réponse chunk par chunk.
+     * Chaque emit contient le texte ACCUMULÉ (pas juste le delta).
+     */
     fun envoyerMessage(message: String): Flow<String> = flow {
         try {
-            Log.d(TAG, "envoyerMessage: $message")
-            val response = chatSession.sendMessage(message)
-            Log.d(TAG, "Réponse reçue: ${response.text?.take(100)}")
-            emit(response.text ?: "Je n'ai pas pu générer de réponse.")
+            Log.d(TAG, "envoyerMessage (stream): $message")
+            val accumulated = StringBuilder()
+            chatSession.sendMessageStream(message).collect { chunk ->
+                chunk.text?.let {
+                    accumulated.append(it)
+                    emit(accumulated.toString())
+                }
+            }
+            if (accumulated.isEmpty()) {
+                emit("Je n'ai pas pu générer de réponse.")
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Erreur envoyerMessage", e)
             emit("❌ Erreur IA : ${e.message}")
         }
     }
 
+    /**
+     * Envoie un message avec contexte patient.
+     * - Vérifie le cache local d'abord pour les questions génériques
+     * - Stream la réponse en temps réel sinon
+     */
     fun envoyerMessageAvecContexte(
         message: String,
         patient: PatientEntity?,
@@ -50,6 +135,15 @@ class ChatbotRepository @Inject constructor(
         historiqueChat: String = ""
     ): Flow<String> = flow {
         try {
+            // Check cache for generic questions (no patient-specific data needed)
+            if (isCacheableQuestion(message) && patient == null && lecturesRecentes.isEmpty()) {
+                val cached = getCachedResponse(message)
+                if (cached != null) {
+                    emit(cached)
+                    return@flow
+                }
+            }
+
             val contexte = buildContexte(patient, lecturesRecentes, latestHbA1c, hba1cEstimee)
             val sb = StringBuilder()
             if (historiqueChat.isNotBlank()) {
@@ -63,10 +157,25 @@ class ChatbotRepository @Inject constructor(
             }
             sb.appendLine("Question : $message")
             val messageComplet = sb.toString().trim()
-            Log.d(TAG, "envoyerMessageAvecContexte: ${messageComplet.take(300)}")
-            val response = chatSession.sendMessage(messageComplet)
-            Log.d(TAG, "Réponse contexte reçue: ${response.text?.take(100)}")
-            emit(response.text ?: "Je n'ai pas pu générer de réponse.")
+            Log.d(TAG, "envoyerMessageAvecContexte (stream): ${messageComplet.take(300)}")
+
+            val accumulated = StringBuilder()
+            chatSession.sendMessageStream(messageComplet).collect { chunk ->
+                chunk.text?.let {
+                    accumulated.append(it)
+                    emit(accumulated.toString())
+                }
+            }
+
+            val finalResponse = accumulated.toString()
+            if (finalResponse.isBlank()) {
+                emit("Je n'ai pas pu générer de réponse.")
+            } else {
+                // Cache generic responses for future use
+                if (isCacheableQuestion(message)) {
+                    cacheResponse(message, finalResponse)
+                }
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Erreur envoyerMessageAvecContexte", e)
             emit("❌ Erreur IA : ${e.message}")
@@ -74,13 +183,19 @@ class ChatbotRepository @Inject constructor(
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // ANALYSE DE REPAS → JSON STRUCTURÉ
+    // ANALYSE DE REPAS → JSON STRUCTURÉ (streaming not used — needs full JSON)
+    // Cache : repas identiques retournent le même résultat
     // ─────────────────────────────────────────────────────────────────────────
 
     suspend fun analyserRepasJson(
         descriptionRepas: String,
         patient: PatientEntity? = null
     ): String {
+        // Check cache for identical meal descriptions
+        val cacheKey = "repas:$descriptionRepas"
+        val cached = getCachedResponse(cacheKey)
+        if (cached != null) return cached
+
         val contextePatient = patient?.let {
             "Patient : ${it.nomComplet}, ${it.age} ans, Diabète ${it.typeDiabete.name.replace("_", " ")}"
         } ?: ""
@@ -126,16 +241,72 @@ class ChatbotRepository @Inject constructor(
 
         return try {
             val response = geminiModel.generateContent(prompt)
-            response.text ?: throw Exception("Réponse vide de Gemini")
+            val text = response.text ?: throw Exception("Réponse vide de Gemini")
+            // Cache this meal analysis (6h TTL for meals)
+            aiCacheDao.insert(
+                AiCacheEntity(
+                    queryHash = hashQuery(cacheKey),
+                    query = cacheKey.take(200),
+                    response = text,
+                    category = "meal",
+                    expiresAt = System.currentTimeMillis() + 6 * 60 * 60 * 1000
+                )
+            )
+            text
         } catch (e: Exception) {
             throw Exception("Erreur ROLLY lors de l'analyse du repas : ${e.message}")
         }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // ANALYSE GLYCÉMIQUE COMPLÈTE
+    // ANALYSE GLYCÉMIQUE — STREAMING
     // ─────────────────────────────────────────────────────────────────────────
 
+    fun analyserGlycemieStream(
+        patient: PatientEntity,
+        lectures: List<LectureGlucoseEntity>,
+        latestHbA1c: HbA1cEntity? = null,
+        hba1cEstimee: Double? = null
+    ): Flow<String> = flow {
+        if (lectures.isEmpty()) {
+            emit("Aucune lecture de glycémie disponible pour l'analyse.")
+            return@flow
+        }
+
+        val contexte = buildContexte(patient, lectures, latestHbA1c, hba1cEstimee)
+        val prompt = """
+            $contexte
+
+            ANALYSE GLYCÉMIQUE — Réponds de manière concise et structurée.
+
+            1. **Contrôle glycémique** : Temps dans la cible (70-180 mg/dL), variabilité, moyenne vs objectif.
+            2. **Tendances** : Patterns hypo/hyperglycémiques identifiés (heures, contextes). Base-toi UNIQUEMENT sur les données ci-dessus.
+            3. **Corrélation HbA1c** : Si HbA1c disponible, compare avec la glycémie moyenne observée. Cohérence ? Écart ?
+            4. **Recommandations** : 3-4 actions concrètes et mesurables pour améliorer le contrôle.
+            5. **Alertes** : Risques immédiats identifiés dans les données.
+
+            IMPORTANT :
+            - N'invente AUCUNE donnée. Analyse UNIQUEMENT ce qui est fourni.
+            - Si les données sont insuffisantes pour un point, indique-le.
+            - Ton professionnel. Maximum 250 mots.
+            - Termine par : "Avis informatif — consultez votre médecin."
+        """.trimIndent()
+
+        try {
+            val accumulated = StringBuilder()
+            geminiModel.generateContentStream(prompt).collect { chunk ->
+                chunk.text?.let {
+                    accumulated.append(it)
+                    emit(accumulated.toString())
+                }
+            }
+            if (accumulated.isEmpty()) emit("Analyse indisponible.")
+        } catch (e: Exception) {
+            emit("Erreur lors de l'analyse : ${e.message}")
+        }
+    }
+
+    /** Non-streaming version (backward compat) */
     suspend fun analyserGlycemie(
         patient: PatientEntity,
         lectures: List<LectureGlucoseEntity>,
@@ -172,14 +343,14 @@ class ChatbotRepository @Inject constructor(
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // CONSEILS NUTRITIONNELS
+    // CONSEILS NUTRITIONNELS — STREAMING
     // ─────────────────────────────────────────────────────────────────────────
 
-    suspend fun conseilsNutritionnels(
+    fun conseilsNutritionnelsStream(
         patient: PatientEntity,
         derniereLecture: LectureGlucoseEntity?,
         latestHbA1c: HbA1cEntity? = null
-    ): String {
+    ): Flow<String> = flow {
         val typeD = patient.typeDiabete.name.replace("_", " ")
         val glycemie = derniereLecture?.let {
             "Dernière glycémie : ${it.valeur.toInt()} mg/dL (${it.contexte.getDisplayName()})"
@@ -209,6 +380,49 @@ class ChatbotRepository @Inject constructor(
             - Termine par : "Avis informatif — consultez votre médecin/diététicien."
         """.trimIndent()
 
+        try {
+            val accumulated = StringBuilder()
+            geminiModel.generateContentStream(prompt).collect { chunk ->
+                chunk.text?.let {
+                    accumulated.append(it)
+                    emit(accumulated.toString())
+                }
+            }
+            if (accumulated.isEmpty()) emit("Conseils indisponibles.")
+        } catch (e: Exception) {
+            emit("Erreur : ${e.message}")
+        }
+    }
+
+    suspend fun conseilsNutritionnels(
+        patient: PatientEntity,
+        derniereLecture: LectureGlucoseEntity?,
+        latestHbA1c: HbA1cEntity? = null
+    ): String {
+        val typeD = patient.typeDiabete.name.replace("_", " ")
+        val glycemie = derniereLecture?.let {
+            "Dernière glycémie : ${it.valeur.toInt()} mg/dL (${it.contexte.getDisplayName()})"
+        } ?: "Pas de lecture récente"
+        val hba1cInfo = latestHbA1c?.let {
+            "Dernière HbA1c : ${it.valeur}% (${it.getInterpretation().name.replace("_", " ").lowercase()})"
+        } ?: ""
+
+        val prompt = """
+            Patient : ${patient.nomComplet}, Diabète $typeD, ${patient.age} ans
+            $glycemie
+            $hba1cInfo
+
+            CONSEILS NUTRITIONNELS — Concis et actionnables.
+
+            1. **Aliments recommandés** : 5-6 aliments à IG bas, adaptés au diabète $typeD
+            2. **Aliments à limiter** : 4-5 aliments à éviter ou réduire, avec alternatives
+            3. **Exemple de repas** : 1 journée type adaptée
+            4. **Collations** : 2-3 options
+            5. **Hydratation** : recommandations
+
+            Maximum 200 mots. Termine par : "Avis informatif — consultez votre médecin/diététicien."
+        """.trimIndent()
+
         return try {
             val response = geminiModel.generateContent(prompt)
             response.text ?: "Conseils indisponibles."
@@ -218,15 +432,18 @@ class ChatbotRepository @Inject constructor(
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // PRÉDICTION DE RISQUE
+    // PRÉDICTION DE RISQUE — STREAMING
     // ─────────────────────────────────────────────────────────────────────────
 
-    suspend fun previsionRisque(
+    fun previsionRisqueStream(
         patient: PatientEntity,
         lectures: List<LectureGlucoseEntity>,
         latestHbA1c: HbA1cEntity? = null
-    ): String {
-        if (lectures.size < 3) return "Minimum 3 lectures nécessaires pour une prévision fiable."
+    ): Flow<String> = flow {
+        if (lectures.size < 3) {
+            emit("Minimum 3 lectures nécessaires pour une prévision fiable.")
+            return@flow
+        }
 
         val contexte = buildContexte(patient, lectures, latestHbA1c, null)
         val prompt = """
@@ -235,19 +452,44 @@ class ChatbotRepository @Inject constructor(
             PRÉVISION DE RISQUE GLYCÉMIQUE — Analyse basée STRICTEMENT sur les données ci-dessus.
 
             1. **Risque hypoglycémie** (prochaines 6h) : Faible / Modéré / Élevé
-               - Justification basée sur les tendances observées
             2. **Risque hyperglycémie** (prochaines 6h) : Faible / Modéré / Élevé
-               - Justification basée sur les tendances observées
             3. **Signaux d'alerte** : Quels symptômes surveiller
             4. **Actions préventives** : 2-3 mesures concrètes
             5. **Consultation urgente** : Dans quels cas appeler le 15/SAMU
 
             RÈGLES STRICTES :
-            - Base-toi UNIQUEMENT sur les tendances, contextes (à jeun, post-prandial, etc.) et heures des lectures.
+            - Base-toi UNIQUEMENT sur les tendances observées.
             - N'invente AUCUN pattern non visible dans les données.
-            - Si les données ne permettent pas une prévision fiable, dis-le clairement.
-            - Précise que cette prévision est INDICATIVE et ne remplace pas un suivi médical.
             - Maximum 200 mots. Ton professionnel.
+        """.trimIndent()
+
+        try {
+            val accumulated = StringBuilder()
+            geminiModel.generateContentStream(prompt).collect { chunk ->
+                chunk.text?.let {
+                    accumulated.append(it)
+                    emit(accumulated.toString())
+                }
+            }
+            if (accumulated.isEmpty()) emit("Prévision indisponible.")
+        } catch (e: Exception) {
+            emit("Erreur : ${e.message}")
+        }
+    }
+
+    suspend fun previsionRisque(
+        patient: PatientEntity,
+        lectures: List<LectureGlucoseEntity>,
+        latestHbA1c: HbA1cEntity? = null
+    ): String {
+        if (lectures.size < 3) return "Minimum 3 lectures nécessaires pour une prévision fiable."
+        val contexte = buildContexte(patient, lectures, latestHbA1c, null)
+        val prompt = """
+            $contexte
+            PRÉVISION DE RISQUE GLYCÉMIQUE — Analyse basée STRICTEMENT sur les données ci-dessus.
+            1. Risque hypoglycémie (prochaines 6h) 2. Risque hyperglycémie (prochaines 6h)
+            3. Signaux d'alerte 4. Actions préventives 5. Consultation urgente
+            Maximum 200 mots.
         """.trimIndent()
 
         return try {
@@ -262,10 +504,6 @@ class ChatbotRepository @Inject constructor(
     // VISION — RECONNAISSANCE D'IMAGE DE REPAS
     // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * Analyse une image de repas via Gemini Vision.
-     * Envoie le Bitmap avec un prompt nutritionnel et retourne un JSON structuré.
-     */
     suspend fun analyserRepasImage(
         bitmap: Bitmap,
         patient: PatientEntity? = null
@@ -283,8 +521,6 @@ class ChatbotRepository @Inject constructor(
             CONSIGNES STRICTES :
             - Réponds UNIQUEMENT avec un objet JSON valide. Aucun texte avant ni après. Pas de balises markdown.
             - Identifie chaque aliment visible dans l'image et estime les portions.
-            - Si un aliment n'est pas clairement identifiable, fais une estimation raisonnable et indique-le.
-            - Toutes les valeurs sont des ESTIMATIONS basées sur l'apparence visuelle.
 
             Schéma JSON OBLIGATOIRE :
             {
@@ -305,13 +541,10 @@ class ChatbotRepository @Inject constructor(
             }
 
             Règles de calcul :
-            - glucides_estimes : grammes (décimal)
-            - index_glycemique : 0-100 (entier), basé sur les tables IG reconnues
-            - charge_glycemique : glucides × IG / 100 (décimal)
+            - index_glycemique : 0-100, basé sur les tables IG reconnues
+            - charge_glycemique : glucides × IG / 100
             - categorie_ig : "bas" (≤55), "moyen" (56-69), "eleve" (≥70)
             - score_diabete : 0 = très défavorable, 100 = excellent pour un diabétique
-            - recommandations : 2-3 conseils concrets et actionnables
-            - alternatives_saines : 1-2 substitutions à IG plus bas
         """.trimIndent()
 
         return try {
@@ -328,21 +561,23 @@ class ChatbotRepository @Inject constructor(
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // ANALYSE PRÉDICTIVE — TENDANCES GLYCÉMIQUES 7 JOURS
+    // ANALYSE PRÉDICTIVE 7 JOURS — STREAMING
     // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * Analyse prédictive complète basée sur l'historique glycémique de 7 jours.
-     * Détecte les patterns, prédit les risques et propose des recommandations.
-     */
-    suspend fun analysePredictive7Jours(
+    fun analysePredictive7JoursStream(
         patient: PatientEntity,
         lectures: List<LectureGlucoseEntity>,
         latestHbA1c: HbA1cEntity? = null,
         hba1cEstimee: Double? = null
-    ): String {
-        if (lectures.isEmpty()) return "Aucune donnée glycémique disponible pour l'analyse prédictive."
-        if (lectures.size < 5) return "Minimum 5 lectures nécessaires pour une analyse prédictive fiable. Actuellement : ${lectures.size} lectures."
+    ): Flow<String> = flow {
+        if (lectures.isEmpty()) {
+            emit("Aucune donnée glycémique disponible pour l'analyse prédictive.")
+            return@flow
+        }
+        if (lectures.size < 5) {
+            emit("Minimum 5 lectures nécessaires. Actuellement : ${lectures.size} lectures.")
+            return@flow
+        }
 
         val contexte = buildContexte(patient, lectures, latestHbA1c, hba1cEstimee)
         val prompt = """
@@ -350,50 +585,50 @@ class ChatbotRepository @Inject constructor(
 
             ANALYSE PRÉDICTIVE DES TENDANCES GLYCÉMIQUES — 7 DERNIERS JOURS
 
-            Tu es un expert en diabétologie clinique. Analyse les données ci-dessus avec rigueur.
-            Base-toi UNIQUEMENT sur les données fournies. N'invente aucune valeur.
-
-            Structure ta réponse ainsi :
-
             ## 📊 Résumé statistique
-            - Glycémie moyenne, min, max
-            - Temps dans la cible (TIR : 70-180 mg/dL)
-            - Écart-type / variabilité glycémique
-            - Coefficient de variation (CV = écart-type/moyenne × 100)
-
             ## 📈 Tendances identifiées
-            - Patterns récurrents (horaires, contextes)
-            - Tendance globale : amélioration / stable / dégradation
-            - Phénomène de l'aube détecté ? (glycémie élevée 4h-8h)
-            - Réponse post-prandiale : normale / exagérée / retardée
-
             ## ⚠️ Risques prédictifs (prochaines 24-48h)
-            - Risque hypoglycémie : Faible / Modéré / Élevé — justification
-            - Risque hyperglycémie : Faible / Modéré / Élevé — justification
-            - Situations à risque identifiées
-
             ## 🎯 Recommandations préventives
-            - 4-5 actions concrètes, mesurables et personnalisées
-            - Adaptées au type de diabète et au profil du patient
-            - Classées par priorité
-
             ## 🔮 Projection
-            - Si les tendances actuelles se maintiennent, quel impact sur l'HbA1c estimée ?
-            - Points d'attention pour les prochains jours
 
-            RÈGLES :
-            - N'invente AUCUNE donnée. Analyse UNIQUEMENT ce qui est fourni.
-            - Si données insuffisantes pour un point, indique-le.
-            - Ton professionnel, concis et structuré.
-            - Termine par : "Avis informatif — consultez votre médecin."
+            RÈGLES : N'invente AUCUNE donnée. Ton professionnel.
+            Termine par : "Avis informatif — consultez votre médecin."
         """.trimIndent()
 
+        try {
+            val accumulated = StringBuilder()
+            geminiModel.generateContentStream(prompt).collect { chunk ->
+                chunk.text?.let {
+                    accumulated.append(it)
+                    emit(accumulated.toString())
+                }
+            }
+            if (accumulated.isEmpty()) emit("Analyse prédictive indisponible.")
+        } catch (e: Exception) {
+            Log.e(TAG, "Erreur analyse prédictive stream", e)
+            emit("Erreur lors de l'analyse prédictive : ${e.message}")
+        }
+    }
+
+    suspend fun analysePredictive7Jours(
+        patient: PatientEntity,
+        lectures: List<LectureGlucoseEntity>,
+        latestHbA1c: HbA1cEntity? = null,
+        hba1cEstimee: Double? = null
+    ): String {
+        if (lectures.isEmpty()) return "Aucune donnée glycémique disponible."
+        if (lectures.size < 5) return "Minimum 5 lectures nécessaires. Actuellement : ${lectures.size}."
+        val contexte = buildContexte(patient, lectures, latestHbA1c, hba1cEstimee)
+        val prompt = """
+            $contexte
+            ANALYSE PRÉDICTIVE — 7 JOURS. Résumé, tendances, risques, recommandations, projection.
+            Ton professionnel. Termine par : "Avis informatif — consultez votre médecin."
+        """.trimIndent()
         return try {
             val response = geminiModel.generateContent(prompt)
             response.text ?: "Analyse prédictive indisponible."
         } catch (e: Exception) {
-            Log.e(TAG, "Erreur analyse prédictive", e)
-            "Erreur lors de l'analyse prédictive : ${e.message}"
+            "Erreur : ${e.message}"
         }
     }
 
@@ -417,7 +652,6 @@ class ChatbotRepository @Inject constructor(
         patient?.let {
             sb.appendLine("Patient : ${it.nomComplet}, ${it.age} ans, Sexe : ${it.sexe.name}")
             sb.appendLine("Type de diabète : ${it.typeDiabete.name.replace("_", " ")}")
-            // Données corporelles
             val metrics = mutableListOf<String>()
             it.poids?.let { p -> metrics.add("Poids : ${p}kg") }
             it.taille?.let { t -> metrics.add("Taille : ${t}cm") }
@@ -429,7 +663,6 @@ class ChatbotRepository @Inject constructor(
             }
         }
 
-        // HbA1c
         latestHbA1c?.let {
             val source = if (it.estEstimation) "estimée" else "labo${if (it.laboratoire.isNotBlank()) " (${it.laboratoire})" else ""}"
             sb.appendLine("Dernière HbA1c : ${it.valeur}% ($source) — ${it.dateMesure}")
@@ -440,7 +673,6 @@ class ChatbotRepository @Inject constructor(
             sb.appendLine("HbA1c estimée (30 derniers jours) : ${it}%")
         }
 
-        // Lectures glycémiques
         if (lectures.isNotEmpty()) {
             val fmt = DateTimeFormatter.ofPattern("dd/MM HH:mm")
             sb.appendLine("Lectures glycémiques récentes (${lectures.size}) :")
