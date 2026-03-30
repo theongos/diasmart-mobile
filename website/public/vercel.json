@@ -1,0 +1,18 @@
+{
+  "headers": [
+    {
+      "source": "/downloads/DiaSmart.apk",
+      "headers": [
+        { "key": "Content-Type", "value": "application/vnd.android.package-archive" },
+        { "key": "Content-Disposition", "value": "attachment; filename=\"DiaSmart.apk\"" }
+      ]
+    },
+    {
+      "source": "/downloads/DiaSmart.zip",
+      "headers": [
+        { "key": "Content-Type", "value": "application/zip" },
+        { "key": "Content-Disposition", "value": "attachment; filename=\"DiaSmart.zip\"" }
+      ]
+    }
+  ]
+}
