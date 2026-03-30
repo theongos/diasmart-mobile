@@ -209,7 +209,7 @@ fun ProfileScreen(
         if (t > 0) String.format("%.1f", p / ((t / 100.0) * (t / 100.0))) else null
     }
 
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val screenBg = if (isDark) Color(0xFF0D0D1A) else Color(0xFFF7F8FC)
     val cardBg = if (isDark) Color(0xFF1A1A2E) else Color.White
     val headerGradient = listOf(
@@ -436,7 +436,7 @@ private fun ProfileSection(
     icon: ImageVector,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val cardBg = if (isDark) Color(0xFF1A1A2E) else Color.White
     val sectionColor = if (isDark) Color(0xFF8B93F0) else Primary
 
@@ -478,7 +478,7 @@ private fun ProfileSection(
 
 @Composable
 private fun ProfileField(label: String, value: String, onEdit: (() -> Unit)? = null) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -524,7 +524,7 @@ private fun MorphoCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     Card(
         modifier = modifier.clickable { onClick() },
         shape = RoundedCornerShape(16.dp),

@@ -26,7 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.diabeto.ui.theme.LocalIsDarkTheme
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.diabeto.data.repository.AppLanguage
@@ -51,7 +51,7 @@ fun SettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val scope = rememberCoroutineScope()
 
     var showThemeDialog by remember { mutableStateOf(false) }
@@ -771,7 +771,7 @@ private fun DayLifeSelectionDialog(
     onSelect: (Int) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val dialogBg = if (isDark) Color(0xFF1A1A2E) else Color.White
 
     AlertDialog(
@@ -843,7 +843,7 @@ private fun DayLifeExportDialog(
     onExportEmail: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val dialogBg = if (isDark) Color(0xFF1A1A2E) else Color.White
 
     AlertDialog(
@@ -954,7 +954,7 @@ private fun DayLifeTargetDialog(
     onConfirm: (Double, Double) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val dialogBg = if (isDark) Color(0xFF1A1A2E) else Color.White
     var minText by remember { mutableStateOf(currentMin.toInt().toString()) }
     var maxText by remember { mutableStateOf(currentMax.toInt().toString()) }

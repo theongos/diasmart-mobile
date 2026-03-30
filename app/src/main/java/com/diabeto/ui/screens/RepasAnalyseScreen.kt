@@ -42,7 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.diabeto.data.model.RepasAnalyse
 import com.diabeto.data.model.RepasDocument
 import com.diabeto.ui.components.RollyIconInline
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.diabeto.ui.theme.LocalIsDarkTheme
 import com.diabeto.ui.theme.*
 import com.diabeto.ui.viewmodel.RepasViewModel
 import java.text.SimpleDateFormat
@@ -94,7 +94,7 @@ fun RepasAnalyseScreen(
         }
     }
 
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val screenBg = if (isDark) DarkBg else LightBg
     val cardBg = if (isDark) DarkCard else LightCard
     val inputBg = if (isDark) DarkInput else LightInput

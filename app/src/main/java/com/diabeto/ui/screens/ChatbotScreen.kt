@@ -15,7 +15,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.diabeto.ui.theme.LocalIsDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -66,7 +66,7 @@ fun ChatbotScreen(
         }
     }
 
-    val isDarkTheme = isSystemInDarkTheme()
+    val isDarkTheme = LocalIsDarkTheme.current
     // Theme-aware colors: light mode = clean white, dark mode = keep current dark style
     val chatBg = if (isDarkTheme) Color(0xFF0D0D1A) else Background
     val chatTopBar = if (isDarkTheme) OnBackground else RollyCardColor
@@ -546,7 +546,7 @@ fun ChatbotScreen(
 @Composable
 private fun RollyMessageBubble(message: ChatbotMessage) {
     val isUser = message.estUtilisateur
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
 
     if (isUser) {
         // Message utilisateur - bulle droite
@@ -616,7 +616,7 @@ fun RichMarkdownText(
     textColor: Color = Color.White.copy(alpha = 0.9f)
 ) {
     val lines = text.split("\n")
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val headerColor = Primary
     val boldColor = if (isDark) Color.White else TextPrimary
     val bulletColor = if (isDark) PrimaryContainer else Primary

@@ -12,7 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.diabeto.ui.theme.LocalIsDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.lifecycle.Lifecycle
@@ -227,7 +227,7 @@ fun DashboardScreen(
         }
     }
 
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val screenBg = if (isDark) Color(0xFF0D0D1A) else Background
     val cardSurface = if (isDark) Color(0xFF141428) else Surface
     val textPri = if (isDark) Color(0xFFE8E5FF) else TextPrimary
@@ -758,7 +758,7 @@ private fun MiniStatCard(
     textPri: Color = TextPrimary,
     textSec: Color = TextSecondary
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val borderCol = if (isDark) Color(0xFF2A2940) else OutlineVariant
     Card(
         modifier = modifier,
@@ -809,7 +809,7 @@ private fun FeatureCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isSystemDark = isSystemInDarkTheme()
+    val isSystemDark = LocalIsDarkTheme.current
     val isDarkCard = cardColor == OnBackground || cardColor == RollyCardColor
     // In dark mode, map pastel card colors to vivid dark equivalents
     val darkModeCardColor = when (cardColor) {
@@ -890,7 +890,7 @@ private fun SectionHeader(
     action: String? = null,
     onAction: (() -> Unit)? = null
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val titleCol = if (isDark) Color(0xFFE8E5FF) else TextPrimary
     Row(
         modifier = Modifier
@@ -991,7 +991,7 @@ private fun PatientChip(
     subtitle: String,
     onClick: () -> Unit
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val initials = name.split(" ").filter { it.isNotBlank() }
         .mapNotNull { it.firstOrNull()?.uppercaseChar() }
         .take(2).joinToString("")
@@ -1085,7 +1085,7 @@ private fun DiaSmartBottomBar(
     isMedecin: Boolean = false,
     navBarBg: Color = NavBarBackground
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val navBorderCol = if (isDark) Color(0xFF2A2940) else OutlineVariant
     Surface(
         modifier = Modifier.fillMaxWidth(),
