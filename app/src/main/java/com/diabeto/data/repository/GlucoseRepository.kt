@@ -13,7 +13,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Repository pour les opérations sur les lectures de glucose et l'HbA1c
+ * Repository pour les opérations sur les lectures de glucose et l'HbA1c.
+ *
+ * Stratégie de synchronisation : LOCAL-FIRST + BATCH SYNC
+ * - Toutes les écritures sont stockées localement dans Room (instantané)
+ * - La synchronisation vers Firestore se fait par BatchSyncWorker (toutes les 4h ou au démarrage)
+ * - Moins de requêtes réseau = moins de charge infrastructure
  */
 @Singleton
 class GlucoseRepository @Inject constructor(
@@ -62,30 +67,27 @@ class GlucoseRepository @Inject constructor(
     suspend fun getLatestReading(patientId: Long): LectureGlucoseEntity? =
         glucoseDao.getLatestReading(patientId)
 
+    // ── Écritures LOCAL-FIRST (pas de réseau immédiat) ─────────────
+    // La sync vers Firestore est gérée par BatchSyncWorker (toutes les 4h)
+
     suspend fun insertLecture(lecture: LectureGlucoseEntity): Long {
-        val id = glucoseDao.insertLecture(lecture)
-        try { cloudBackup.backupGlucose(lecture.copy(id = id)) } catch (_: Exception) {}
-        return id
+        return glucoseDao.insertLecture(lecture)
     }
 
     suspend fun insertLectures(lectures: List<LectureGlucoseEntity>) {
         glucoseDao.insertLectures(lectures)
-        try { for (l in lectures) cloudBackup.backupGlucose(l) } catch (_: Exception) {}
     }
 
     suspend fun updateLecture(lecture: LectureGlucoseEntity) {
         glucoseDao.updateLecture(lecture)
-        try { cloudBackup.backupGlucose(lecture) } catch (_: Exception) {}
     }
 
     suspend fun deleteLecture(lecture: LectureGlucoseEntity) {
         glucoseDao.deleteLecture(lecture)
-        try { cloudBackup.deleteBackupDoc("glucose", lecture.id.toString()) } catch (_: Exception) {}
     }
 
     suspend fun deleteLectureById(id: Long) {
         glucoseDao.deleteLectureById(id)
-        try { cloudBackup.deleteBackupDoc("glucose", id.toString()) } catch (_: Exception) {}
     }
 
     suspend fun deleteAllPatientLectures(patientId: Long) =
@@ -129,24 +131,19 @@ class GlucoseRepository @Inject constructor(
     }
 
     suspend fun insertHbA1c(hba1c: HbA1cEntity): Long {
-        val id = hbA1cDao.insertHbA1c(hba1c)
-        try { cloudBackup.backupHbA1c(hba1c.copy(id = id)) } catch (_: Exception) {}
-        return id
+        return hbA1cDao.insertHbA1c(hba1c)
     }
 
     suspend fun updateHbA1c(hba1c: HbA1cEntity) {
         hbA1cDao.updateHbA1c(hba1c)
-        try { cloudBackup.backupHbA1c(hba1c) } catch (_: Exception) {}
     }
 
     suspend fun deleteHbA1c(hba1c: HbA1cEntity) {
         hbA1cDao.deleteHbA1c(hba1c)
-        try { cloudBackup.deleteBackupDoc("hba1c", hba1c.id.toString()) } catch (_: Exception) {}
     }
 
     suspend fun deleteHbA1cById(id: Long) {
         hbA1cDao.deleteHbA1cById(id)
-        try { cloudBackup.deleteBackupDoc("hba1c", id.toString()) } catch (_: Exception) {}
     }
 
     /**

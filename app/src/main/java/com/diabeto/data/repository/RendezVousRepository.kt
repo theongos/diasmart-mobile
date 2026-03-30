@@ -53,30 +53,26 @@ class RendezVousRepository @Inject constructor(
     suspend fun getPendingConfirmations(): List<RendezVousEntity> = 
         rendezVousDao.getPendingConfirmations()
     
+    // Écritures LOCAL-FIRST — sync par BatchSyncWorker (toutes les 4h)
+
     suspend fun insertRendezVous(rendezVous: RendezVousEntity): Long {
-        val id = rendezVousDao.insertRendezVous(rendezVous)
-        try { cloudBackup.backupRendezVous(rendezVous.copy(id = id)) } catch (_: Exception) {}
-        return id
+        return rendezVousDao.insertRendezVous(rendezVous)
     }
 
     suspend fun insertRendezVousList(rendezVous: List<RendezVousEntity>) {
         rendezVousDao.insertRendezVousList(rendezVous)
-        try { for (r in rendezVous) cloudBackup.backupRendezVous(r) } catch (_: Exception) {}
     }
 
     suspend fun updateRendezVous(rendezVous: RendezVousEntity) {
         rendezVousDao.updateRendezVous(rendezVous)
-        try { cloudBackup.backupRendezVous(rendezVous) } catch (_: Exception) {}
     }
 
     suspend fun deleteRendezVous(rendezVous: RendezVousEntity) {
         rendezVousDao.deleteRendezVous(rendezVous)
-        try { cloudBackup.deleteBackupDoc("rendezvous", rendezVous.id.toString()) } catch (_: Exception) {}
     }
 
     suspend fun deleteRendezVousById(id: Long) {
         rendezVousDao.deleteRendezVousById(id)
-        try { cloudBackup.deleteBackupDoc("rendezvous", id.toString()) } catch (_: Exception) {}
     }
 
     suspend fun deleteAllPatientRendezVous(patientId: Long) =

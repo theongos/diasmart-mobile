@@ -27,24 +27,21 @@ class PatientRepository @Inject constructor(
 
     suspend fun getPatientCount(): Int = patientDao.getPatientCount()
 
+    // Écritures LOCAL-FIRST — sync par BatchSyncWorker (toutes les 4h)
+
     suspend fun insertPatient(patient: PatientEntity): Long {
-        val id = patientDao.insertPatient(patient)
-        try { cloudBackup.backupPatient(patient.copy(id = id)) } catch (_: Exception) {}
-        return id
+        return patientDao.insertPatient(patient)
     }
 
     suspend fun updatePatient(patient: PatientEntity) {
         patientDao.updatePatient(patient)
-        try { cloudBackup.backupPatient(patient) } catch (_: Exception) {}
     }
 
     suspend fun deletePatient(patient: PatientEntity) {
         patientDao.deletePatient(patient)
-        try { cloudBackup.deleteBackupDoc("patients", patient.id.toString()) } catch (_: Exception) {}
     }
 
     suspend fun deletePatientById(id: Long) {
         patientDao.deletePatientById(id)
-        try { cloudBackup.deleteBackupDoc("patients", id.toString()) } catch (_: Exception) {}
     }
 }

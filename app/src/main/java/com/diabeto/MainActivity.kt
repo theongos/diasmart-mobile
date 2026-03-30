@@ -20,6 +20,7 @@ import com.diabeto.data.repository.ThemeMode
 import com.diabeto.notifications.DiaSmartFCMService
 import com.diabeto.notifications.NotificationHelper
 import com.diabeto.notifications.ReminderScheduler
+import com.diabeto.sync.BatchSyncWorker
 import com.diabeto.ui.navigation.DiabetoNavigation
 import com.diabeto.ui.theme.DiabetoTheme
 import com.diabeto.voip.CallManager
@@ -51,6 +52,10 @@ class MainActivity : ComponentActivity() {
         ReminderScheduler.scheduleMedicationReminders(this)
         ReminderScheduler.scheduleAppointmentReminders(this)
         ReminderScheduler.scheduleMeasurementReminders(this)
+
+        // Batch sync : sync local → Firestore toutes les 4h + au démarrage
+        BatchSyncWorker.schedulePeriodic(this)
+        BatchSyncWorker.syncNow(this)
 
         // S'abonner au topic FCM "updates" pour les notifications de mise à jour
         DiaSmartFCMService.subscribeToUpdatesTopic()

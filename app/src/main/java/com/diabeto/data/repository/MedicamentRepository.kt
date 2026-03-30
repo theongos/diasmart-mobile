@@ -37,30 +37,26 @@ class MedicamentRepository @Inject constructor(
     suspend fun getActiveMedicamentCount(patientId: Long): Int = 
         medicamentDao.getActiveMedicamentCount(patientId)
     
+    // Écritures LOCAL-FIRST — sync par BatchSyncWorker (toutes les 4h)
+
     suspend fun insertMedicament(medicament: MedicamentEntity): Long {
-        val id = medicamentDao.insertMedicament(medicament)
-        try { cloudBackup.backupMedicament(medicament.copy(id = id)) } catch (_: Exception) {}
-        return id
+        return medicamentDao.insertMedicament(medicament)
     }
 
     suspend fun insertMedicaments(medicaments: List<MedicamentEntity>) {
         medicamentDao.insertMedicaments(medicaments)
-        try { for (m in medicaments) cloudBackup.backupMedicament(m) } catch (_: Exception) {}
     }
 
     suspend fun updateMedicament(medicament: MedicamentEntity) {
         medicamentDao.updateMedicament(medicament)
-        try { cloudBackup.backupMedicament(medicament) } catch (_: Exception) {}
     }
 
     suspend fun deleteMedicament(medicament: MedicamentEntity) {
         medicamentDao.deleteMedicament(medicament)
-        try { cloudBackup.deleteBackupDoc("medicaments", medicament.id.toString()) } catch (_: Exception) {}
     }
 
     suspend fun deleteMedicamentById(id: Long) {
         medicamentDao.deleteMedicamentById(id)
-        try { cloudBackup.deleteBackupDoc("medicaments", id.toString()) } catch (_: Exception) {}
     }
 
     suspend fun deleteAllPatientMedicaments(patientId: Long) =

@@ -24,20 +24,18 @@ class JournalRepository @Inject constructor(
     suspend fun getEntryById(id: Long): JournalEntity? =
         journalDao.getEntryById(id)
 
+    // Écritures LOCAL-FIRST — sync par BatchSyncWorker (toutes les 4h)
+
     suspend fun saveEntry(entry: JournalEntity): Long {
-        val id = journalDao.insertEntry(entry)
-        try { cloudBackup.backupJournal(entry.copy(id = id)) } catch (_: Exception) {}
-        return id
+        return journalDao.insertEntry(entry)
     }
 
     suspend fun updateEntry(entry: JournalEntity) {
         journalDao.updateEntry(entry)
-        try { cloudBackup.backupJournal(entry) } catch (_: Exception) {}
     }
 
     suspend fun deleteEntry(entry: JournalEntity) {
         journalDao.deleteEntry(entry)
-        try { cloudBackup.deleteBackupDoc("journal", entry.id.toString()) } catch (_: Exception) {}
     }
 
     suspend fun getEntriesBetweenDates(patientId: Long, startDate: LocalDate, endDate: LocalDate): List<JournalEntity> =
