@@ -511,7 +511,7 @@ fun SplashScreen(
 
             // ── Footer ──
             Text(
-                text = "v1.7.0",
+                text = "v1.9.3",
                 fontSize = 11.sp,
                 color = Color.White.copy(alpha = 0.3f * sloganAlpha),
                 modifier = Modifier.padding(bottom = 24.dp)
