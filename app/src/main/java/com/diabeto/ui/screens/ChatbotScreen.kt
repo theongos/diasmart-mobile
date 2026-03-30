@@ -613,15 +613,18 @@ private fun RollyMessageBubble(message: ChatbotMessage) {
 @Composable
 fun RichMarkdownText(
     text: String,
-    textColor: Color = Color.White.copy(alpha = 0.9f)
+    textColor: Color = Color.Unspecified
 ) {
     val lines = text.split("\n")
     val isDark = LocalIsDarkTheme.current
+    val resolvedTextColor = if (textColor == Color.Unspecified) {
+        if (isDark) Color.White.copy(alpha = 0.9f) else TextPrimary
+    } else textColor
     val headerColor = Primary
     val boldColor = if (isDark) Color.White else TextPrimary
     val bulletColor = if (isDark) PrimaryContainer else Primary
-    val tableHeaderBg = if (isDark) Color(0xFF1E3A5F) else PrimaryContainer
-    val tableBorderColor = if (isDark) Color.White.copy(alpha = 0.15f) else Outline
+    val tableHeaderBg = if (isDark) Color(0xFF1E3A5F) else Color(0xFFE8E5FF)
+    val tableBorderColor = if (isDark) Color.White.copy(alpha = 0.15f) else Color(0xFFD0CDE0)
 
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         var i = 0
@@ -647,7 +650,7 @@ fun RichMarkdownText(
                         j++
                     }
                     if (tableLines.isNotEmpty()) {
-                        MarkdownTable(tableLines, tableHeaderBg, tableBorderColor, textColor)
+                        MarkdownTable(tableLines, tableHeaderBg, tableBorderColor, resolvedTextColor)
                     }
                     i = j
                     continue
@@ -688,7 +691,7 @@ fun RichMarkdownText(
                 // Numérotation type "1. Titre" → header
                 line.trimStart().matches(Regex("^\\d+\\.\\s+.+")) -> {
                     val content = line.trimStart()
-                    StyledNumberedItem(content, textColor, headerColor)
+                    StyledNumberedItem(content, resolvedTextColor, headerColor)
                 }
 
                 // Bullet point (*, -, •)
@@ -702,7 +705,7 @@ fun RichMarkdownText(
                     ) {
                         Text("•", color = bulletColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.width(8.dp))
-                        StyledInlineText(content, textColor, boldColor)
+                        StyledInlineText(content, resolvedTextColor, boldColor)
                     }
                 }
 
@@ -717,7 +720,7 @@ fun RichMarkdownText(
                     ) {
                         Text("◦", color = bulletColor.copy(alpha = 0.6f), fontSize = 12.sp)
                         Spacer(Modifier.width(6.dp))
-                        StyledInlineText(content, textColor.copy(alpha = 0.8f), boldColor)
+                        StyledInlineText(content, resolvedTextColor.copy(alpha = 0.8f), boldColor)
                     }
                 }
 
@@ -741,7 +744,7 @@ fun RichMarkdownText(
 
                 // Texte normal avec gras inline
                 else -> {
-                    StyledInlineText(line, textColor, boldColor)
+                    StyledInlineText(line, resolvedTextColor, boldColor)
                 }
             }
             i++
@@ -805,6 +808,9 @@ private fun StyledNumberedItem(
     textColor: Color,
     headerColor: Color
 ) {
+    val isDark = LocalIsDarkTheme.current
+    val boldColor = if (isDark) Color.White else TextPrimary
+
     // Extraire le numéro et le reste
     val match = Regex("^(\\d+)\\.\\s+(.+)").find(content.trim())
     if (match != null) {
@@ -829,7 +835,7 @@ private fun StyledNumberedItem(
                 )
                 if (desc.isNotBlank()) {
                     Spacer(Modifier.height(3.dp))
-                    StyledInlineText(desc, textColor, Color.White)
+                    StyledInlineText(desc, textColor, boldColor)
                 }
             }
         } else {
@@ -862,7 +868,7 @@ private fun StyledNumberedItem(
                             }
                             break
                         }
-                        withStyle(SpanStyle(color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)) {
+                        withStyle(SpanStyle(color = boldColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)) {
                             append(remaining.substring(0, be))
                         }
                         remaining = remaining.substring(be + 2)
@@ -872,7 +878,7 @@ private fun StyledNumberedItem(
             }
         }
     } else {
-        StyledInlineText(content, textColor, Color.White)
+        StyledInlineText(content, textColor, boldColor)
     }
 }
 
@@ -886,6 +892,7 @@ private fun MarkdownTable(
     borderColor: Color,
     textColor: Color
 ) {
+    val isDark = LocalIsDarkTheme.current
     val parsedRows = rows.map { row ->
         row.trim().removePrefix("|").removeSuffix("|")
             .split("|").map { it.trim() }
@@ -893,9 +900,14 @@ private fun MarkdownTable(
 
     if (parsedRows.isEmpty()) return
 
+    val tableBg = if (isDark) Color(0xFF141428) else Color(0xFFF5F3FF)
+    val altRowBg = if (isDark) Color.White.copy(alpha = 0.03f) else Color(0xFFECEAFF).copy(alpha = 0.5f)
+    val headerTextColor = if (isDark) Color(0xFFE8E5FF) else Color.White
+    val cellTextColor = if (isDark) textColor.copy(alpha = 0.85f) else TextPrimary.copy(alpha = 0.85f)
+
     Surface(
         shape = RoundedCornerShape(8.dp),
-        color = Color(0xFF141428),
+        color = tableBg,
         border = androidx.compose.foundation.BorderStroke(1.dp, borderColor),
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
     ) {
@@ -907,7 +919,7 @@ private fun MarkdownTable(
                         .fillMaxWidth()
                         .then(
                             if (isHeader) Modifier.background(headerBg)
-                            else if (rowIdx % 2 == 0) Modifier.background(Color.White.copy(alpha = 0.03f))
+                            else if (rowIdx % 2 == 0) Modifier.background(altRowBg)
                             else Modifier
                         )
                         .padding(horizontal = 8.dp, vertical = 6.dp)
@@ -920,7 +932,7 @@ private fun MarkdownTable(
                                 .padding(horizontal = 4.dp),
                             fontSize = if (isHeader) 11.sp else 12.sp,
                             fontWeight = if (isHeader) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isHeader) PrimaryContainer else textColor.copy(alpha = 0.85f),
+                            color = if (isHeader) headerTextColor else cellTextColor,
                             lineHeight = 16.sp
                         )
                     }
