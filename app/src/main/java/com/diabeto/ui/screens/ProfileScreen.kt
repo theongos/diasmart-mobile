@@ -396,7 +396,7 @@ fun ProfileScreen(
             }
 
             Spacer(Modifier.height(24.dp))
-            Text("DiaSmart v1.9.0", fontSize = 11.sp, color = subtitleColor)
+            Text("DiaSmart v1.9.3", fontSize = 11.sp, color = subtitleColor)
         }
     }
 
