@@ -40,7 +40,8 @@ data class RendezVousEntity(
     val notes: String = "",
     val estConfirme: Boolean = false,
     val rappelEnvoye: Boolean = false,
-    val createdAt: LocalDateTime = LocalDateTime.now()
+    val createdAt: LocalDateTime = LocalDateTime.now(),
+    val lastModified: Long = System.currentTimeMillis()
 ) {
     fun estPasse(): Boolean = dateHeure.isBefore(LocalDateTime.now())
     

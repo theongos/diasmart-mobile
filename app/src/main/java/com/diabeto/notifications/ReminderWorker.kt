@@ -118,11 +118,16 @@ object ReminderScheduler {
     private const val APPOINTMENT_WORK = "appointment_reminder_work"
     private const val MEASUREMENT_WORK = "measurement_reminder_work"
 
+    private fun batteryAwareConstraints() = Constraints.Builder()
+        .setRequiresBatteryNotLow(true)
+        .build()
+
     fun scheduleMedicationReminders(context: Context) {
         val request = PeriodicWorkRequestBuilder<MedicationReminderWorker>(
             8, TimeUnit.HOURS
         )
-            .setConstraints(Constraints.Builder().build())
+            .setConstraints(batteryAwareConstraints())
+            .setBackoffCriteria(BackoffPolicy.LINEAR, WorkRequest.MIN_BACKOFF_MILLIS, TimeUnit.MILLISECONDS)
             .addTag(MEDICATION_WORK)
             .build()
 
@@ -135,9 +140,10 @@ object ReminderScheduler {
 
     fun scheduleAppointmentReminders(context: Context) {
         val request = PeriodicWorkRequestBuilder<AppointmentReminderWorker>(
-            30, TimeUnit.MINUTES
+            1, TimeUnit.HOURS  // Réduit de 30min à 1h pour économiser la batterie
         )
-            .setConstraints(Constraints.Builder().build())
+            .setConstraints(batteryAwareConstraints())
+            .setBackoffCriteria(BackoffPolicy.LINEAR, WorkRequest.MIN_BACKOFF_MILLIS, TimeUnit.MILLISECONDS)
             .addTag(APPOINTMENT_WORK)
             .build()
 
@@ -152,7 +158,8 @@ object ReminderScheduler {
         val request = PeriodicWorkRequestBuilder<GlucoseMeasurementReminderWorker>(
             12, TimeUnit.HOURS
         )
-            .setConstraints(Constraints.Builder().build())
+            .setConstraints(batteryAwareConstraints())
+            .setBackoffCriteria(BackoffPolicy.LINEAR, WorkRequest.MIN_BACKOFF_MILLIS, TimeUnit.MILLISECONDS)
             .addTag(MEASUREMENT_WORK)
             .build()
 

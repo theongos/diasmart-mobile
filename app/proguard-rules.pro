@@ -61,6 +61,10 @@
 # Keep sync worker
 -keep class com.diabeto.sync.** { *; }
 
+# SQLCipher
+-keep class net.sqlcipher.** { *; }
+-dontwarn net.sqlcipher.**
+
 # General
 -keepattributes Signature
 -keepattributes Exceptions

@@ -8,6 +8,7 @@ import android.net.NetworkRequest
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import com.diabeto.BuildConfig
 import org.webrtc.*
 import org.webrtc.audio.JavaAudioDeviceModule
 import javax.inject.Inject
@@ -37,41 +38,41 @@ class WebRTCManager @Inject constructor(
         // ── ICE Server Configuration ──
         // Multiple STUN + TURN with UDP/TCP/TLS for maximum connectivity
         // TCP variants bypass restrictive firewalls (common in Africa/enterprise networks)
-        fun buildIceServers(): List<PeerConnection.IceServer> = listOf(
-            // STUN (free, reliable Google servers)
-            PeerConnection.IceServer.builder("stun:stun.l.google.com:19302")
-                .createIceServer(),
-            PeerConnection.IceServer.builder("stun:stun1.l.google.com:19302")
-                .createIceServer(),
-            PeerConnection.IceServer.builder("stun:stun3.l.google.com:19302")
-                .createIceServer(),
-            PeerConnection.IceServer.builder("stun:stun4.l.google.com:19302")
-                .createIceServer(),
+        fun buildIceServers(): List<PeerConnection.IceServer> {
+            val turnUser = BuildConfig.TURN_USERNAME
+            val turnPass = BuildConfig.TURN_PASSWORD
+            return listOf(
+                // STUN (free, reliable Google servers)
+                PeerConnection.IceServer.builder("stun:stun.l.google.com:19302")
+                    .createIceServer(),
+                PeerConnection.IceServer.builder("stun:stun1.l.google.com:19302")
+                    .createIceServer(),
+                PeerConnection.IceServer.builder("stun:stun3.l.google.com:19302")
+                    .createIceServer(),
+                PeerConnection.IceServer.builder("stun:stun4.l.google.com:19302")
+                    .createIceServer(),
 
-            // TURN - UDP (fastest, works in most cases)
-            PeerConnection.IceServer.builder("turn:a.relay.metered.ca:80?transport=udp")
-                .setUsername("83eebabf8b4cce9d5dbcb649")
-                .setPassword("2D7JvfkOQtBdYW3R")
-                .createIceServer(),
+                // TURN - UDP (fastest, works in most cases)
+                PeerConnection.IceServer.builder("turn:a.relay.metered.ca:80?transport=udp")
+                    .setUsername(turnUser).setPassword(turnPass)
+                    .createIceServer(),
 
-            // TURN - TCP (firewall bypass when UDP is blocked)
-            PeerConnection.IceServer.builder("turn:a.relay.metered.ca:80?transport=tcp")
-                .setUsername("83eebabf8b4cce9d5dbcb649")
-                .setPassword("2D7JvfkOQtBdYW3R")
-                .createIceServer(),
+                // TURN - TCP (firewall bypass when UDP is blocked)
+                PeerConnection.IceServer.builder("turn:a.relay.metered.ca:80?transport=tcp")
+                    .setUsername(turnUser).setPassword(turnPass)
+                    .createIceServer(),
 
-            // TURN - TLS on 443 (maximum firewall bypass — looks like HTTPS traffic)
-            PeerConnection.IceServer.builder("turn:a.relay.metered.ca:443?transport=tcp")
-                .setUsername("83eebabf8b4cce9d5dbcb649")
-                .setPassword("2D7JvfkOQtBdYW3R")
-                .createIceServer(),
+                // TURN - TLS on 443 (maximum firewall bypass — looks like HTTPS traffic)
+                PeerConnection.IceServer.builder("turn:a.relay.metered.ca:443?transport=tcp")
+                    .setUsername(turnUser).setPassword(turnPass)
+                    .createIceServer(),
 
-            // TURNS - secure relay (last resort, works through most corporate firewalls)
-            PeerConnection.IceServer.builder("turns:a.relay.metered.ca:443?transport=tcp")
-                .setUsername("83eebabf8b4cce9d5dbcb649")
-                .setPassword("2D7JvfkOQtBdYW3R")
-                .createIceServer(),
-        )
+                // TURNS - secure relay (last resort, works through most corporate firewalls)
+                PeerConnection.IceServer.builder("turns:a.relay.metered.ca:443?transport=tcp")
+                    .setUsername(turnUser).setPassword(turnPass)
+                    .createIceServer(),
+            )
+        }
 
         // Video quality presets (adaptive based on network)
         const val VIDEO_WIDTH_LOW = 320
@@ -781,47 +782,61 @@ class WebRTCManager @Inject constructor(
     // ═══════════════════════════════════════════════════════════
 
     fun dispose() {
-        Log.d(TAG, "🧹 Disposing WebRTC resources...")
+        Log.d(TAG, "Disposing WebRTC resources...")
 
-        stopHeartbeat()
-        stopNetworkMonitoring()
+        try { stopHeartbeat() } catch (e: Exception) { Log.w(TAG, "Heartbeat stop error", e) }
+        try { stopNetworkMonitoring() } catch (e: Exception) { Log.w(TAG, "Network monitor stop error", e) }
+        // Remove any pending handler callbacks
+        mainHandler.removeCallbacksAndMessages(null)
 
         try {
             dataChannel?.close()
             dataChannel?.dispose()
         } catch (e: Exception) { Log.w(TAG, "DataChannel dispose error", e) }
-        dataChannel = null
+        finally { dataChannel = null }
 
         try {
             videoCapturer?.stopCapture()
             videoCapturer?.dispose()
         } catch (e: Exception) { Log.w(TAG, "Capturer dispose error", e) }
-        videoCapturer = null
+        finally { videoCapturer = null }
 
-        localVideoTrack?.dispose()
-        localVideoTrack = null
-        localAudioTrack?.dispose()
-        localAudioTrack = null
-        localVideoSource?.dispose()
-        localVideoSource = null
+        try { localVideoTrack?.dispose() } catch (e: Exception) { Log.w(TAG, "VideoTrack dispose error", e) }
+        finally { localVideoTrack = null }
+        try { localAudioTrack?.dispose() } catch (e: Exception) { Log.w(TAG, "AudioTrack dispose error", e) }
+        finally { localAudioTrack = null }
+        try { localVideoSource?.dispose() } catch (e: Exception) { Log.w(TAG, "VideoSource dispose error", e) }
+        finally { localVideoSource = null }
 
-        surfaceTextureHelper?.dispose()
-        surfaceTextureHelper = null
+        try { surfaceTextureHelper?.dispose() } catch (e: Exception) { Log.w(TAG, "SurfaceHelper dispose error", e) }
+        finally { surfaceTextureHelper = null }
 
-        peerConnection?.close()
-        peerConnection?.dispose()
-        peerConnection = null
+        try {
+            peerConnection?.close()
+            peerConnection?.dispose()
+        } catch (e: Exception) { Log.w(TAG, "PeerConnection dispose error", e) }
+        finally { peerConnection = null }
 
-        Log.d(TAG, "✅ WebRTC resources disposed")
+        // Clear callbacks to prevent memory leaks
+        onIceCandidate = null
+        onRemoteVideoTrack = null
+        onRemoteAudioTrack = null
+        onConnectionStateChange = null
+        onPeerConnectionStateChange = null
+        onLocalVideoTrack = null
+        onNetworkChanged = null
+        onHeartbeatTimeout = null
+
+        Log.d(TAG, "WebRTC resources disposed")
     }
 
     fun release() {
         dispose()
-        peerConnectionFactory?.dispose()
-        peerConnectionFactory = null
-        eglBase?.release()
-        eglBase = null
-        Log.d(TAG, "✅ WebRTC fully released")
+        try { peerConnectionFactory?.dispose() } catch (e: Exception) { Log.w(TAG, "Factory dispose error", e) }
+        finally { peerConnectionFactory = null }
+        try { eglBase?.release() } catch (e: Exception) { Log.w(TAG, "EGL release error", e) }
+        finally { eglBase = null }
+        Log.d(TAG, "WebRTC fully released")
     }
 
     // ═══════════════════════════════════════════════════════════

@@ -22,7 +22,7 @@ service cloud.firestore {
     // ============================================
     match /patients/{patientId} {
       allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
       allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
@@ -31,21 +31,30 @@ service cloud.firestore {
     // ============================================
     match /glucose/{docId} {
       allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
       allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
     // ============================================
     // CONVERSATIONS (MESSAGERIE PATIENT-MEDECIN)
+    // Seuls les participants peuvent lire/écrire
     // ============================================
     match /conversations/{conversationId} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null
+                  && (resource.data.patientUid == request.auth.uid
+                      || resource.data.medecinUid == request.auth.uid);
       allow create: if request.auth != null;
-      allow update: if request.auth != null;
+      allow update: if request.auth != null
+                    && (resource.data.patientUid == request.auth.uid
+                        || resource.data.medecinUid == request.auth.uid);
 
       match /messages/{messageId} {
-        allow read: if request.auth != null;
-        allow create: if request.auth != null;
+        allow read: if request.auth != null
+                    && (get(/databases/$(database)/documents/conversations/$(conversationId)).data.patientUid == request.auth.uid
+                        || get(/databases/$(database)/documents/conversations/$(conversationId)).data.medecinUid == request.auth.uid);
+        allow create: if request.auth != null
+                      && (get(/databases/$(database)/documents/conversations/$(conversationId)).data.patientUid == request.auth.uid
+                          || get(/databases/$(database)/documents/conversations/$(conversationId)).data.medecinUid == request.auth.uid);
       }
     }
 
@@ -55,12 +64,10 @@ service cloud.firestore {
     match /rolly_history/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
 
-      // Anciennes messages (flat)
       match /messages/{messageId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
 
-      // Nouvelles sessions/conversations
       match /conversations/{convId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
 
@@ -72,26 +79,32 @@ service cloud.firestore {
 
     // ============================================
     // ACTIVITE PHYSIQUE / PODOMETRE
+    // Propriétaire uniquement
     // ============================================
     match /activite/{docId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null;
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
     match /steps/{docId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null;
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
     // ============================================
     // VALIDATIONS ROLLY (MEDECIN-PATIENT-IA)
+    // Seuls patient et médecin concernés
     // ============================================
     match /validations/{validationId} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null
+                  && (resource.data.patientUid == request.auth.uid
+                      || resource.data.medecinUid == request.auth.uid);
       allow create: if request.auth != null;
-      allow update: if request.auth != null;
+      allow update: if request.auth != null
+                    && (resource.data.patientUid == request.auth.uid
+                        || resource.data.medecinUid == request.auth.uid);
     }
 
     // ============================================
@@ -99,7 +112,7 @@ service cloud.firestore {
     // ============================================
     match /medicaments/{medId} {
       allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
       allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
@@ -108,7 +121,7 @@ service cloud.firestore {
     // ============================================
     match /rendezvous/{rdvId} {
       allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
       allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
@@ -117,7 +130,7 @@ service cloud.firestore {
     // ============================================
     match /journal/{entryId} {
       allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
       allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
@@ -126,17 +139,64 @@ service cloud.firestore {
     // ============================================
     match /repas/{repasId} {
       allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
       allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
     // ============================================
     // CONSENTEMENTS / DATA SHARING
+    // Seuls patient et médecin concernés
     // ============================================
     match /consents/{consentId} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null
+                  && (resource.data.patientUid == request.auth.uid
+                      || resource.data.medecinUid == request.auth.uid);
       allow create: if request.auth != null;
-      allow update, delete: if request.auth != null;
+      allow update: if request.auth != null
+                    && (resource.data.patientUid == request.auth.uid
+                        || resource.data.medecinUid == request.auth.uid);
+      allow delete: if request.auth != null
+                    && resource.data.patientUid == request.auth.uid;
+    }
+
+    // ============================================
+    // DATA SHARING (collection alternative)
+    // ============================================
+    match /data_sharing/{docId} {
+      allow read: if request.auth != null
+                  && (resource.data.patientUid == request.auth.uid
+                      || resource.data.medecinUid == request.auth.uid);
+      allow create: if request.auth != null;
+      allow update: if request.auth != null
+                    && (resource.data.patientUid == request.auth.uid
+                        || resource.data.medecinUid == request.auth.uid);
+      allow delete: if request.auth != null
+                    && resource.data.patientUid == request.auth.uid;
+    }
+
+    // ============================================
+    // BACKUPS (données privées par utilisateur)
+    // ============================================
+    match /backups/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ============================================
+    // APPELS VoIP
+    // Seuls appelant et appelé
+    // ============================================
+    match /calls/{callId} {
+      allow read: if request.auth != null
+                  && (resource.data.callerUid == request.auth.uid
+                      || resource.data.calleeUid == request.auth.uid);
+      allow create: if request.auth != null;
+      allow update: if request.auth != null
+                    && (resource.data.callerUid == request.auth.uid
+                        || resource.data.calleeUid == request.auth.uid);
+
+      match /iceCandidates/{iceId} {
+        allow read, write: if request.auth != null;
+      }
     }
 
     // ============================================
@@ -150,8 +210,16 @@ service cloud.firestore {
     // CONFIG APPLICATION (MISES A JOUR)
     // ============================================
     match /app_config/{docId} {
-      allow read: if true;  // Tout le monde peut lire la version
-      allow write: if false; // Seul l'admin Firebase peut ecrire
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // ============================================
+    // FCM TOKENS
+    // ============================================
+    match /fcm_tokens/{docId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && resource == null || resource.data.uid == request.auth.uid;
     }
   }
 }

@@ -36,7 +36,8 @@ data class PatientEntity(
     val tourDeTaille: Double? = null,   // cm
     val masseGrasse: Double? = null,    // % de masse grasse
     val createdAt: LocalDateTime = LocalDateTime.now(),
-    val updatedAt: LocalDateTime = LocalDateTime.now()
+    val updatedAt: LocalDateTime = LocalDateTime.now(),
+    val lastModified: Long = System.currentTimeMillis()
 ) {
     val age: Int
         get() = Period.between(dateNaissance, LocalDate.now()).years

@@ -11,6 +11,8 @@ import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.security.MessageDigest
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -29,6 +31,7 @@ class ChatbotRepository @Inject constructor(
     private val aiCacheDao: AiCacheDao
 ) {
     private var chatSession = geminiModel.startChat()
+    private val chatMutex = Mutex()
 
     // ─────────────────────────────────────────────────────────────────────────
     // CACHE HELPERS
@@ -106,10 +109,12 @@ class ChatbotRepository @Inject constructor(
         try {
             Log.d(TAG, "envoyerMessage (stream): $message")
             val accumulated = StringBuilder()
-            chatSession.sendMessageStream(message).collect { chunk ->
-                chunk.text?.let {
-                    accumulated.append(it)
-                    emit(accumulated.toString())
+            chatMutex.withLock {
+                chatSession.sendMessageStream(message).collect { chunk ->
+                    chunk.text?.let {
+                        accumulated.append(it)
+                        emit(accumulated.toString())
+                    }
                 }
             }
             if (accumulated.isEmpty()) {
@@ -160,10 +165,12 @@ class ChatbotRepository @Inject constructor(
             Log.d(TAG, "envoyerMessageAvecContexte (stream): ${messageComplet.take(300)}")
 
             val accumulated = StringBuilder()
-            chatSession.sendMessageStream(messageComplet).collect { chunk ->
-                chunk.text?.let {
-                    accumulated.append(it)
-                    emit(accumulated.toString())
+            chatMutex.withLock {
+                chatSession.sendMessageStream(messageComplet).collect { chunk ->
+                    chunk.text?.let {
+                        accumulated.append(it)
+                        emit(accumulated.toString())
+                    }
                 }
             }
 
@@ -636,8 +643,10 @@ class ChatbotRepository @Inject constructor(
     // UTILITAIRES
     // ─────────────────────────────────────────────────────────────────────────
 
-    fun reinitialiserChat() {
-        chatSession = geminiModel.startChat()
+    suspend fun reinitialiserChat() {
+        chatMutex.withLock {
+            chatSession = geminiModel.startChat()
+        }
     }
 
     private fun buildContexte(

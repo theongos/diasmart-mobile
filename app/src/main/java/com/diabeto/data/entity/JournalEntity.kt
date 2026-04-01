@@ -57,5 +57,6 @@ data class JournalEntity(
     val pas: Int = 0,
     val notes: String = "",
     val glycemieCorrelation: Double? = null,
-    val createdAt: LocalDateTime = LocalDateTime.now()
+    val createdAt: LocalDateTime = LocalDateTime.now(),
+    val lastModified: Long = System.currentTimeMillis()
 )

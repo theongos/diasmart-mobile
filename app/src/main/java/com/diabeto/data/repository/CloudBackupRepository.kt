@@ -240,12 +240,28 @@ class CloudBackupRepository @Inject constructor(
         }
     }
 
+    /**
+     * Backup a single document with timestamp-based conflict resolution.
+     * Only overwrites cloud data if local is newer.
+     */
     private suspend fun backupDoc(collection: String, docId: String, data: Map<String, Any?>) {
         val userId = uid ?: return
         try {
-            db.collection(BACKUPS).document(userId)
+            val docRef = db.collection(BACKUPS).document(userId)
                 .collection(collection).document(docId)
-                .set(data, SetOptions.merge()).await()
+            val localModified = (data["lastModified"] as? Long) ?: 0L
+
+            // Check if cloud version is newer
+            val cloudDoc = docRef.get().await()
+            if (cloudDoc.exists()) {
+                val cloudModified = cloudDoc.getLong("lastModified") ?: 0L
+                if (cloudModified > localModified) {
+                    Log.d(TAG, "Skip $collection/$docId — cloud is newer ($cloudModified > $localModified)")
+                    return
+                }
+            }
+
+            docRef.set(data, SetOptions.merge()).await()
         } catch (e: Exception) {
             Log.e(TAG, "Backup $collection/$docId failed", e)
         }
@@ -304,7 +320,8 @@ class CloudBackupRepository @Inject constructor(
         "masseGrasse" to p.masseGrasse,
         "notes" to p.notes,
         "createdAt" to p.createdAt.toString(),
-        "updatedAt" to p.updatedAt.toString()
+        "updatedAt" to p.updatedAt.toString(),
+        "lastModified" to p.lastModified
     )
 
     private fun mapToPatient(m: Map<String, Any?>): PatientEntity = PatientEntity(
@@ -334,7 +351,8 @@ class CloudBackupRepository @Inject constructor(
         "dateHeure" to r.dateHeure.toString(),
         "contexte" to r.contexte.name,
         "notes" to r.notes,
-        "createdAt" to r.createdAt.toString()
+        "createdAt" to r.createdAt.toString(),
+        "lastModified" to r.lastModified
     )
 
     private fun mapToGlucose(m: Map<String, Any?>): LectureGlucoseEntity = LectureGlucoseEntity(
@@ -356,7 +374,8 @@ class CloudBackupRepository @Inject constructor(
         "laboratoire" to h.laboratoire,
         "notes" to h.notes,
         "estEstimation" to h.estEstimation,
-        "createdAt" to h.createdAt.toString()
+        "createdAt" to h.createdAt.toString(),
+        "lastModified" to h.lastModified
     )
 
     private fun mapToHbA1c(m: Map<String, Any?>): HbA1cEntity = HbA1cEntity(
@@ -382,7 +401,8 @@ class CloudBackupRepository @Inject constructor(
         "estActif" to med.estActif,
         "rappelActive" to med.rappelActive,
         "notes" to med.notes,
-        "createdAt" to med.createdAt.toString()
+        "createdAt" to med.createdAt.toString(),
+        "lastModified" to med.lastModified
     )
 
     private fun mapToMedicament(m: Map<String, Any?>): MedicamentEntity = MedicamentEntity(
@@ -412,7 +432,8 @@ class CloudBackupRepository @Inject constructor(
         "notes" to r.notes,
         "estConfirme" to r.estConfirme,
         "rappelEnvoye" to r.rappelEnvoye,
-        "createdAt" to r.createdAt.toString()
+        "createdAt" to r.createdAt.toString(),
+        "lastModified" to r.lastModified
     )
 
     private fun mapToRendezVous(m: Map<String, Any?>): RendezVousEntity = RendezVousEntity(
@@ -443,7 +464,8 @@ class CloudBackupRepository @Inject constructor(
         "pas" to j.pas,
         "notes" to j.notes,
         "glycemieCorrelation" to j.glycemieCorrelation,
-        "createdAt" to j.createdAt.toString()
+        "createdAt" to j.createdAt.toString(),
+        "lastModified" to j.lastModified
     )
 
     private fun mapToJournal(m: Map<String, Any?>): JournalEntity = JournalEntity(

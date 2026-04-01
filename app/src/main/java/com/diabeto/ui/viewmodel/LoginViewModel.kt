@@ -32,12 +32,9 @@ class LoginViewModel @Inject constructor(
             return
         }
         _uiState.update { it.copy(isLoading = true, error = null) }
-        // Demo credentials — replace with Firebase Auth in production
-        if (username.trim() == "admin" && password == "admin123") {
-            _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
-        } else {
-            _uiState.update { it.copy(isLoading = false, error = "Identifiant ou mot de passe incorrect") }
-        }
+        // Authentication is handled by Firebase Auth via LoginScreen/AuthViewModel
+        // This ViewModel is kept for legacy local-only screens
+        _uiState.update { it.copy(isLoading = false, error = "Veuillez utiliser la connexion Firebase") }
     }
 
     fun clearError() {

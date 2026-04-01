@@ -72,10 +72,11 @@ class BatchSyncWorker @AssistedInject constructor(
         fun schedulePeriodic(context: Context) {
             val constraints = Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
+                .setRequiresBatteryNotLow(true)
                 .build()
 
             val request = PeriodicWorkRequestBuilder<BatchSyncWorker>(
-                4, TimeUnit.HOURS
+                1, TimeUnit.HOURS
             )
                 .setConstraints(constraints)
                 .setBackoffCriteria(
@@ -91,7 +92,7 @@ class BatchSyncWorker @AssistedInject constructor(
                 ExistingPeriodicWorkPolicy.KEEP,
                 request
             )
-            Log.d(TAG, "Periodic batch sync scheduled (every 4h)")
+            Log.d(TAG, "Periodic batch sync scheduled (every 1h)")
         }
 
         /**

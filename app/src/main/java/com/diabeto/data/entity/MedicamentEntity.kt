@@ -41,7 +41,8 @@ data class MedicamentEntity(
     val estActif: Boolean = true,
     val rappelActive: Boolean = true,
     val notes: String = "",
-    val createdAt: LocalDateTime = LocalDateTime.now()
+    val createdAt: LocalDateTime = LocalDateTime.now(),
+    val lastModified: Long = System.currentTimeMillis()
 ) {
     fun estEnCours(): Boolean {
         val today = LocalDate.now()

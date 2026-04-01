@@ -1,5 +1,6 @@
 package com.diabeto.data.repository
 
+import android.util.Log
 import com.diabeto.data.model.ConsentStatus
 import com.diabeto.data.model.DataSharingConsent
 import com.diabeto.data.model.UserProfile
@@ -264,7 +265,13 @@ class DataSharingRepository @Inject constructor(
     }
 
     // ── Récupérer les données Firestore d'un patient partagé ──
+    // SÉCURITÉ : vérifie le consentement actif avant toute lecture
     suspend fun getPatientGlucoseData(patientUid: String): List<Map<String, Any?>> {
+        val medecinUid = authRepository.currentUserId ?: return emptyList()
+        if (!hasAccess(patientUid, medecinUid)) {
+            Log.w("DataSharing", "Accès refusé : pas de consentement pour $patientUid")
+            return emptyList()
+        }
         return try {
             val snap = firestore.collection("glucose")
                 .whereEqualTo("userId", patientUid)
@@ -277,6 +284,11 @@ class DataSharingRepository @Inject constructor(
     }
 
     suspend fun getPatientRepasData(patientUid: String): List<Map<String, Any?>> {
+        val medecinUid = authRepository.currentUserId ?: return emptyList()
+        if (!hasAccess(patientUid, medecinUid)) {
+            Log.w("DataSharing", "Accès refusé : pas de consentement pour $patientUid")
+            return emptyList()
+        }
         return try {
             val snap = firestore.collection("repas")
                 .whereEqualTo("userId", patientUid)

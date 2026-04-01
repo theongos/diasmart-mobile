@@ -34,20 +34,30 @@ android {
             useSupportLibrary = true
         }
 
-        // Clé API Gemini injectée depuis local.properties
+        // Secrets injectés depuis local.properties (jamais dans le code source)
         buildConfigField(
             "String",
             "GEMINI_API_KEY",
             "\"${localProps.getProperty("GEMINI_API_KEY", "")}\""
+        )
+        buildConfigField(
+            "String",
+            "TURN_USERNAME",
+            "\"${localProps.getProperty("TURN_USERNAME", "")}\""
+        )
+        buildConfigField(
+            "String",
+            "TURN_PASSWORD",
+            "\"${localProps.getProperty("TURN_PASSWORD", "")}\""
         )
     }
 
     signingConfigs {
         create("release") {
             storeFile = file("../diasmart-release.jks")
-            storePassword = "DiaSmart2024"
-            keyAlias = "diasmart"
-            keyPassword = "DiaSmart2024"
+            storePassword = localProps.getProperty("KEYSTORE_PASSWORD", "")
+            keyAlias = localProps.getProperty("KEY_ALIAS", "")
+            keyPassword = localProps.getProperty("KEY_PASSWORD", "")
         }
     }
 
@@ -124,6 +134,10 @@ dependencies {
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
+
+    // SQLCipher — encryption for Room database (medical data protection)
+    implementation("net.zetetic:android-database-sqlcipher:4.5.4")
+    implementation("androidx.sqlite:sqlite-ktx:2.4.0")
 
     // Hilt DI
     implementation("com.google.dagger:hilt-android:2.52")

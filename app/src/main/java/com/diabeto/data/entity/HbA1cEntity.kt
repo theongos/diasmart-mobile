@@ -43,7 +43,8 @@ data class HbA1cEntity(
     val laboratoire: String = "",
     val notes: String = "",
     val estEstimation: Boolean = false, // true si calculée à partir de la glycémie moyenne
-    val createdAt: LocalDateTime = LocalDateTime.now()
+    val createdAt: LocalDateTime = LocalDateTime.now(),
+    val lastModified: Long = System.currentTimeMillis()
 ) {
     /**
      * Interprétation clinique de la valeur HbA1c

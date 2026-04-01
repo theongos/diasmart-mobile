@@ -184,8 +184,9 @@ class FirestoreSignaling {
                 .await()
         } catch (e: Exception) {
             Log.e(TAG, "Error ending call", e)
+        } finally {
+            cleanup()
         }
-        cleanup()
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -354,19 +355,43 @@ class FirestoreSignaling {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // CLEANUP
+    // CLEANUP — try-finally pour garantir le nettoyage
     // ═══════════════════════════════════════════════════════════
 
     fun cleanup() {
-        callListener?.remove()
-        callListener = null
-        iceListener?.remove()
-        iceListener = null
+        try {
+            callListener?.remove()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error removing callListener", e)
+        } finally {
+            callListener = null
+        }
+        try {
+            iceListener?.remove()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error removing iceListener", e)
+        } finally {
+            iceListener = null
+        }
     }
 
     fun stopListening() {
-        incomingCallListener?.remove()
-        incomingCallListener = null
+        try {
+            incomingCallListener?.remove()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error removing incomingCallListener", e)
+        } finally {
+            incomingCallListener = null
+        }
         cleanup()
+        // Clear all callbacks to prevent memory leaks
+        onCallIncoming = null
+        onCallAccepted = null
+        onCallEnded = null
+        onRemoteOffer = null
+        onRemoteAnswer = null
+        onRemoteIceCandidate = null
+        onIceRestartOffer = null
+        onIceRestartAnswer = null
     }
 }

@@ -32,7 +32,8 @@ data class LectureGlucoseEntity(
     val dateHeure: LocalDateTime,
     val contexte: ContexteGlucose,
     val notes: String = "",
-    val createdAt: LocalDateTime = LocalDateTime.now()
+    val createdAt: LocalDateTime = LocalDateTime.now(),
+    val lastModified: Long = System.currentTimeMillis()
 )
 
 enum class ContexteGlucose {
