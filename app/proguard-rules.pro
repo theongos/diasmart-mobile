@@ -28,6 +28,39 @@
 -dontwarn java.time.**
 -keep class java.time.** { *; }
 
+# Keep Firebase
+-keep class com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.android.gms.**
+
+# Keep WebRTC
+-keep class org.webrtc.** { *; }
+-dontwarn org.webrtc.**
+
+# Keep Gemini / Generative AI
+-keep class com.google.ai.client.generativeai.** { *; }
+-dontwarn com.google.ai.client.generativeai.**
+
+# Keep Credentials / Google Sign-In
+-keep class androidx.credentials.** { *; }
+-keep class com.google.android.libraries.identity.** { *; }
+
+# Keep VoIP / Telecom classes
+-keep class com.diabeto.voip.** { *; }
+
+# Keep notification classes
+-keep class com.diabeto.notifications.** { *; }
+
+# Keep widget classes
+-keep class com.diabeto.widget.** { *; }
+
+# Keep service classes
+-keep class com.diabeto.service.** { *; }
+
+# Keep sync worker
+-keep class com.diabeto.sync.** { *; }
+
 # General
 -keepattributes Signature
 -keepattributes Exceptions
