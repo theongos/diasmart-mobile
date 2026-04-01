@@ -199,14 +199,33 @@ class DataSharingRepository @Inject constructor(
     //  COMMUN : Lister tous les patients de la plateforme
     // ═══════════════════════════════════════════════════════════════
 
+    /**
+     * Liste les patients de la plateforme — réservé aux médecins.
+     * Retourne uniquement les patients ayant un consentement actif avec ce médecin.
+     */
     suspend fun getAllPlatformPatients(): List<UserProfile> {
+        val currentUid = authRepository.currentUserId ?: return emptyList()
+        val currentProfile = authRepository.getCurrentUserProfile() ?: return emptyList()
+
+        // Seuls les médecins peuvent lister les patients
+        if (currentProfile.role != UserRole.MEDECIN) {
+            Log.w("DataSharing", "getAllPlatformPatients refusé : utilisateur n'est pas médecin")
+            return emptyList()
+        }
+
         return try {
-            val snap = firestore.collection(COLLECTION_USERS)
-                .whereEqualTo("role", UserRole.PATIENT.name)
+            // Retourner uniquement les patients qui ont consenti au partage avec ce médecin
+            val consents = firestore.collection(COLLECTION_SHARING)
+                .whereEqualTo("medecinUid", currentUid)
+                .whereEqualTo("isActive", true)
                 .get().await()
-            snap.documents.mapNotNull { doc ->
-                @Suppress("UNCHECKED_CAST")
-                doc.data?.let { UserProfile.fromMap(it as Map<String, Any?>) }
+
+            val patientUids = consents.documents.mapNotNull { it.getString("patientUid") }
+            if (patientUids.isEmpty()) return emptyList()
+
+            // Récupérer les profils des patients consentants
+            patientUids.mapNotNull { uid ->
+                authRepository.getUserProfile(uid)
             }
         } catch (_: Exception) { emptyList() }
     }

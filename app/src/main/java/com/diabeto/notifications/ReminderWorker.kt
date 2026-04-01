@@ -3,29 +3,32 @@ package com.diabeto.notifications
 import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.*
-import com.diabeto.data.database.DiabetoDatabase
+import com.diabeto.data.dao.GlucoseDao
+import com.diabeto.data.dao.MedicamentDao
+import com.diabeto.data.dao.PatientDao
+import com.diabeto.data.dao.RendezVousDao
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 
 @HiltWorker
 class MedicationReminderWorker @AssistedInject constructor(
     @Assisted context: Context,
-    @Assisted params: WorkerParameters
+    @Assisted params: WorkerParameters,
+    private val medicamentDao: MedicamentDao,
+    private val patientDao: PatientDao
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
         return try {
-            val db = DiabetoDatabase.getInstance(applicationContext)
-            val medicaments = db.medicamentDao().getAllActiveMedicaments()
+            val medicaments = medicamentDao.getAllActiveMedicaments()
 
             for (med in medicaments) {
                 if (!med.rappelActive) continue
-                val patient = db.patientDao().getPatientById(med.patientId) ?: continue
+                val patient = patientDao.getPatientById(med.patientId) ?: continue
 
                 NotificationHelper.showMedicamentReminder(
                     context = applicationContext,
@@ -44,21 +47,21 @@ class MedicationReminderWorker @AssistedInject constructor(
 @HiltWorker
 class AppointmentReminderWorker @AssistedInject constructor(
     @Assisted context: Context,
-    @Assisted params: WorkerParameters
+    @Assisted params: WorkerParameters,
+    private val rendezVousDao: RendezVousDao,
+    private val patientDao: PatientDao
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
         return try {
-            val db = DiabetoDatabase.getInstance(applicationContext)
             val now = LocalDateTime.now()
             val oneHourLater = now.plusHours(1)
 
-            // Find appointments in the next hour
-            val upcomingRdvs = db.rendezVousDao().getUpcomingRendezVousAfter(now, oneHourLater)
+            val upcomingRdvs = rendezVousDao.getUpcomingRendezVousAfter(now, oneHourLater)
 
             for (rdv in upcomingRdvs) {
                 if (rdv.rappelEnvoye) continue
-                val patient = db.patientDao().getPatientById(rdv.patientId) ?: continue
+                val patient = patientDao.getPatientById(rdv.patientId) ?: continue
 
                 NotificationHelper.showRendezVousReminder(
                     context = applicationContext,
@@ -67,7 +70,7 @@ class AppointmentReminderWorker @AssistedInject constructor(
                     patientName = patient.nomComplet,
                     dateHeure = rdv.dateHeure.format(DateTimeFormatter.ofPattern("HH:mm"))
                 )
-                db.rendezVousDao().markReminderSent(rdv.id)
+                rendezVousDao.markReminderSent(rdv.id)
             }
             Result.success()
         } catch (e: Exception) {
@@ -79,17 +82,17 @@ class AppointmentReminderWorker @AssistedInject constructor(
 @HiltWorker
 class GlucoseMeasurementReminderWorker @AssistedInject constructor(
     @Assisted context: Context,
-    @Assisted params: WorkerParameters
+    @Assisted params: WorkerParameters,
+    private val patientDao: PatientDao,
+    private val glucoseDao: GlucoseDao
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
         return try {
-            val db = DiabetoDatabase.getInstance(applicationContext)
-            val patients = db.patientDao().getAllPatientsList()
+            val patients = patientDao.getAllPatientsList()
 
             for (patient in patients) {
-                // Check if patient has measured today
-                val todayReadings = db.glucoseDao().getReadingsCountForDate(
+                val todayReadings = glucoseDao.getReadingsCountForDate(
                     patient.id,
                     LocalDate.now()
                 )

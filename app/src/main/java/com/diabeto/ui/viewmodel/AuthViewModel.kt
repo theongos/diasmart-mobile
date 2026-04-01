@@ -140,8 +140,12 @@ class AuthViewModel @Inject constructor(
             _uiState.update { it.copy(error = "Tous les champs sont obligatoires") }
             return
         }
-        if (state.password.length < 6) {
-            _uiState.update { it.copy(error = "Le mot de passe doit contenir au moins 6 caractères") }
+        if (state.password.length < 8) {
+            _uiState.update { it.copy(error = "Le mot de passe doit contenir au moins 8 caractères") }
+            return
+        }
+        if (!state.password.any { it.isUpperCase() } || !state.password.any { it.isDigit() }) {
+            _uiState.update { it.copy(error = "Le mot de passe doit contenir au moins une majuscule et un chiffre") }
             return
         }
         viewModelScope.launch {
@@ -363,17 +367,18 @@ class AuthViewModel @Inject constructor(
 
     private fun traduitErreurFirebase(message: String?): String = when {
         message == null -> "Erreur inconnue"
-        message.contains("password", ignoreCase = true) -> "Mot de passe incorrect ou trop court"
-        message.contains("email") && message.contains("already") -> "Cet email est déjà utilisé"
+        // Sécurité : messages génériques pour login/signup (pas de fuite d'existence de compte)
+        message.contains("password", ignoreCase = true) -> "Email ou mot de passe incorrect"
+        message.contains("email") && message.contains("already") -> "Impossible de créer le compte. Vérifiez vos informations."
         message.contains("email", ignoreCase = true) -> "Format d'email invalide"
         message.contains("network", ignoreCase = true) -> "Pas de connexion réseau"
-        message.contains("user-not-found") || message.contains("no user") -> "Aucun compte avec cet email"
+        message.contains("user-not-found") || message.contains("no user") -> "Email ou mot de passe incorrect"
         message.contains("too-many-requests") -> "Trop de tentatives, réessayez plus tard"
         message.contains("invalid-phone") -> "Numéro de téléphone invalide"
         message.contains("invalid-verification") -> "Code de vérification invalide"
-        message.contains("quota-exceeded") -> "Quota SMS dépassé, réessayez plus tard"
+        message.contains("quota-exceeded") -> "Service temporairement indisponible, réessayez plus tard"
         message.contains("session-expired") -> "Session expirée, renvoyez le code"
         message.contains("credential") -> "Identifiants invalides"
-        else -> "Erreur : $message"
+        else -> "Une erreur est survenue. Veuillez réessayer."
     }
 }
