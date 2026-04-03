@@ -1,12 +1,16 @@
 package com.diabeto.data.repository
 
 import android.util.Log
+import androidx.room.withTransaction
 import com.diabeto.data.dao.*
+import com.diabeto.data.database.DiabetoDatabase
 import com.diabeto.data.entity.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -33,6 +37,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class CloudBackupRepository @Inject constructor(
+    private val database: DiabetoDatabase,
     private val patientDao: PatientDao,
     private val glucoseDao: GlucoseDao,
     private val hbA1cDao: HbA1cDao,
@@ -45,6 +50,8 @@ class CloudBackupRepository @Inject constructor(
         private const val BACKUPS = "backups"
     }
 
+    private val syncMutex = Mutex()
+
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
 
@@ -56,6 +63,10 @@ class CloudBackupRepository @Inject constructor(
 
     suspend fun performFullBackup(): Result<Int> = withContext(Dispatchers.IO) {
         val userId = uid ?: return@withContext Result.failure(Exception("Non connecte"))
+        if (!syncMutex.tryLock()) {
+            Log.d(TAG, "Sync already in progress — skipping backup")
+            return@withContext Result.success(0)
+        }
         try {
             var totalDocs = 0
             val userRef = db.collection(BACKUPS).document(userId)
@@ -133,6 +144,8 @@ class CloudBackupRepository @Inject constructor(
         } catch (e: Exception) {
             Log.e(TAG, "Backup failed", e)
             Result.failure(e)
+        } finally {
+            syncMutex.unlock()
         }
     }
 
@@ -142,80 +155,80 @@ class CloudBackupRepository @Inject constructor(
 
     suspend fun performFullRestore(): Result<Int> = withContext(Dispatchers.IO) {
         val userId = uid ?: return@withContext Result.failure(Exception("Non connecte"))
-        try {
-            var totalDocs = 0
-            val userRef = db.collection(BACKUPS).document(userId)
+        syncMutex.withLock {
+            try {
+                val userRef = db.collection(BACKUPS).document(userId)
 
-            // Check if backup exists
-            val metadata = userRef.collection("metadata").document("info").get().await()
-            if (!metadata.exists()) {
-                Log.d(TAG, "No cloud backup found for $userId")
-                return@withContext Result.success(0)
+                // Check if backup exists
+                val metadata = userRef.collection("metadata").document("info").get().await()
+                if (!metadata.exists()) {
+                    Log.d(TAG, "No cloud backup found for $userId")
+                    return@withContext Result.success(0)
+                }
+
+                // Fetch all cloud data BEFORE writing to local DB
+                val patientDocs = userRef.collection("patients").get().await()
+                val glucoseDocs = userRef.collection("glucose").get().await()
+                val hba1cDocs = userRef.collection("hba1c").get().await()
+                val medDocs = userRef.collection("medicaments").get().await()
+                val rdvDocs = userRef.collection("rendezvous").get().await()
+                val journalDocs = userRef.collection("journal").get().await()
+
+                // Insert all data in a single Room transaction — atomic: all or nothing
+                var totalDocs = 0
+                database.withTransaction {
+                    val patientIdMap = mutableMapOf<Long, Long>()
+
+                    for (doc in patientDocs.documents) {
+                        val patient = mapToPatient(doc.data ?: continue)
+                        val oldId = patient.id
+                        val newId = patientDao.insertPatient(patient.copy(id = 0))
+                        patientIdMap[oldId] = newId
+                        totalDocs++
+                    }
+
+                    for (doc in glucoseDocs.documents) {
+                        val reading = mapToGlucose(doc.data ?: continue)
+                        val newPatientId = patientIdMap[reading.patientId] ?: continue
+                        glucoseDao.insertLecture(reading.copy(id = 0, patientId = newPatientId))
+                        totalDocs++
+                    }
+
+                    for (doc in hba1cDocs.documents) {
+                        val hba1c = mapToHbA1c(doc.data ?: continue)
+                        val newPatientId = patientIdMap[hba1c.patientId] ?: continue
+                        hbA1cDao.insertHbA1c(hba1c.copy(id = 0, patientId = newPatientId))
+                        totalDocs++
+                    }
+
+                    for (doc in medDocs.documents) {
+                        val med = mapToMedicament(doc.data ?: continue)
+                        val newPatientId = patientIdMap[med.patientId] ?: continue
+                        medicamentDao.insertMedicament(med.copy(id = 0, patientId = newPatientId))
+                        totalDocs++
+                    }
+
+                    for (doc in rdvDocs.documents) {
+                        val rdv = mapToRendezVous(doc.data ?: continue)
+                        val newPatientId = patientIdMap[rdv.patientId] ?: continue
+                        rendezVousDao.insertRendezVous(rdv.copy(id = 0, patientId = newPatientId))
+                        totalDocs++
+                    }
+
+                    for (doc in journalDocs.documents) {
+                        val entry = mapToJournal(doc.data ?: continue)
+                        val newPatientId = patientIdMap[entry.patientId] ?: continue
+                        journalDao.insertEntry(entry.copy(id = 0, patientId = newPatientId))
+                        totalDocs++
+                    }
+                }
+
+                Log.d(TAG, "Full restore: $totalDocs documents restored (atomic transaction)")
+                Result.success(totalDocs)
+            } catch (e: Exception) {
+                Log.e(TAG, "Restore failed — transaction rolled back", e)
+                Result.failure(e)
             }
-
-            // ID mapping: cloud ID → new local ID (since Room auto-generates IDs)
-            val patientIdMap = mutableMapOf<Long, Long>()
-
-            // 1. Restore patients
-            val patientDocs = userRef.collection("patients").get().await()
-            for (doc in patientDocs.documents) {
-                val patient = mapToPatient(doc.data ?: continue)
-                val oldId = patient.id
-                val newId = patientDao.insertPatient(patient.copy(id = 0)) // auto-generate
-                patientIdMap[oldId] = newId
-                totalDocs++
-            }
-
-            // 2. Restore glucose
-            val glucoseDocs = userRef.collection("glucose").get().await()
-            for (doc in glucoseDocs.documents) {
-                val reading = mapToGlucose(doc.data ?: continue)
-                val newPatientId = patientIdMap[reading.patientId] ?: continue
-                glucoseDao.insertLecture(reading.copy(id = 0, patientId = newPatientId))
-                totalDocs++
-            }
-
-            // 3. Restore HbA1c
-            val hba1cDocs = userRef.collection("hba1c").get().await()
-            for (doc in hba1cDocs.documents) {
-                val hba1c = mapToHbA1c(doc.data ?: continue)
-                val newPatientId = patientIdMap[hba1c.patientId] ?: continue
-                hbA1cDao.insertHbA1c(hba1c.copy(id = 0, patientId = newPatientId))
-                totalDocs++
-            }
-
-            // 4. Restore medicaments
-            val medDocs = userRef.collection("medicaments").get().await()
-            for (doc in medDocs.documents) {
-                val med = mapToMedicament(doc.data ?: continue)
-                val newPatientId = patientIdMap[med.patientId] ?: continue
-                medicamentDao.insertMedicament(med.copy(id = 0, patientId = newPatientId))
-                totalDocs++
-            }
-
-            // 5. Restore rendez-vous
-            val rdvDocs = userRef.collection("rendezvous").get().await()
-            for (doc in rdvDocs.documents) {
-                val rdv = mapToRendezVous(doc.data ?: continue)
-                val newPatientId = patientIdMap[rdv.patientId] ?: continue
-                rendezVousDao.insertRendezVous(rdv.copy(id = 0, patientId = newPatientId))
-                totalDocs++
-            }
-
-            // 6. Restore journal
-            val journalDocs = userRef.collection("journal").get().await()
-            for (doc in journalDocs.documents) {
-                val entry = mapToJournal(doc.data ?: continue)
-                val newPatientId = patientIdMap[entry.patientId] ?: continue
-                journalDao.insertEntry(entry.copy(id = 0, patientId = newPatientId))
-                totalDocs++
-            }
-
-            Log.d(TAG, "Full restore: $totalDocs documents restored")
-            Result.success(totalDocs)
-        } catch (e: Exception) {
-            Log.e(TAG, "Restore failed", e)
-            Result.failure(e)
         }
     }
 

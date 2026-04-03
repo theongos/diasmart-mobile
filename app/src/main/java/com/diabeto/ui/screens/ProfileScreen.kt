@@ -114,9 +114,12 @@ fun ProfileScreen(
     }
 
     // Photo picker — resize to 256px and store as base64 in Firestore (no Storage needed)
+    var isUploadingPhoto by remember { mutableStateOf(false) }
+
     val photoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri ?: return@rememberLauncherForActivityResult
         scope.launch {
+            isUploadingPhoto = true
             try {
                 // Read and resize bitmap
                 val inputStream = context.contentResolver.openInputStream(uri)
@@ -151,6 +154,8 @@ fun ProfileScreen(
                 snackbarHostState.showSnackbar("Photo mise à jour")
             } catch (e: Exception) {
                 snackbarHostState.showSnackbar("Erreur: ${e.message}")
+            } finally {
+                isUploadingPhoto = false
             }
         }
     }
@@ -306,8 +311,15 @@ fun ProfileScreen(
                         )
                     }
                 }
+                if (isUploadingPhoto) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(32.dp),
+                        color = Primary,
+                        strokeWidth = 2.dp
+                    )
+                }
                 IconButton(
-                    onClick = { photoLauncher.launch("image/*") },
+                    onClick = { if (!isUploadingPhoto) photoLauncher.launch("image/*") },
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)

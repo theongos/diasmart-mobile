@@ -83,14 +83,16 @@ class ReminderReceiver : BroadcastReceiver() {
  * Receiver pour le redémarrage du téléphone
  */
 class BootReceiver : BroadcastReceiver() {
-    
+
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-            // Recréer les canaux de notification
-            NotificationHelper.createNotificationChannels(context)
-            
-            // Reprogrammer les rappels
-            // TODO: Implémenter la reprogrammation des alarmes
-        }
+        if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
+
+        // Recréer les canaux de notification
+        NotificationHelper.createNotificationChannels(context)
+
+        // Reprogrammer les Workers de rappel
+        ReminderScheduler.scheduleMedicationReminders(context)
+        ReminderScheduler.scheduleAppointmentReminders(context)
+        ReminderScheduler.scheduleMeasurementReminders(context)
     }
 }

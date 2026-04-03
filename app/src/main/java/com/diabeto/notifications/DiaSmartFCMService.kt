@@ -119,7 +119,7 @@ class DiaSmartFCMService : FirebaseMessagingService() {
         callerNom: String,
         callType: String
     ) {
-        Log.d(TAG, "Incoming call FCM: $callId from $callerNom ($callType)")
+        Log.d(TAG, "Incoming call FCM: $callId type=$callType")
 
         // Create high-priority notification with full screen intent
         val channelId = "diasmart_calls"

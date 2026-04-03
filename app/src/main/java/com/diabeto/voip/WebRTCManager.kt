@@ -123,15 +123,15 @@ class WebRTCManager @Inject constructor(
 
     private var isVideoCall = false
 
-    // ── Callbacks ──
-    var onIceCandidate: ((IceCandidate) -> Unit)? = null
-    var onRemoteVideoTrack: ((VideoTrack) -> Unit)? = null
-    var onRemoteAudioTrack: ((AudioTrack) -> Unit)? = null
-    var onConnectionStateChange: ((PeerConnection.IceConnectionState) -> Unit)? = null
-    var onPeerConnectionStateChange: ((PeerConnection.PeerConnectionState) -> Unit)? = null
-    var onLocalVideoTrack: ((VideoTrack) -> Unit)? = null
-    var onNetworkChanged: (() -> Unit)? = null        // WiFi↔4G switch detected
-    var onHeartbeatTimeout: (() -> Unit)? = null       // Remote peer unreachable
+    // ── Callbacks (volatile for cross-thread visibility during dispose) ──
+    @Volatile var onIceCandidate: ((IceCandidate) -> Unit)? = null
+    @Volatile var onRemoteVideoTrack: ((VideoTrack) -> Unit)? = null
+    @Volatile var onRemoteAudioTrack: ((AudioTrack) -> Unit)? = null
+    @Volatile var onConnectionStateChange: ((PeerConnection.IceConnectionState) -> Unit)? = null
+    @Volatile var onPeerConnectionStateChange: ((PeerConnection.PeerConnectionState) -> Unit)? = null
+    @Volatile var onLocalVideoTrack: ((VideoTrack) -> Unit)? = null
+    @Volatile var onNetworkChanged: (() -> Unit)? = null
+    @Volatile var onHeartbeatTimeout: (() -> Unit)? = null
 
     // ═══════════════════════════════════════════════════════════
     // INITIALIZATION

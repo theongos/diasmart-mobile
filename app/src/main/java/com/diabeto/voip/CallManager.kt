@@ -87,7 +87,8 @@ class CallManager @Inject constructor(
     val remoteVideoTrack: StateFlow<VideoTrack?> = _remoteVideoTrack.asStateFlow()
 
     private val signaling = FirestoreSignaling()
-    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private var scopeJob = SupervisorJob()
+    private var scope = CoroutineScope(Dispatchers.Main + scopeJob)
 
     private var audioManager: AudioManager? = null
     private var audioFocusRequest: AudioFocusRequest? = null
@@ -575,6 +576,10 @@ class CallManager @Inject constructor(
         _callState.value = CallInfo()
         remoteDescriptionSet = false
         pendingIceCandidates.clear()
+        // Reset scope to isolate next call from any leaked coroutines
+        scopeJob.cancel()
+        scopeJob = SupervisorJob()
+        scope = CoroutineScope(Dispatchers.Main + scopeJob)
         CallService.stop(context)
     }
 
@@ -653,6 +658,6 @@ class CallManager @Inject constructor(
         endCall()
         signaling.stopListening()
         webRTCManager.release()
-        scope.cancel()
+        scopeJob.cancel()
     }
 }
