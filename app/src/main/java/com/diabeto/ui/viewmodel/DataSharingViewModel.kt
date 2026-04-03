@@ -1,5 +1,6 @@
 package com.diabeto.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.diabeto.data.model.DataSharingConsent
@@ -73,7 +74,9 @@ class DataSharingViewModel @Inject constructor(
             try {
                 val medecins = dataSharingRepository.getAvailableMedecins()
                 _uiState.update { it.copy(availableMedecins = medecins) }
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                Log.w("DataSharingVM", "Failed to load medecins", e)
+            }
         }
     }
 

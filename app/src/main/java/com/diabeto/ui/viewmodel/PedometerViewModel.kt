@@ -1,5 +1,6 @@
 package com.diabeto.ui.viewmodel
 
+import android.util.Log
 import android.content.Context
 import android.content.Intent
 import android.hardware.Sensor
@@ -85,7 +86,9 @@ class PedometerViewModel @Inject constructor(
                     }
                     _uiState.update { it.copy(avgGlycemie = avg, glycemieImpact = impact) }
                 }
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                Log.w("PedometerVM", "Failed to load glycemie impact", e)
+            }
         }
     }
 

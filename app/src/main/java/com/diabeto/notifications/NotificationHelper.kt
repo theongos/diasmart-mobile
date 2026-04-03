@@ -92,7 +92,7 @@ object NotificationHelper {
         
         val notificationManager = context.getSystemService(NotificationManager::class.java)
         notificationManager.notify(
-            NOTIFICATION_ID_MEDICAMENT + medicamentId.toInt(),
+            NOTIFICATION_ID_MEDICAMENT + (medicamentId % 1000).toInt(),
             notification
         )
     }
@@ -134,7 +134,7 @@ object NotificationHelper {
         
         val notificationManager = context.getSystemService(NotificationManager::class.java)
         notificationManager.notify(
-            NOTIFICATION_ID_RENDEZ_VOUS + rdvId.toInt(),
+            NOTIFICATION_ID_RENDEZ_VOUS + (rdvId % 1000).toInt(),
             notification
         )
     }
@@ -169,7 +169,7 @@ object NotificationHelper {
             .build()
 
         val notificationManager = context.getSystemService(NotificationManager::class.java)
-        notificationManager.notify(3000 + patientId.toInt(), notification)
+        notificationManager.notify(3000 + (patientId % 1000).toInt(), notification)
     }
 
     /**

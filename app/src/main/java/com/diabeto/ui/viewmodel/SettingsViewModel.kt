@@ -1,5 +1,6 @@
 package com.diabeto.ui.viewmodel
 
+import android.util.Log
 import android.content.Context
 import android.content.Intent
 import androidx.lifecycle.ViewModel
@@ -194,8 +195,8 @@ class SettingsViewModel @Inject constructor(
                         context.startActivity(Intent.createChooser(intent, "Exporter ($format)"))
                     }
                 }
-            } catch (_: Exception) {
-                // Toast handled in UI
+            } catch (e: Exception) {
+                Log.w("SettingsVM", "Export failed", e)
             }
         }
     }

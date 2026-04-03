@@ -98,8 +98,8 @@ class DashboardViewModel @Inject constructor(
                 profile?.let {
                     _uiState.update { state -> state.copy(userRole = it.role) }
                 }
-            } catch (_: Exception) {
-                // Par défaut PATIENT
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to load user role, defaulting to PATIENT", e)
             }
         }
     }

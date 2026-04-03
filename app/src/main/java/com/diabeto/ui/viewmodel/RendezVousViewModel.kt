@@ -149,7 +149,9 @@ class RendezVousViewModel @Inject constructor(
                     }
                 }
                 // Patient: pas de patient options - ils ne créent pas de RDV
-            } catch (_: Exception) { }
+            } catch (e: Exception) {
+                Log.w("RendezVousVM", "Failed to load patient options", e)
+            }
         }
     }
 

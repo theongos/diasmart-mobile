@@ -1,6 +1,9 @@
 package com.diabeto.data.database
 
 import android.content.Context
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
+import android.util.Base64
 import android.util.Log
 import androidx.room.Database
 import androidx.room.Room
@@ -11,6 +14,11 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.diabeto.data.dao.*
 import com.diabeto.data.entity.*
 import net.sqlcipher.database.SupportFactory
+import java.security.KeyStore
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+import javax.crypto.spec.GCMParameterSpec
 
 /**
  * Base de données Room principale de l'application.
@@ -44,15 +52,79 @@ abstract class DiabetoDatabase : RoomDatabase() {
         const val DATABASE_NAME = "diabeto_database.db"
         private const val TAG = "DiabetoDatabase"
 
-        // Passphrase for SQLCipher — derived from app + device identity
+        private const val KEYSTORE_ALIAS = "diasmart_db_key"
+        private const val PREFS_NAME = "diasmart_db_prefs"
+        private const val PREF_ENCRYPTED_PASS = "encrypted_passphrase"
+        private const val PREF_IV = "passphrase_iv"
+
+        /**
+         * Passphrase for SQLCipher — generated once, stored encrypted via Android Keystore.
+         * The actual passphrase is a random 32-byte key, encrypted with AES-GCM using
+         * a hardware-backed key that never leaves the Keystore.
+         */
         private fun getPassphrase(context: Context): ByteArray {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val existingEncrypted = prefs.getString(PREF_ENCRYPTED_PASS, null)
+            val existingIv = prefs.getString(PREF_IV, null)
+
+            return if (existingEncrypted != null && existingIv != null) {
+                // Decrypt stored passphrase with Keystore key
+                try {
+                    val key = getOrCreateKeystoreKey()
+                    val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+                    val iv = Base64.decode(existingIv, Base64.NO_WRAP)
+                    cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(128, iv))
+                    cipher.doFinal(Base64.decode(existingEncrypted, Base64.NO_WRAP))
+                } catch (e: Exception) {
+                    Log.w(TAG, "Keystore decrypt failed, falling back to legacy key", e)
+                    getLegacyPassphrase(context)
+                }
+            } else {
+                // First launch: generate random passphrase and encrypt with Keystore
+                try {
+                    val passphrase = ByteArray(32).also { java.security.SecureRandom().nextBytes(it) }
+                    val key = getOrCreateKeystoreKey()
+                    val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+                    cipher.init(Cipher.ENCRYPT_MODE, key)
+                    val encrypted = cipher.doFinal(passphrase)
+                    prefs.edit()
+                        .putString(PREF_ENCRYPTED_PASS, Base64.encodeToString(encrypted, Base64.NO_WRAP))
+                        .putString(PREF_IV, Base64.encodeToString(cipher.iv, Base64.NO_WRAP))
+                        .apply()
+                    passphrase
+                } catch (e: Exception) {
+                    Log.w(TAG, "Keystore init failed, using legacy key", e)
+                    getLegacyPassphrase(context)
+                }
+            }
+        }
+
+        private fun getOrCreateKeystoreKey(): SecretKey {
+            val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+            keyStore.getEntry(KEYSTORE_ALIAS, null)?.let {
+                return (it as KeyStore.SecretKeyEntry).secretKey
+            }
+            val spec = KeyGenParameterSpec.Builder(
+                KEYSTORE_ALIAS,
+                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+            )
+                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setKeySize(256)
+                .build()
+            return KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore")
+                .apply { init(spec) }
+                .generateKey()
+        }
+
+        /** Legacy passphrase for backward compatibility with existing databases. */
+        private fun getLegacyPassphrase(context: Context): ByteArray {
             val packageName = context.packageName
             val androidId = android.provider.Settings.Secure.getString(
                 context.contentResolver,
                 android.provider.Settings.Secure.ANDROID_ID
             ) ?: "diasmart_default"
-            val key = "DSm@rt_${packageName}_$androidId"
-            return key.toByteArray(Charsets.UTF_8)
+            return "DSm@rt_${packageName}_$androidId".toByteArray(Charsets.UTF_8)
         }
 
         // ══════════════════════════════════════════════════════════════

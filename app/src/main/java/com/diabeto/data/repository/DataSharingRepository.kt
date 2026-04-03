@@ -103,7 +103,7 @@ class DataSharingRepository @Inject constructor(
                 @Suppress("UNCHECKED_CAST")
                 doc.data?.let { DataSharingConsent.fromMap(it as Map<String, Any?>) }
             }
-        } catch (_: Exception) { emptyList() }
+        } catch (e: Exception) { Log.w("DataSharing", "Query failed: ${e.message}"); emptyList() }
     }
 
     // ── Patient : accorder le consentement à un médecin (ancien flow) ──
@@ -160,7 +160,7 @@ class DataSharingRepository @Inject constructor(
                 @Suppress("UNCHECKED_CAST")
                 doc.data?.let { DataSharingConsent.fromMap(it as Map<String, Any?>) }
             }
-        } catch (_: Exception) { emptyList() }
+        } catch (e: Exception) { Log.w("DataSharing", "Query failed: ${e.message}"); emptyList() }
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -178,7 +178,7 @@ class DataSharingRepository @Inject constructor(
                 @Suppress("UNCHECKED_CAST")
                 doc.data?.let { DataSharingConsent.fromMap(it as Map<String, Any?>) }
             }
-        } catch (_: Exception) { emptyList() }
+        } catch (e: Exception) { Log.w("DataSharing", "Query failed: ${e.message}"); emptyList() }
     }
 
     // ── Médecin : lister ses demandes en cours (toutes) ──
@@ -192,7 +192,7 @@ class DataSharingRepository @Inject constructor(
                 @Suppress("UNCHECKED_CAST")
                 doc.data?.let { DataSharingConsent.fromMap(it as Map<String, Any?>) }
             }
-        } catch (_: Exception) { emptyList() }
+        } catch (e: Exception) { Log.w("DataSharing", "Query failed: ${e.message}"); emptyList() }
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -227,7 +227,7 @@ class DataSharingRepository @Inject constructor(
             patientUids.mapNotNull { uid ->
                 authRepository.getUserProfile(uid)
             }
-        } catch (_: Exception) { emptyList() }
+        } catch (e: Exception) { Log.w("DataSharing", "Query failed: ${e.message}"); emptyList() }
     }
 
     // ── Lister les médecins disponibles ──
@@ -245,7 +245,7 @@ class DataSharingRepository @Inject constructor(
                 val consent = DataSharingConsent.fromMap(doc.data as Map<String, Any?>)
                 consent.isActive && consent.status == ConsentStatus.ACCEPTED
             } else false
-        } catch (_: Exception) { false }
+        } catch (e: Exception) { Log.w("DataSharing", "hasAccess check failed: ${e.message}"); false }
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -299,7 +299,7 @@ class DataSharingRepository @Inject constructor(
                 @Suppress("UNCHECKED_CAST")
                 it.data as? Map<String, Any?>
             }
-        } catch (_: Exception) { emptyList() }
+        } catch (e: Exception) { Log.w("DataSharing", "Query failed: ${e.message}"); emptyList() }
     }
 
     suspend fun getPatientRepasData(patientUid: String): List<Map<String, Any?>> {
@@ -316,6 +316,6 @@ class DataSharingRepository @Inject constructor(
                 @Suppress("UNCHECKED_CAST")
                 it.data as? Map<String, Any?>
             }
-        } catch (_: Exception) { emptyList() }
+        } catch (e: Exception) { Log.w("DataSharing", "Query failed: ${e.message}"); emptyList() }
     }
 }

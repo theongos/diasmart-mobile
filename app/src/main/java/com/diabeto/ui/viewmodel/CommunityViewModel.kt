@@ -1,5 +1,6 @@
 package com.diabeto.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.diabeto.data.repository.AuthRepository
@@ -85,7 +86,9 @@ class CommunityViewModel @Inject constructor(
                     .get().await()
                     .size()
                 _uiState.update { it.copy(membersCount = count) }
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                Log.w("CommunityVM", "Failed to count members", e)
+            }
         }
     }
 

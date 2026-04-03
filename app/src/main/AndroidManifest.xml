@@ -48,6 +48,7 @@
         android:roundIcon="@mipmap/diasmart_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Diabeto"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:usesCleartextTraffic="false"
         tools:targetApi="34">
 

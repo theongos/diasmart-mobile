@@ -80,13 +80,13 @@ class AuthViewModel @Inject constructor(
     }
 
     // ── Mise à jour des champs ──────────────────────────────────────
-    fun onEmailChange(email: String) = _uiState.update { it.copy(email = email) }
-    fun onPasswordChange(pw: String) = _uiState.update { it.copy(password = pw) }
-    fun onNomChange(nom: String) = _uiState.update { it.copy(nom = nom) }
-    fun onPrenomChange(prenom: String) = _uiState.update { it.copy(prenom = prenom) }
+    fun onEmailChange(email: String) { if (email.length <= 254) _uiState.update { it.copy(email = email) } }
+    fun onPasswordChange(pw: String) { if (pw.length <= 128) _uiState.update { it.copy(password = pw) } }
+    fun onNomChange(nom: String) { if (nom.length <= 50) _uiState.update { it.copy(nom = nom) } }
+    fun onPrenomChange(prenom: String) { if (prenom.length <= 50) _uiState.update { it.copy(prenom = prenom) } }
     fun onRoleChange(role: UserRole) = _uiState.update { it.copy(selectedRole = role) }
-    fun onPhoneNumberChange(phone: String) = _uiState.update { it.copy(phoneNumber = phone) }
-    fun onSmsCodeChange(code: String) = _uiState.update { it.copy(smsCode = code) }
+    fun onPhoneNumberChange(phone: String) { if (phone.length <= 15) _uiState.update { it.copy(phoneNumber = phone) } }
+    fun onSmsCodeChange(code: String) { if (code.length <= 6) _uiState.update { it.copy(smsCode = code.filter { it.isDigit() }) } }
 
     fun toggleRegister(show: Boolean) = _uiState.update {
         it.copy(showRegister = show, error = null)

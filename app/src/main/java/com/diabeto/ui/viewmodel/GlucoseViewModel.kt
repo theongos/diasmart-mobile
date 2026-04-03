@@ -1,5 +1,6 @@
 package com.diabeto.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -231,8 +232,8 @@ class GlucoseViewModel @Inject constructor(
                 val hba1cEst = _uiState.value.hba1cEstimee
                 val analysis = chatbotRepository.analyserGlycemie(patient, lectures, latestHbA1c, hba1cEst)
                 _uiState.update { it.copy(rollyAnalysis = analysis, showRollyAnalysis = true) }
-            } catch (_: Exception) {
-                // Silencieux : l'auto-analyse est optionnelle
+            } catch (e: Exception) {
+                Log.d("GlucoseVM", "Auto-analysis skipped: ${e.message}")
             }
         }
     }

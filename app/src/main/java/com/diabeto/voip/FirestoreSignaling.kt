@@ -32,6 +32,7 @@ class FirestoreSignaling {
 
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
+    private val listenerLock = Any()
     private var callListener: ListenerRegistration? = null
     private var iceListener: ListenerRegistration? = null
     private var incomingCallListener: ListenerRegistration? = null
@@ -73,10 +74,10 @@ class FirestoreSignaling {
             return
         }
 
-        incomingCallListener?.remove()
+        synchronized(listenerLock) { incomingCallListener?.remove() }
         Log.d(TAG, "Listening for incoming calls (uid=$uid)")
 
-        incomingCallListener = db.collection(CALLS_COLLECTION)
+        val listener = db.collection(CALLS_COLLECTION)
             .whereEqualTo("calleeUid", uid)
             .whereEqualTo("status", "calling")
             .addSnapshotListener { snapshots, error ->
@@ -102,6 +103,7 @@ class FirestoreSignaling {
                     }
                 }
             }
+        synchronized(listenerLock) { incomingCallListener = listener }
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -212,10 +214,10 @@ class FirestoreSignaling {
 
     fun listenToIceCandidates(callId: String) {
         if (callId.isEmpty()) return
-        iceListener?.remove()
+        synchronized(listenerLock) { iceListener?.remove() }
         Log.d(TAG, "Listening for ICE candidates: $callId")
 
-        iceListener = db.collection(CALLS_COLLECTION).document(callId)
+        val newIceListener = db.collection(CALLS_COLLECTION).document(callId)
             .collection(ICE_COLLECTION)
             .addSnapshotListener { snapshots, error ->
                 if (error != null) {
@@ -236,6 +238,7 @@ class FirestoreSignaling {
                     }
                 }
             }
+        synchronized(listenerLock) { iceListener = newIceListener }
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -274,7 +277,7 @@ class FirestoreSignaling {
     // ═══════════════════════════════════════════════════════════
 
     private fun listenToCall(callId: String) {
-        callListener?.remove()
+        synchronized(listenerLock) { callListener?.remove() }
 
         var offerProcessed = false
         var answerProcessed = false
@@ -282,7 +285,7 @@ class FirestoreSignaling {
         var lastIceRestartId: String? = null
         var lastIceRestartAnswerProcessed = false
 
-        callListener = db.collection(CALLS_COLLECTION).document(callId)
+        val newCallListener = db.collection(CALLS_COLLECTION).document(callId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     Log.e(TAG, "Call listen error", error)
@@ -352,6 +355,7 @@ class FirestoreSignaling {
                     onIceRestartAnswer?.invoke(callId, iceRestartAnswer)
                 }
             }
+        synchronized(listenerLock) { callListener = newCallListener }
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -359,29 +363,33 @@ class FirestoreSignaling {
     // ═══════════════════════════════════════════════════════════
 
     fun cleanup() {
-        try {
-            callListener?.remove()
-        } catch (e: Exception) {
-            Log.e(TAG, "Error removing callListener", e)
-        } finally {
-            callListener = null
-        }
-        try {
-            iceListener?.remove()
-        } catch (e: Exception) {
-            Log.e(TAG, "Error removing iceListener", e)
-        } finally {
-            iceListener = null
+        synchronized(listenerLock) {
+            try {
+                callListener?.remove()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error removing callListener", e)
+            } finally {
+                callListener = null
+            }
+            try {
+                iceListener?.remove()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error removing iceListener", e)
+            } finally {
+                iceListener = null
+            }
         }
     }
 
     fun stopListening() {
-        try {
-            incomingCallListener?.remove()
-        } catch (e: Exception) {
-            Log.e(TAG, "Error removing incomingCallListener", e)
-        } finally {
-            incomingCallListener = null
+        synchronized(listenerLock) {
+            try {
+                incomingCallListener?.remove()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error removing incomingCallListener", e)
+            } finally {
+                incomingCallListener = null
+            }
         }
         cleanup()
         // Clear all callbacks to prevent memory leaks

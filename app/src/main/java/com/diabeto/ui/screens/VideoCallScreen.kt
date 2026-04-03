@@ -194,8 +194,8 @@ fun VideoCallScreen(
                                 javaScriptEnabled = true
                                 domStorageEnabled = true
                                 mediaPlaybackRequiresUserGesture = false
-                                allowFileAccess = true
-                                javaScriptCanOpenWindowsAutomatically = true
+                                allowFileAccess = false
+                                javaScriptCanOpenWindowsAutomatically = false
                                 databaseEnabled = true
                                 setSupportMultipleWindows(false)
                                 useWideViewPort = true
@@ -206,7 +206,16 @@ fun VideoCallScreen(
 
                             webChromeClient = object : WebChromeClient() {
                                 override fun onPermissionRequest(request: PermissionRequest?) {
-                                    request?.grant(request.resources)
+                                    // Only grant camera and microphone — deny everything else
+                                    val allowed = request?.resources?.filter { res ->
+                                        res == PermissionRequest.RESOURCE_AUDIO_CAPTURE ||
+                                        res == PermissionRequest.RESOURCE_VIDEO_CAPTURE
+                                    }?.toTypedArray()
+                                    if (!allowed.isNullOrEmpty()) {
+                                        request.grant(allowed)
+                                    } else {
+                                        request?.deny()
+                                    }
                                 }
 
                                 override fun onProgressChanged(view: WebView?, newProgress: Int) {

@@ -1,5 +1,6 @@
 package com.diabeto.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -69,7 +70,7 @@ class JournalViewModel @Inject constructor(
                 val today = journalRepository.getEntryByDate(patientId, LocalDate.now())
                 val glycemie = try {
                     glucoseRepository.getLast24HoursAverage(patientId).takeIf { it > 0 }
-                } catch (_: Exception) { null }
+                } catch (e: Exception) { Log.w("JournalVM", "Glucose avg failed", e); null }
 
                 if (today != null) {
                     _uiState.update {
@@ -88,7 +89,9 @@ class JournalViewModel @Inject constructor(
                 } else {
                     _uiState.update { it.copy(todayGlycemie = glycemie) }
                 }
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                Log.w("JournalVM", "Failed to load today entry", e)
+            }
         }
     }
 
