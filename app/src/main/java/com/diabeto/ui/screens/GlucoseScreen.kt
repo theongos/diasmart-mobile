@@ -36,7 +36,7 @@ import com.diabeto.data.entity.LectureGlucoseEntity
 import com.diabeto.ui.components.RollyIcon
 import com.diabeto.ui.components.RollyIconInline
 import com.diabeto.ui.theme.*
-import com.diabeto.ui.viewmodel.DailyGlucoseAverage
+import com.diabeto.data.repository.GlucoseRepository.DailyGlucoseAverage
 import com.diabeto.ui.viewmodel.GlucoseTab
 import com.diabeto.ui.viewmodel.GlucoseUiState
 import com.diabeto.ui.viewmodel.GlucoseViewModel
@@ -630,7 +630,7 @@ private fun HbA1cTargetScale(currentValue: Double?) {
         Text("Échelle HbA1c", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.height(8.dp))
         Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(2.dp)) {
-            listOf(Triple("< 5.7%", Color(0xFF4CAF50), "Normal"), Triple("5.7-6.4%", Color(0xFFFFC107), "Prédiabète"), Triple("6.5-7.0%", Color(0xFF81C784), "Cible"), Triple("7.0-8.0%", Color(0xFFFFB74D), "Au-dessus"), Triple("> 8.0%", Color(0xFFE57373), "Risque")).forEach { (range, color, label) ->
+            listOf(Triple("< 5.7%", HbA1cNormal, "Normal"), Triple("5.7-6.4%", HbA1cPreDiabete, "Prédiabète"), Triple("6.5-7.0%", HbA1cCible, "Cible"), Triple("7.0-8.0%", HbA1cAuDessus, "Au-dessus"), Triple("> 8.0%", HbA1cRisque, "Risque")).forEach { (range, color, label) ->
                 val isActive = currentValue?.let { v -> when (range) { "< 5.7%" -> v < 5.7; "5.7-6.4%" -> v in 5.7..6.4; "6.5-7.0%" -> v in 6.5..7.0; "7.0-8.0%" -> v in 7.0..8.0; else -> v > 8.0 } } ?: false
                 Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                     Surface(modifier = Modifier.fillMaxWidth().height(8.dp), shape = RoundedCornerShape(4.dp), color = color.copy(alpha = if (isActive) 1f else 0.3f)) {}

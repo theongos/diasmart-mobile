@@ -89,7 +89,7 @@ fun MessagerieScreen(
             if (uiState.currentProfile?.role == UserRole.PATIENT) {
                 ExtendedFloatingActionButton(
                     onClick = { viewModel.toggleNouvelleConversation(true) },
-                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                    icon = { Icon(Icons.Default.Add, contentDescription = "Nouvelle conversation") },
                     text = { Text("Contacter un médecin") },
                     containerColor = Primary
                 )
@@ -108,7 +108,7 @@ fun MessagerieScreen(
                 ) {
                     Icon(
                         Icons.Default.Forum,
-                        contentDescription = null,
+                        contentDescription = "Aucune conversation",
                         modifier = Modifier.size(64.dp),
                         tint = OnSurfaceVariant.copy(alpha = 0.4f)
                     )
@@ -279,7 +279,7 @@ private fun MedecinItem(medecin: UserProfile, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Icon(Icons.Default.LocalHospital, contentDescription = null, tint = Primary)
+            Icon(Icons.Default.LocalHospital, contentDescription = "Médecin", tint = Primary)
             Column {
                 Text(medecin.nomComplet, fontWeight = FontWeight.Medium)
                 Text(medecin.email, style = MaterialTheme.typography.bodySmall, color = OnSurfaceVariant)
@@ -383,7 +383,7 @@ fun ConversationDetailScreen(
                             onNavigateToVideoCall(roomName, interlocuteurNom, true)
                         }
                     }) {
-                        Icon(Icons.Default.Call, "Appel audio", tint = Color(0xFF4CAF50))
+                        Icon(Icons.Default.Call, "Appel audio", tint = StatusGreen)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Surface)

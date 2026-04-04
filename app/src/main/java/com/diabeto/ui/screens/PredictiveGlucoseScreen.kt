@@ -224,7 +224,7 @@ private fun PredictiveChartCard(uiState: PredictiveUiState) {
                 // Légende
                 Row(Modifier.fillMaxWidth(), Arrangement.SpaceEvenly) {
                     ChartLegendDot(Primary, "Historique")
-                    ChartLegendDot(Color(0xFFFF9800), "Prédiction")
+                    ChartLegendDot(StatusOrange, "Prédiction")
                     ChartLegendDot(GlucoseNormal.copy(alpha = 0.3f), "Zone cible")
                 }
             } else {
@@ -254,7 +254,7 @@ private fun PredictiveChart(
     if (allPoints.isEmpty()) return
 
     val historicalColor = Primary
-    val predictionColor = Color(0xFFFF9800)
+    val predictionColor = StatusOrange
     val targetZoneColor = GlucoseNormal.copy(alpha = 0.12f)
     val gridColor = Outline.copy(alpha = 0.2f)
     val confidenceColor = predictionColor.copy(alpha = 0.15f)
@@ -518,7 +518,7 @@ private fun PredictionDetailsCard(uiState: PredictiveUiState) {
                             Surface(
                                 Modifier.width(24.dp).height(3.dp),
                                 shape = RoundedCornerShape(2.dp),
-                                color = Color(0xFFFF9800).copy(alpha = conf)
+                                color = StatusOrange.copy(alpha = conf)
                             ) {}
                         }
                     }

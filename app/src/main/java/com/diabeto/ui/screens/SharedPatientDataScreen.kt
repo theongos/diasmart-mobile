@@ -177,7 +177,7 @@ fun SharedPatientDataScreen(
                         ActionChipCard(
                             icon = Icons.Default.CalendarToday,
                             label = "Creer un RDV",
-                            color = Color(0xFF4CAF50),
+                            color = StatusGreen,
                             onClick = onNavigateToRendezVous,
                             modifier = Modifier.weight(1f)
                         )
@@ -343,9 +343,9 @@ private fun GlucoseDataCard(data: Map<String, Any?>) {
         ?: ""
 
     val glucoseColor = when {
-        value < 70 -> Color(0xFFF44336)
-        value > 180 -> Color(0xFFFF9800)
-        else -> Color(0xFF4CAF50)
+        value < 70 -> StatusRedDark
+        value > 180 -> StatusOrange
+        else -> StatusGreen
     }
 
     Card(
@@ -417,9 +417,9 @@ private fun RepasDataCard(data: Map<String, Any?>) {
                     Surface(
                         shape = RoundedCornerShape(6.dp),
                         color = when {
-                            it >= 7 -> Color(0xFF4CAF50).copy(alpha = 0.15f)
-                            it >= 4 -> Color(0xFFFF9800).copy(alpha = 0.15f)
-                            else -> Color(0xFFF44336).copy(alpha = 0.15f)
+                            it >= 7 -> StatusGreen.copy(alpha = 0.15f)
+                            it >= 4 -> StatusOrange.copy(alpha = 0.15f)
+                            else -> StatusRedDark.copy(alpha = 0.15f)
                         }
                     ) {
                         Text(

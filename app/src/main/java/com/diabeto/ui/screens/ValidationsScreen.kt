@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -20,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.diabeto.R
 import com.diabeto.data.model.RollyValidation
 import com.diabeto.data.model.ValidationStatus
 import com.diabeto.ui.theme.*
@@ -49,9 +51,9 @@ fun ValidationsScreen(
                         Text("🤖", fontSize = 20.sp)
                         Spacer(Modifier.width(8.dp))
                         Column {
-                            Text("Validations ROLLY", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.validations_title), fontWeight = FontWeight.Bold)
                             Text(
-                                "Collaboration IA-Médecin",
+                                stringResource(R.string.validations_subtitle),
                                 fontSize = 11.sp,
                                 color = Primary
                             )
@@ -116,7 +118,7 @@ fun ValidationsScreen(
                     )
                     Spacer(Modifier.height(16.dp))
                     Text(
-                        "Aucune validation en attente",
+                        stringResource(R.string.validations_none_pending),
                         style = MaterialTheme.typography.titleMedium,
                         color = OnSurfaceVariant
                     )
@@ -149,9 +151,9 @@ private fun ValidationCard(
 ) {
     var comment by remember { mutableStateOf("") }
     val statusColor = when (validation.status) {
-        ValidationStatus.PENDING -> Color(0xFFFF9800)
-        ValidationStatus.VALIDATED -> Color(0xFF4CAF50)
-        ValidationStatus.REJECTED -> Color(0xFFFF5252)
+        ValidationStatus.PENDING -> StatusOrange
+        ValidationStatus.VALIDATED -> StatusGreen
+        ValidationStatus.REJECTED -> StatusRed
     }
     val statusText = when (validation.status) {
         ValidationStatus.PENDING -> "En attente"

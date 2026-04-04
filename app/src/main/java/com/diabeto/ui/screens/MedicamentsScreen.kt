@@ -291,7 +291,7 @@ private fun MedicamentCard(
                     ) {
                         Icon(
                             Icons.Default.Schedule,
-                            contentDescription = null,
+                            contentDescription = "Heure de prise",
                             modifier = Modifier.size(16.dp),
                             tint = Primary
                         )

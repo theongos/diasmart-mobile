@@ -297,12 +297,12 @@ private fun PlatformPatientCard(
                 ConsentStatus.ACCEPTED -> {
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = Color(0xFF4CAF50).copy(alpha = 0.15f)
+                        color = StatusGreen.copy(alpha = 0.15f)
                     ) {
                         Row(Modifier.padding(horizontal = 10.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.CheckCircle, null, tint = Color(0xFF4CAF50), modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.CheckCircle, null, tint = StatusGreen, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(4.dp))
-                            Text("Accepte", fontSize = 12.sp, color = Color(0xFF4CAF50), fontWeight = FontWeight.Medium)
+                            Text("Accepte", fontSize = 12.sp, color = StatusGreen, fontWeight = FontWeight.Medium)
                         }
                     }
                 }
@@ -372,7 +372,7 @@ private fun MyPatientCard(
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(consent.patientNom, fontWeight = FontWeight.SemiBold)
-                Text("Acces accorde", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
+                Text("Acces accorde", style = MaterialTheme.typography.bodySmall, color = StatusGreen)
             }
             Icon(Icons.Default.ChevronRight, null, tint = OnSurfaceVariant)
         }
@@ -401,10 +401,10 @@ private fun PendingRequestCard(
                 Text("Souhaite acceder a vos donnees", fontSize = 12.sp, color = OnSurfaceVariant)
             }
             IconButton(onClick = onAccept, modifier = Modifier.size(36.dp)) {
-                Icon(Icons.Default.CheckCircle, "Accepter", tint = Color(0xFF4CAF50))
+                Icon(Icons.Default.CheckCircle, "Accepter", tint = StatusGreen)
             }
             IconButton(onClick = onReject, modifier = Modifier.size(36.dp)) {
-                Icon(Icons.Default.Cancel, "Refuser", tint = Color(0xFFF44336))
+                Icon(Icons.Default.Cancel, "Refuser", tint = StatusRedDark)
             }
         }
     }

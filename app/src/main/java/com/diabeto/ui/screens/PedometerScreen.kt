@@ -26,12 +26,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.diabeto.R
 import com.diabeto.ui.theme.*
 import com.diabeto.ui.viewmodel.PedometerViewModel
 
@@ -86,8 +88,8 @@ fun PedometerScreen(
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, "Retour", tint = Color.White)
                         }
                         Column {
-                            Text("Podomètre", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            Text("Compteur de pas", fontSize = 12.sp, color = Color.White.copy(alpha = 0.8f))
+                            Text(stringResource(R.string.pedometer_title), fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text(stringResource(R.string.pedometer_subtitle), fontSize = 12.sp, color = Color.White.copy(alpha = 0.8f))
                         }
                     }
                 }
@@ -117,7 +119,7 @@ fun PedometerScreen(
                                 Icon(Icons.Default.Warning, null, tint = Warning)
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
-                                    "Permission refusée",
+                                    stringResource(R.string.pedometer_permission_denied),
                                     fontWeight = FontWeight.Bold,
                                     color = Warning
                                 )
@@ -131,7 +133,7 @@ fun PedometerScreen(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             TextButton(onClick = { requestPermissionAndStart() }) {
-                                Text("Réessayer", color = Primary)
+                                Text(stringResource(R.string.pedometer_retry), color = Primary)
                             }
                         }
                     }
@@ -188,12 +190,12 @@ fun PedometerScreen(
                 ) {
                     Icon(
                         if (uiState.isTracking) Icons.Default.Stop else Icons.Default.PlayArrow,
-                        contentDescription = null,
+                        contentDescription = if (uiState.isTracking) stringResource(R.string.pedometer_stop) else stringResource(R.string.pedometer_start),
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        if (uiState.isTracking) "Arrêter" else "Démarrer le suivi",
+                        if (uiState.isTracking) stringResource(R.string.pedometer_stop) else stringResource(R.string.pedometer_start),
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -233,7 +235,7 @@ fun PedometerScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.MonitorHeart, null, tint = Primary, modifier = Modifier.size(24.dp))
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Impact glycémique", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                                Text(stringResource(R.string.pedometer_glycemic_impact), fontWeight = FontWeight.Bold, fontSize = 15.sp)
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             uiState.avgGlycemie?.let { avg ->
@@ -353,7 +355,7 @@ private fun StepCounterCircle(
                 fontWeight = FontWeight.Bold,
                 color = Primary
             )
-            Text("pas", fontSize = 14.sp, color = OnSurfaceVariant)
+            Text(stringResource(R.string.pedometer_steps), fontSize = 14.sp, color = OnSurfaceVariant)
             Text(
                 "${(progress * 100).toInt()}% de l'objectif",
                 fontSize = 12.sp,

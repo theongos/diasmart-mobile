@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.res.stringResource
 import com.diabeto.R
 import com.diabeto.util.AppUpdateChecker
 import com.diabeto.data.entity.RendezVousAvecPatient
@@ -71,6 +72,7 @@ fun DashboardScreen(
     val context = LocalContext.current
 
     // ── Mise a jour automatique ──
+    val pendingUpdateData by viewModel.pendingUpdate.collectAsStateWithLifecycle()
     var showUpdateDialog by remember { mutableStateOf(false) }
     var updateVersion by remember { mutableStateOf("") }
     var updateUrl by remember { mutableStateOf("") }
@@ -85,15 +87,12 @@ fun DashboardScreen(
         } else false
     }
 
-    LaunchedEffect(Unit) {
-        val prefs = context.getSharedPreferences("diasmart_prefs", android.content.Context.MODE_PRIVATE)
-        val pendingVersion = prefs.getString("pending_update_version", null)
-        val pendingUrl = prefs.getString("pending_update_url", null)
-        if (!pendingVersion.isNullOrBlank() && !pendingUrl.isNullOrBlank()) {
-            updateVersion = pendingVersion
-            updateUrl = pendingUrl
-            updateChangelog = prefs.getString("pending_update_changelog", "") ?: ""
-            updateForce = prefs.getBoolean("pending_update_force", false)
+    LaunchedEffect(pendingUpdateData) {
+        pendingUpdateData?.let { update ->
+            updateVersion = update.version
+            updateUrl = update.url
+            updateChangelog = update.changelog
+            updateForce = update.force
             needsInstallPermission = checkInstallPermission()
             showUpdateDialog = true
         }
@@ -110,9 +109,7 @@ fun DashboardScreen(
                     checker.downloadAndInstall(updateUrl, updateVersion)
                     isDownloading = true
                     showUpdateDialog = false
-                    context.getSharedPreferences("diasmart_prefs", android.content.Context.MODE_PRIVATE)
-                        .edit().remove("pending_update_version").remove("pending_update_url")
-                        .remove("pending_update_changelog").remove("pending_update_force").apply()
+                    viewModel.clearPendingUpdate()
                 }
             }
         }
@@ -126,9 +123,7 @@ fun DashboardScreen(
             onDismissRequest = {
                 if (!updateForce) {
                     showUpdateDialog = false
-                    context.getSharedPreferences("diasmart_prefs", android.content.Context.MODE_PRIVATE)
-                        .edit().remove("pending_update_version").remove("pending_update_url")
-                        .remove("pending_update_changelog").remove("pending_update_force").apply()
+                    viewModel.clearPendingUpdate()
                 }
             },
             icon = {
@@ -141,7 +136,7 @@ fun DashboardScreen(
                     Icon(Icons.Default.SystemUpdateAlt, null, tint = Primary, modifier = Modifier.size(28.dp))
                 }
             },
-            title = { Text("Mise a jour disponible", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.dashboard_update_available), fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Surface(shape = RoundedCornerShape(12.dp), color = PrimaryContainer) {
@@ -152,18 +147,18 @@ fun DashboardScreen(
                         )
                     }
                     if (updateChangelog.isNotBlank()) {
-                        Text("Nouveautes :", fontWeight = FontWeight.Medium)
+                        Text(stringResource(R.string.dashboard_new_features), fontWeight = FontWeight.Medium)
                         Text(updateChangelog, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
                     }
                     if (needsInstallPermission) {
                         HorizontalDivider(color = OutlineVariant)
                         Text(
-                            "Autorisez l'installation depuis cette source.",
+                            stringResource(R.string.dashboard_install_permission),
                             style = MaterialTheme.typography.bodySmall, color = Warning, fontWeight = FontWeight.Medium
                         )
                     }
                     if (updateForce) {
-                        Text("Cette mise a jour est obligatoire.", style = MaterialTheme.typography.bodySmall, color = Error, fontWeight = FontWeight.Medium)
+                        Text(stringResource(R.string.dashboard_update_mandatory), style = MaterialTheme.typography.bodySmall, color = Error, fontWeight = FontWeight.Medium)
                     }
                 }
             },
@@ -177,7 +172,7 @@ fun DashboardScreen(
                         ) {
                             Icon(Icons.Default.Settings, null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Autoriser")
+                            Text(stringResource(R.string.dashboard_authorize))
                         }
                         Spacer(Modifier.height(8.dp))
                         TextButton(onClick = {
@@ -185,23 +180,21 @@ fun DashboardScreen(
                         }) {
                             Icon(Icons.Default.OpenInBrowser, null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(4.dp))
-                            Text("Via navigateur", fontSize = 12.sp)
+                            Text(stringResource(R.string.dashboard_via_browser), fontSize = 12.sp)
                         }
                     } else {
                         Button(
                             onClick = {
                                 AppUpdateChecker(context).downloadAndInstall(updateUrl, updateVersion)
                                 isDownloading = true; showUpdateDialog = false
-                                context.getSharedPreferences("diasmart_prefs", android.content.Context.MODE_PRIVATE)
-                                    .edit().remove("pending_update_version").remove("pending_update_url")
-                                    .remove("pending_update_changelog").remove("pending_update_force").apply()
+                                viewModel.clearPendingUpdate()
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = Primary),
                             shape = RoundedCornerShape(14.dp)
                         ) {
                             Icon(Icons.Default.Download, null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Installer")
+                            Text(stringResource(R.string.dashboard_install))
                         }
                     }
                 }
@@ -210,10 +203,8 @@ fun DashboardScreen(
                 if (!updateForce) {
                     TextButton(onClick = {
                         showUpdateDialog = false
-                        context.getSharedPreferences("diasmart_prefs", android.content.Context.MODE_PRIVATE)
-                            .edit().remove("pending_update_version").remove("pending_update_url")
-                            .remove("pending_update_changelog").remove("pending_update_force").apply()
-                    }) { Text("Plus tard") }
+                        viewModel.clearPendingUpdate()
+                    }) { Text(stringResource(R.string.dashboard_later)) }
                 }
             },
             shape = RoundedCornerShape(24.dp)
@@ -228,14 +219,14 @@ fun DashboardScreen(
     }
 
     val isDark = LocalIsDarkTheme.current
-    val screenBg = if (isDark) Color(0xFF0D0D1A) else Background
-    val cardSurface = if (isDark) Color(0xFF141428) else Surface
-    val textPri = if (isDark) Color(0xFFE8E5FF) else TextPrimary
-    val textSec = if (isDark) Color(0xFFB8B5C8) else TextSecondary
-    val textTer = if (isDark) Color(0xFF8A87A8) else TextTertiary
-    val navBg = if (isDark) Color(0xFF141428) else NavBarBackground
-    val outlineCol = if (isDark) Color(0xFF2A2940) else OutlineVariant
-    val primaryContainerCol = if (isDark) Color(0xFF3D2FCC) else PrimaryContainer
+    val screenBg = if (isDark) DarkBackground else Background
+    val cardSurface = if (isDark) DarkSurface else Surface
+    val textPri = if (isDark) DarkTextPrimary else TextPrimary
+    val textSec = if (isDark) DarkTextSecondary else TextSecondary
+    val textTer = if (isDark) DarkTextTertiary else TextTertiary
+    val navBg = if (isDark) DarkNavBar else NavBarBackground
+    val outlineCol = if (isDark) DarkOutline else OutlineVariant
+    val primaryContainerCol = if (isDark) DarkPrimaryContainer else PrimaryContainer
 
     Scaffold(
         bottomBar = {
@@ -363,7 +354,7 @@ fun DashboardScreen(
                                 ) {
                                     Icon(
                                         Icons.Outlined.MonitorHeart,
-                                        contentDescription = null,
+                                        contentDescription = "Suivi glycémique",
                                         tint = Color.White,
                                         modifier = Modifier.size(32.dp)
                                     )
@@ -674,7 +665,7 @@ fun DashboardScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         if (uiState.upcomingRendezVous.isEmpty()) {
-                            EmptyStateMessage("Aucun rendez-vous à venir", Icons.Outlined.CalendarMonth, textSec = textSec, textTer = textTer, surfaceVar = if (isDark) Color(0xFF2A2940) else SurfaceVariant)
+                            EmptyStateMessage("Aucun rendez-vous à venir", Icons.Outlined.CalendarMonth, textSec = textSec, textTer = textTer, surfaceVar = if (isDark) DarkOutline else SurfaceVariant)
                         } else {
                             uiState.upcomingRendezVous.take(3).forEachIndexed { index, rdv ->
                                 ModernRendezVousItem(
@@ -718,7 +709,7 @@ fun DashboardScreen(
                         elevation = CardDefaults.cardElevation(0.dp),
                         border = BorderStroke(1.dp, outlineCol)
                     ) {
-                        EmptyStateMessage("Aucun patient enregistré", Icons.Outlined.People, textSec = textSec, textTer = textTer, surfaceVar = if (isDark) Color(0xFF2A2940) else SurfaceVariant)
+                        EmptyStateMessage("Aucun patient enregistré", Icons.Outlined.People, textSec = textSec, textTer = textTer, surfaceVar = if (isDark) DarkOutline else SurfaceVariant)
                     }
                 } else {
                     LazyRow(
@@ -759,7 +750,7 @@ private fun MiniStatCard(
     textSec: Color = TextSecondary
 ) {
     val isDark = LocalIsDarkTheme.current
-    val borderCol = if (isDark) Color(0xFF2A2940) else OutlineVariant
+    val borderCol = if (isDark) DarkOutline else OutlineVariant
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(20.dp),
@@ -828,7 +819,7 @@ private fun FeatureCard(
     val actualCardColor = if (!isOnline && (isRolly || icon == Icons.Outlined.Forum || icon == Icons.Outlined.Restaurant))
         SurfaceVariant else resolvedCardColor
 
-    val featureBorderCol = if (isSystemDark) Color(0xFF2A2940) else OutlineVariant
+    val featureBorderCol = if (isSystemDark) DarkOutline else OutlineVariant
     Card(
         modifier = modifier
             .height(110.dp)
@@ -891,7 +882,7 @@ private fun SectionHeader(
     onAction: (() -> Unit)? = null
 ) {
     val isDark = LocalIsDarkTheme.current
-    val titleCol = if (isDark) Color(0xFFE8E5FF) else TextPrimary
+    val titleCol = if (isDark) DarkTextPrimary else TextPrimary
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -995,12 +986,12 @@ private fun PatientChip(
     val initials = name.split(" ").filter { it.isNotBlank() }
         .mapNotNull { it.firstOrNull()?.uppercaseChar() }
         .take(2).joinToString("")
-    val chipSurface = if (isDark) Color(0xFF141428) else Surface
-    val chipTextPri = if (isDark) Color(0xFFE8E5FF) else TextPrimary
-    val chipTextSec = if (isDark) Color(0xFFB8B5C8) else TextSecondary
-    val chipPrimaryContainer = if (isDark) Color(0xFF3D2FCC) else PrimaryContainer
+    val chipSurface = if (isDark) DarkSurface else Surface
+    val chipTextPri = if (isDark) DarkTextPrimary else TextPrimary
+    val chipTextSec = if (isDark) DarkTextSecondary else TextSecondary
+    val chipPrimaryContainer = if (isDark) DarkPrimaryContainer else PrimaryContainer
 
-    val chipBorderCol = if (isDark) Color(0xFF2A2940) else OutlineVariant
+    val chipBorderCol = if (isDark) DarkOutline else OutlineVariant
     Card(
         modifier = Modifier
             .width(140.dp)
@@ -1086,7 +1077,7 @@ private fun DiaSmartBottomBar(
     navBarBg: Color = NavBarBackground
 ) {
     val isDark = LocalIsDarkTheme.current
-    val navBorderCol = if (isDark) Color(0xFF2A2940) else OutlineVariant
+    val navBorderCol = if (isDark) DarkOutline else OutlineVariant
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shadowElevation = 0.dp,

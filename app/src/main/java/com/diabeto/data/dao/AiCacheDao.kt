@@ -21,6 +21,9 @@ interface AiCacheDao {
     @Query("DELETE FROM ai_cache WHERE expiresAt < :now")
     suspend fun purgeExpired(now: Long = System.currentTimeMillis())
 
+    @Query("DELETE FROM ai_cache WHERE queryHash = :hash")
+    suspend fun deleteByHash(hash: String)
+
     @Query("SELECT COUNT(*) FROM ai_cache")
     suspend fun count(): Int
 }

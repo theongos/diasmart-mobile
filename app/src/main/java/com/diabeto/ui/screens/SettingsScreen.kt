@@ -24,8 +24,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.diabeto.R
 import com.diabeto.ui.theme.LocalIsDarkTheme
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -63,16 +65,16 @@ fun SettingsScreen(
     var isBackingUp by remember { mutableStateOf(false) }
 
     // DayLife-inspired colors
-    val screenBg = if (isDark) Color(0xFF0D0D1A) else Color(0xFFF7F8FC)
+    val screenBg = if (isDark) DarkBackground else Color(0xFFF7F8FC)
     val cardBg = if (isDark) Color(0xFF1A1A2E) else Color.White
     val headerGradient = listOf(
         if (isDark) Color(0xFF2A2B55) else Color(0xFF6771E4),
         if (isDark) Color(0xFF1A1A3E) else Color(0xFF8B93F0)
     )
     val sectionTextColor = if (isDark) Color(0xFF8B93F0) else Primary
-    val titleColor = if (isDark) Color(0xFFE8E5FF) else TextPrimary
-    val subtitleColor = if (isDark) Color(0xFFB8B5C8) else TextSecondary
-    val dividerColor = if (isDark) Color(0xFF2A2A40) else Color(0xFFF0EFF5)
+    val titleColor = if (isDark) DarkTextPrimary else TextPrimary
+    val subtitleColor = if (isDark) DarkTextSecondary else TextSecondary
+    val dividerColor = if (isDark) DarkOutline else Color(0xFFF0EFF5)
 
     Scaffold(
         topBar = {
@@ -96,7 +98,7 @@ fun SettingsScreen(
                         )
                     }
                     Text(
-                        "Paramètres",
+                        stringResource(R.string.settings_title),
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -128,7 +130,7 @@ fun SettingsScreen(
                     DayLifeSettingsItem(
                         icon = Icons.Default.Palette,
                         iconBg = Color(0xFF6771E4),
-                        title = "Thème",
+                        title = stringResource(R.string.settings_theme),
                         subtitle = when (uiState.themeMode) {
                             ThemeMode.SYSTEM -> "Système"
                             ThemeMode.LIGHT -> "Clair"
@@ -142,7 +144,7 @@ fun SettingsScreen(
                     DayLifeSettingsItem(
                         icon = Icons.Default.Language,
                         iconBg = Color(0xFF00C9A7),
-                        title = "Langue",
+                        title = stringResource(R.string.settings_language),
                         subtitle = uiState.language.displayName,
                         titleColor = titleColor,
                         subtitleColor = subtitleColor,
@@ -199,7 +201,7 @@ fun SettingsScreen(
             // ── Notifications ─────────────────────────────────
             item {
                 DayLifeSectionHeader(
-                    title = "Notifications",
+                    title = stringResource(R.string.settings_notifications),
                     color = sectionTextColor,
                     isDark = isDark
                 )
@@ -209,7 +211,7 @@ fun SettingsScreen(
                     DayLifeToggleItem(
                         icon = Icons.Default.Notifications,
                         iconBg = Color(0xFFFF8C42),
-                        title = "Notifications",
+                        title = stringResource(R.string.settings_notifications),
                         subtitle = "Activer les notifications push",
                         checked = uiState.notificationsEnabled,
                         onCheckedChange = viewModel::setNotificationsEnabled,
@@ -572,7 +574,7 @@ private fun DayLifeSettingsCard(
         colors = CardDefaults.cardColors(containerColor = cardBg),
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            if (cardBg == Color.White) Color(0xFFF0EFF5) else Color(0xFF2A2A40)
+            if (cardBg == Color.White) Color(0xFFF0EFF5) else DarkOutline
         )
     ) {
         Column(
@@ -609,7 +611,7 @@ private fun DayLifeSettingsItem(
         ) {
             Icon(
                 icon,
-                contentDescription = null,
+                contentDescription = title,
                 tint = iconBg,
                 modifier = Modifier.size(22.dp)
             )
@@ -632,7 +634,7 @@ private fun DayLifeSettingsItem(
         }
         Icon(
             Icons.Default.ChevronRight,
-            contentDescription = null,
+            contentDescription = "Ouvrir $title",
             tint = subtitleColor.copy(alpha = 0.5f),
             modifier = Modifier.size(20.dp)
         )
@@ -670,7 +672,7 @@ private fun DayLifeToggleItem(
         ) {
             Icon(
                 icon,
-                contentDescription = null,
+                contentDescription = title,
                 tint = iconBg.copy(alpha = alpha),
                 modifier = Modifier.size(22.dp)
             )
@@ -699,7 +701,7 @@ private fun DayLifeToggleItem(
                 checkedThumbColor = Color.White,
                 checkedTrackColor = Primary,
                 uncheckedThumbColor = if (isDark) Color(0xFF4A4A60) else Color(0xFFD4D2E0),
-                uncheckedTrackColor = if (isDark) Color(0xFF2A2A40) else Color(0xFFF0EFF5)
+                uncheckedTrackColor = if (isDark) DarkOutline else Color(0xFFF0EFF5)
             )
         )
     }
@@ -783,7 +785,7 @@ private fun DayLifeSelectionDialog(
                 title,
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
-                color = if (isDark) Color(0xFFE8E5FF) else TextPrimary
+                color = if (isDark) DarkTextPrimary else TextPrimary
             )
         },
         text = {
@@ -815,7 +817,7 @@ private fun DayLifeSelectionDialog(
                             fontSize = 15.sp,
                             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                             color = if (selected) Primary
-                                   else if (isDark) Color(0xFFE8E5FF) else TextPrimary
+                                   else if (isDark) DarkTextPrimary else TextPrimary
                         )
                     }
                     if (index < options.lastIndex) {
@@ -855,7 +857,7 @@ private fun DayLifeExportDialog(
                 "Exporter mes données",
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
-                color = if (isDark) Color(0xFFE8E5FF) else TextPrimary
+                color = if (isDark) DarkTextPrimary else TextPrimary
             )
         },
         text = {
@@ -925,7 +927,7 @@ private fun ExportOptionCard(
         ) {
             Icon(
                 icon,
-                contentDescription = null,
+                contentDescription = title,
                 tint = iconBg,
                 modifier = Modifier.size(22.dp)
             )
@@ -936,12 +938,12 @@ private fun ExportOptionCard(
                 title,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
-                color = if (isDark) Color(0xFFE8E5FF) else TextPrimary
+                color = if (isDark) DarkTextPrimary else TextPrimary
             )
             Text(
                 subtitle,
                 fontSize = 12.sp,
-                color = if (isDark) Color(0xFFB8B5C8) else TextSecondary
+                color = if (isDark) DarkTextSecondary else TextSecondary
             )
         }
     }
@@ -968,7 +970,7 @@ private fun DayLifeTargetDialog(
                 "Objectif glycémique",
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
-                color = if (isDark) Color(0xFFE8E5FF) else TextPrimary
+                color = if (isDark) DarkTextPrimary else TextPrimary
             )
         },
         text = {
@@ -976,7 +978,7 @@ private fun DayLifeTargetDialog(
                 Text(
                     "Définissez votre plage cible (mg/dL)",
                     fontSize = 14.sp,
-                    color = if (isDark) Color(0xFFB8B5C8) else TextSecondary
+                    color = if (isDark) DarkTextSecondary else TextSecondary
                 )
                 OutlinedTextField(
                     value = minText,

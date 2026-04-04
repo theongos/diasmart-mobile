@@ -18,8 +18,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.diabeto.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.diabeto.ui.theme.*
 import com.diabeto.ui.viewmodel.DataSharingViewModel
@@ -45,7 +47,7 @@ fun DataSharingScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Partage de données") },
+                title = { Text(stringResource(R.string.data_sharing_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, "Retour")
@@ -75,7 +77,7 @@ fun DataSharingScreen(
                         Icon(Icons.Default.Security, null, tint = Primary, modifier = Modifier.size(32.dp))
                         Spacer(Modifier.width(12.dp))
                         Column {
-                            Text("Contrôle de vos données", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            Text(stringResource(R.string.data_sharing_control), fontWeight = FontWeight.Bold, fontSize = 15.sp)
                             Text(
                                 "Vous décidez quelles données partager avec votre médecin. Vous pouvez révoquer l'accès à tout moment.",
                                 style = MaterialTheme.typography.bodySmall,
@@ -96,7 +98,7 @@ fun DataSharingScreen(
                     ) {
                         Icon(Icons.Default.PersonAdd, null, Modifier.size(20.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("Partager avec un médecin")
+                        Text(stringResource(R.string.data_sharing_share_with_doctor))
                     }
                 }
             }
@@ -257,10 +259,10 @@ fun DataSharingScreen(
     if (showMedecinDialog) {
         AlertDialog(
             onDismissRequest = { showMedecinDialog = false },
-            title = { Text("Choisir un médecin") },
+            title = { Text(stringResource(R.string.data_sharing_choose_doctor)) },
             text = {
                 if (uiState.availableMedecins.isEmpty()) {
-                    Text("Aucun médecin disponible pour le moment.", color = OnSurfaceVariant)
+                    Text(stringResource(R.string.data_sharing_no_doctor), color = OnSurfaceVariant)
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         uiState.availableMedecins.forEach { medecin ->

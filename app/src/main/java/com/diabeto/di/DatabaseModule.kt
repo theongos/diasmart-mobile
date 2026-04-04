@@ -57,4 +57,9 @@ object DatabaseModule {
     fun provideAiCacheDao(database: DiabetoDatabase): AiCacheDao {
         return database.aiCacheDao()
     }
+
+    @Provides
+    fun providePendingOperationDao(database: DiabetoDatabase): PendingOperationDao {
+        return database.pendingOperationDao()
+    }
 }

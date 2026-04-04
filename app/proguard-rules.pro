@@ -2,66 +2,68 @@
 # You can control the set of applied configuration files using the
 # proguardFiles setting in build.gradle.kts.
 
-# Keep Room entities
+# Keep Room entities (fields needed for reflection-based column mapping)
 -keep class com.diabeto.data.entity.** { *; }
--keep class com.diabeto.data.dao.** { *; }
 
-# Keep ViewModels
--keep class * extends androidx.lifecycle.ViewModel {
-    <init>(...);
-}
+# Keep Room DAOs (interface methods needed by Room compiler)
+-keep interface com.diabeto.data.dao.** { *; }
 
-# Keep Hilt
--keep class * extends dagger.hilt.android.HiltAndroidApp { *; }
+# Keep Hilt application class
 -keep class * extends android.app.Application { *; }
 
-# Keep Compose
--keep class androidx.compose.** { *; }
--keep class * extends androidx.activity.ComponentActivity { *; }
+# Keep Activities (needed for manifest references)
+-keep class * extends androidx.activity.ComponentActivity {
+    <init>(...);
+}
 
 # Keep Kotlin serialization
 -keepattributes *Annotation*, InnerClasses
 -dontnote kotlinx.serialization.AnnotationsKt
 -keepclassmembers class kotlinx.serialization.json.** { *; }
 
-# Keep Java time
+# Keep Java time (used by Room converters)
 -dontwarn java.time.**
 -keep class java.time.** { *; }
 
-# Keep Firebase
--keep class com.google.firebase.** { *; }
+# Firebase (reflection-based deserialization)
+-keep class com.google.firebase.firestore.** { *; }
 -dontwarn com.google.firebase.**
--keep class com.google.android.gms.** { *; }
+-keep class com.google.android.gms.internal.** { *; }
 -dontwarn com.google.android.gms.**
 
-# Keep WebRTC
+# WebRTC (JNI native methods)
 -keep class org.webrtc.** { *; }
 -dontwarn org.webrtc.**
 
-# Keep Gemini / Generative AI
+# Gemini / Generative AI (reflection-based)
 -keep class com.google.ai.client.generativeai.** { *; }
 -dontwarn com.google.ai.client.generativeai.**
 
-# Keep Credentials / Google Sign-In
+# Credentials / Google Sign-In
 -keep class androidx.credentials.** { *; }
 -keep class com.google.android.libraries.identity.** { *; }
 
-# Keep VoIP / Telecom classes
--keep class com.diabeto.voip.** { *; }
+# VoIP — keep service and connection classes (manifest-referenced)
+-keep class com.diabeto.voip.VoipConnectionService { *; }
+-keep class com.diabeto.voip.VoipConnection { *; }
 
-# Keep notification classes
--keep class com.diabeto.notifications.** { *; }
+# Notification receivers and services (manifest-referenced)
+-keep class com.diabeto.notifications.ReminderReceiver { *; }
+-keep class com.diabeto.notifications.ReminderReceiver$BootReceiver { *; }
+-keep class com.diabeto.notifications.DiaSmartFCMService { *; }
 
-# Keep widget classes
--keep class com.diabeto.widget.** { *; }
+# Widget classes (manifest-referenced)
+-keep class com.diabeto.widget.** extends android.appwidget.AppWidgetProvider { *; }
 
-# Keep service classes
--keep class com.diabeto.service.** { *; }
+# Service classes (manifest-referenced)
+-keep class com.diabeto.service.StepCounterService { *; }
 
-# Keep sync worker
--keep class com.diabeto.sync.** { *; }
+# Workers (referenced by WorkManager via class name)
+-keep class * extends androidx.work.ListenableWorker {
+    <init>(android.content.Context, androidx.work.WorkerParameters);
+}
 
-# SQLCipher
+# SQLCipher (JNI native methods)
 -keep class net.sqlcipher.** { *; }
 -dontwarn net.sqlcipher.**
 

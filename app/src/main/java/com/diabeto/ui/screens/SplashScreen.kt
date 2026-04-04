@@ -1,6 +1,5 @@
 package com.diabeto.ui.screens
 
-import android.content.Context
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -32,7 +31,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.diabeto.R
 import com.diabeto.ui.theme.*
+import com.diabeto.data.repository.PreferencesRepository
 import com.diabeto.util.AppUpdateChecker
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -51,6 +55,12 @@ import kotlinx.coroutines.launch
  *  ✅ Si l'utilisateur est déjà connecté → skip Login → Dashboard
  *  ✅ Vérification de mise à jour en arrière-plan
  */
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+private interface SplashEntryPoint {
+    fun preferencesRepository(): PreferencesRepository
+}
+
 @Composable
 fun SplashScreen(
     onSplashFinished: (isLoggedIn: Boolean) -> Unit,
@@ -65,19 +75,22 @@ fun SplashScreen(
 
         // Vérification de mise à jour NON-BLOQUANTE en arrière-plan
         // On ne bloque JAMAIS la navigation — les infos sont stockées
-        // dans SharedPreferences et le dialogue s'affichera sur le Dashboard
+        // dans DataStore et le dialogue s'affichera sur le Dashboard
         launch {
             try {
+                val entryPoint = EntryPointAccessors.fromApplication(
+                    context.applicationContext, SplashEntryPoint::class.java
+                )
+                val prefsRepo = entryPoint.preferencesRepository()
                 val checker = AppUpdateChecker(context)
                 val update = checker.checkForUpdate()
                 if (update != null && update.apkUrl.isNotBlank()) {
-                    val prefs = context.getSharedPreferences("diasmart_prefs", Context.MODE_PRIVATE)
-                    prefs.edit()
-                        .putString("pending_update_version", update.versionName)
-                        .putString("pending_update_url", update.apkUrl)
-                        .putString("pending_update_changelog", update.changelog)
-                        .putBoolean("pending_update_force", update.forceUpdate)
-                        .apply()
+                    prefsRepo.setPendingUpdate(
+                        version = update.versionName,
+                        url = update.apkUrl,
+                        changelog = update.changelog,
+                        force = update.forceUpdate
+                    )
                 }
             } catch (_: Exception) {
                 // Silencieux — la MAJ est non-critique

@@ -355,7 +355,7 @@ private fun QuickActionButton(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp))
+            Icon(icon, contentDescription = label, modifier = Modifier.size(24.dp))
             Spacer(modifier = Modifier.height(4.dp))
             Text(label, style = MaterialTheme.typography.labelSmall)
         }
@@ -473,7 +473,7 @@ private fun InfoRow(
     ) {
         Icon(
             imageVector = icon,
-            contentDescription = null,
+            contentDescription = label,
             tint = OnSurfaceVariant,
             modifier = Modifier.size(20.dp)
         )

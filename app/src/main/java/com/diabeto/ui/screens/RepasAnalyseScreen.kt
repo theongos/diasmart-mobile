@@ -49,16 +49,16 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 // ── Theme colors ─────────────────────────────────────────────────────────
-private val DarkBg = Color(0xFF0D0D1A)
-private val DarkSurface = OnBackground
+private val DarkBg = DarkBackground
+private val DarkSurfaceRepas = OnBackground
 private val DarkCard = Color(0xFF16213E)
 private val DarkInput = Color(0xFF1E1E30)
 private val DrawerBg = Color(0xFF111128)
 private val AccentCyan = Primary
 private val AccentPurple = Color(0xFF7C4DFF)
-private val AccentGreen = Color(0xFF4CAF50)
-private val AccentOrange = Color(0xFFFF9800)
-private val AccentRed = Color(0xFFFF5252)
+private val AccentGreen = StatusGreen
+private val AccentOrange = StatusOrange
+private val AccentRed = StatusRed
 private val DimWhite = Color.White.copy(alpha = 0.6f)
 private val MutedWhite = Color.White.copy(alpha = 0.4f)
 
@@ -101,7 +101,7 @@ fun RepasAnalyseScreen(
     val titleColor = if (isDark) Color.White else TextPrimary
     val bodyColor = if (isDark) DimWhite else TextSecondary
     val mutedColor = if (isDark) MutedWhite else LightMutedText
-    val topBarBg = if (isDark) DarkSurface else RollyCardColor
+    val topBarBg = if (isDark) DarkSurfaceRepas else RollyCardColor
     val topBarText = Color.White  // Always white on colored bar
     val dividerColor = if (isDark) Color.White.copy(alpha = 0.1f) else Outline
 
@@ -121,7 +121,7 @@ fun RepasAnalyseScreen(
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         Icons.Default.Restaurant,
-                                        contentDescription = null,
+                                        contentDescription = "Analyse repas",
                                         tint = if (isDark) AccentCyan else Color.White,
                                         modifier = Modifier.size(20.dp)
                                     )
@@ -491,7 +491,7 @@ private fun AnalyseHistoriqueDrawer(
                     ) {
                         Icon(
                             Icons.Default.Add,
-                            contentDescription = null,
+                            contentDescription = "Nouvelle analyse",
                             tint = AccentCyan,
                             modifier = Modifier.size(18.dp)
                         )

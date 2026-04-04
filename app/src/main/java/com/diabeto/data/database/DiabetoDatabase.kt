@@ -32,9 +32,10 @@ import javax.crypto.spec.GCMParameterSpec
         RendezVousEntity::class,
         HbA1cEntity::class,
         JournalEntity::class,
-        AiCacheEntity::class
+        AiCacheEntity::class,
+        PendingOperationEntity::class
     ],
-    version = 7,
+    version = 9,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -47,6 +48,7 @@ abstract class DiabetoDatabase : RoomDatabase() {
     abstract fun hbA1cDao(): HbA1cDao
     abstract fun journalDao(): JournalDao
     abstract fun aiCacheDao(): AiCacheDao
+    abstract fun pendingOperationDao(): PendingOperationDao
 
     companion object {
         const val DATABASE_NAME = "diabeto_database.db"
@@ -150,6 +152,38 @@ abstract class DiabetoDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // v8: Add HMAC column to ai_cache for integrity verification
+                try {
+                    db.execSQL("ALTER TABLE ai_cache ADD COLUMN hmac TEXT NOT NULL DEFAULT ''")
+                } catch (e: Exception) {
+                    Log.w(TAG, "Migration 7→8: hmac column may already exist: ${e.message}")
+                }
+                Log.d(TAG, "Migration 7→8 complete: added hmac column to ai_cache")
+            }
+        }
+
+        private val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS pending_operations (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        operationType TEXT NOT NULL,
+                        collection TEXT NOT NULL,
+                        documentId TEXT NOT NULL,
+                        payload TEXT NOT NULL,
+                        retryCount INTEGER NOT NULL DEFAULT 0,
+                        maxRetries INTEGER NOT NULL DEFAULT 5,
+                        createdAt INTEGER NOT NULL,
+                        lastAttemptAt INTEGER NOT NULL DEFAULT 0,
+                        status TEXT NOT NULL DEFAULT 'PENDING'
+                    )
+                """.trimIndent())
+                Log.d(TAG, "Migration 8→9 complete: created pending_operations table")
+            }
+        }
+
         @Volatile
         private var INSTANCE: DiabetoDatabase? = null
 
@@ -169,7 +203,7 @@ abstract class DiabetoDatabase : RoomDatabase() {
                 DATABASE_NAME
             )
             .openHelperFactory(factory)
-            .addMigrations(MIGRATION_6_7)
+            .addMigrations(MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
             .fallbackToDestructiveMigrationOnDowngrade()
             .build()
         }

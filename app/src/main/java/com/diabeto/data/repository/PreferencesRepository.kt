@@ -56,6 +56,10 @@ class PreferencesRepository @Inject constructor(
         val MEASURE_TYPE = stringPreferencesKey("measure_type")
         val TARGET_MIN = stringPreferencesKey("glycemic_target_min")
         val TARGET_MAX = stringPreferencesKey("glycemic_target_max")
+        val PENDING_UPDATE_VERSION = stringPreferencesKey("pending_update_version")
+        val PENDING_UPDATE_URL = stringPreferencesKey("pending_update_url")
+        val PENDING_UPDATE_CHANGELOG = stringPreferencesKey("pending_update_changelog")
+        val PENDING_UPDATE_FORCE = booleanPreferencesKey("pending_update_force")
     }
 
     val themeMode: Flow<ThemeMode> = context.dataStore.data.map { prefs ->
@@ -146,6 +150,46 @@ class PreferencesRepository @Inject constructor(
         context.dataStore.edit {
             it[Keys.TARGET_MIN] = min.toString()
             it[Keys.TARGET_MAX] = max.toString()
+        }
+    }
+
+    // ── Pending app update ──
+
+    data class PendingUpdate(
+        val version: String,
+        val url: String,
+        val changelog: String,
+        val force: Boolean
+    )
+
+    val pendingUpdate: Flow<PendingUpdate?> = context.dataStore.data.map { prefs ->
+        val version = prefs[Keys.PENDING_UPDATE_VERSION]
+        val url = prefs[Keys.PENDING_UPDATE_URL]
+        if (!version.isNullOrBlank() && !url.isNullOrBlank()) {
+            PendingUpdate(
+                version = version,
+                url = url,
+                changelog = prefs[Keys.PENDING_UPDATE_CHANGELOG] ?: "",
+                force = prefs[Keys.PENDING_UPDATE_FORCE] ?: false
+            )
+        } else null
+    }
+
+    suspend fun setPendingUpdate(version: String, url: String, changelog: String, force: Boolean) {
+        context.dataStore.edit {
+            it[Keys.PENDING_UPDATE_VERSION] = version
+            it[Keys.PENDING_UPDATE_URL] = url
+            it[Keys.PENDING_UPDATE_CHANGELOG] = changelog
+            it[Keys.PENDING_UPDATE_FORCE] = force
+        }
+    }
+
+    suspend fun clearPendingUpdate() {
+        context.dataStore.edit {
+            it.remove(Keys.PENDING_UPDATE_VERSION)
+            it.remove(Keys.PENDING_UPDATE_URL)
+            it.remove(Keys.PENDING_UPDATE_CHANGELOG)
+            it.remove(Keys.PENDING_UPDATE_FORCE)
         }
     }
 }

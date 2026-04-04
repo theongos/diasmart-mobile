@@ -129,8 +129,138 @@
 
     <!-- Podomètre -->
     <string name="pedometer_title">Podomètre</string>
+    <string name="pedometer_subtitle">Compteur de pas</string>
     <string name="pedometer_steps">pas</string>
     <string name="pedometer_goal">de l\'objectif</string>
     <string name="pedometer_start">Démarrer le suivi</string>
     <string name="pedometer_stop">Arrêter</string>
+    <string name="pedometer_permission_denied">Permission refusée</string>
+    <string name="pedometer_retry">Réessayer</string>
+    <string name="pedometer_glycemic_impact">Impact glycémique</string>
+
+    <!-- Login / Inscription -->
+    <string name="auth_welcome">Bienvenue !</string>
+    <string name="auth_hello">Bonjour !</string>
+    <string name="auth_create_account_subtitle">Créez votre compte DiaSmart</string>
+    <string name="auth_login_subtitle">Connectez-vous à DiaSmart</string>
+    <string name="auth_inscription">Inscription</string>
+    <string name="auth_connexion">Connexion</string>
+    <string name="auth_phone">Téléphone</string>
+    <string name="auth_prenom">Prénom</string>
+    <string name="auth_nom">Nom</string>
+    <string name="auth_i_am">Je suis :</string>
+    <string name="auth_phone_number">Numéro de téléphone</string>
+    <string name="auth_sms_sent">Un code SMS a été envoyé</string>
+    <string name="auth_verification_code">Code de vérification</string>
+    <string name="auth_create_my_account">Créer mon compte</string>
+    <string name="auth_verify_code">Vérifier le code</string>
+    <string name="auth_send_sms">Envoyer le code SMS</string>
+    <string name="auth_sign_in">Se connecter</string>
+    <string name="auth_or">ou</string>
+    <string name="auth_google">Google</string>
+    <string name="auth_already_account">J\'ai déjà un compte</string>
+    <string name="auth_no_account">Créer un compte</string>
+    <string name="auth_tagline">DiaSmart — Gestion intelligente du diabète</string>
+    <string name="auth_reset_email_sent">Email de réinitialisation envoyé !</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title_1">Suivi Intelligent</string>
+    <string name="onboarding_desc_1">Gérez votre diabète au quotidien</string>
+    <string name="onboarding_title_2">ROLLY, votre assistant IA</string>
+    <string name="onboarding_desc_2">Un chatbot médical disponible 24h/24</string>
+    <string name="onboarding_skip">Passer</string>
+    <string name="onboarding_next">Suivant</string>
+    <string name="onboarding_start">Commencer</string>
+    <string name="onboarding_login_link">Déjà un compte ? Se connecter</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_glucose_avg">Glycémie moyenne</string>
+    <string name="dashboard_offline_mode">Mode hors-ligne</string>
+    <string name="dashboard_offline_data">Données locales accessibles</string>
+    <string name="dashboard_update_available">Mise à jour disponible</string>
+    <string name="dashboard_new_features">Nouveautés :</string>
+    <string name="dashboard_update_mandatory">Cette mise à jour est obligatoire.</string>
+    <string name="dashboard_authorize">Autoriser</string>
+    <string name="dashboard_via_browser">Via navigateur</string>
+    <string name="dashboard_install">Installer</string>
+    <string name="dashboard_later">Plus tard</string>
+    <string name="dashboard_install_permission">Autorisez l\'installation depuis cette source.</string>
+    <string name="dashboard_version">Version %1$s</string>
+    <string name="dashboard_pending_sync">%1$d opérations en attente de synchronisation</string>
+
+    <!-- Glucose -->
+    <string name="glucose_added_success">Ajouté avec succès</string>
+    <string name="glucose_report_title">DiaSmart - Rapport glycémique</string>
+    <string name="glucose_share_report">Partager le rapport</string>
+    <string name="glucose_tracking">Suivi glycémique</string>
+    <string name="glucose_export">Exporter</string>
+    <string name="glucose_tab_glycemie">Glycémie</string>
+    <string name="glucose_tab_hba1c">HbA1c</string>
+    <string name="glucose_tab_suivi">Suivi</string>
+    <string name="glucose_add_hba1c">Ajouter un résultat HbA1c</string>
+    <string name="glucose_invalid_value">Valeur invalide</string>
+    <string name="glucose_value_too_high">Valeur trop élevée</string>
+    <string name="glucose_hba1c_invalid">HbA1c invalide (3%% à 20%%)</string>
+    <string name="glucose_hypo_severe">Hypoglycémie sévère</string>
+    <string name="glucose_hypo">Hypoglycémie</string>
+    <string name="glucose_in_target">Dans la cible</string>
+    <string name="glucose_hyper">Hyperglycémie</string>
+    <string name="glucose_hyper_severe">Hyperglycémie sévère</string>
+    <string name="glucose_min_readings">Minimum 10 lectures pour estimer l\'HbA1c</string>
+
+    <!-- Patient Edit -->
+    <string name="patient_edit_title">Édition Patient</string>
+    <string name="patient_nom_required">Nom *</string>
+    <string name="patient_prenom_required">Prénom *</string>
+    <string name="patient_dob_required">Date de naissance *</string>
+    <string name="patient_choose_date">Choisir date</string>
+    <string name="patient_sexe_required">Sexe *</string>
+    <string name="patient_type_required">Type de diabète *</string>
+    <string name="patient_body_data">Données corporelles</string>
+    <string name="patient_weight">Poids (kg)</string>
+    <string name="patient_height">Taille (cm)</string>
+    <string name="patient_waist">Tour de taille (cm)</string>
+    <string name="patient_body_fat">Masse grasse (%%)</string>
+
+    <!-- Messagerie -->
+    <string name="messagerie_contact_doctor">Contacter un médecin</string>
+    <string name="messagerie_empty_patient_hint">Contactez votre médecin via le bouton +</string>
+    <string name="messagerie_empty_doctor_hint">Vos patients vous contacteront ici</string>
+    <string name="messagerie_back">Retour</string>
+
+    <!-- Chatbot -->
+    <string name="chatbot_discussions">Discussions</string>
+    <string name="chatbot_new_discussion">Nouvelle discussion</string>
+    <string name="chatbot_clear_history">Effacer tout l\'historique</string>
+    <string name="chatbot_back">Retour</string>
+
+    <!-- Repas Analyse -->
+    <string name="repas_new_analysis">Nouvelle analyse</string>
+
+    <!-- Data Sharing -->
+    <string name="data_sharing_title">Partage de données</string>
+    <string name="data_sharing_control">Contrôle de vos données</string>
+    <string name="data_sharing_share_with_doctor">Partager avec un médecin</string>
+    <string name="data_sharing_choose_doctor">Choisir un médecin</string>
+    <string name="data_sharing_no_doctor">Aucun médecin disponible pour le moment.</string>
+
+    <!-- Validations -->
+    <string name="validations_title">Validations ROLLY</string>
+    <string name="validations_subtitle">Collaboration IA-Médecin</string>
+    <string name="validations_none_pending">Aucune validation en attente</string>
+
+    <!-- Profile -->
+    <string name="profile_image_read_error">Impossible de lire l\'image</string>
+    <string name="profile_photo_updated">Photo mise à jour</string>
+    <string name="profile_change_phone">Modifier le téléphone</string>
+
+    <!-- Médicaments -->
+    <string name="medicament_added_success">Médicament ajouté avec succès</string>
+    <string name="medicament_new">Nouveau médicament</string>
+
+    <!-- Common -->
+    <string name="ok">OK</string>
+    <string name="error_generic">Erreur: %1$s</string>
+    <string name="export_error">Erreur export: %1$s</string>
+    <string name="loading_analysis">Analyse des données…</string>
 </resources>

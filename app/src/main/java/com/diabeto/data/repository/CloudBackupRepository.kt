@@ -43,7 +43,8 @@ class CloudBackupRepository @Inject constructor(
     private val hbA1cDao: HbA1cDao,
     private val medicamentDao: MedicamentDao,
     private val rendezVousDao: RendezVousDao,
-    private val journalDao: JournalDao
+    private val journalDao: JournalDao,
+    private val pendingOperationDao: PendingOperationDao
 ) {
     companion object {
         private const val TAG = "CloudBackup"
@@ -276,7 +277,20 @@ class CloudBackupRepository @Inject constructor(
 
             docRef.set(data, SetOptions.merge()).await()
         } catch (e: Exception) {
-            Log.e(TAG, "Backup $collection/$docId failed", e)
+            Log.e(TAG, "Backup $collection/$docId failed — queuing for retry", e)
+            try {
+                val jsonPayload = org.json.JSONObject(data.filterValues { it != null }).toString()
+                pendingOperationDao.insert(
+                    PendingOperationEntity(
+                        operationType = "BACKUP_DOC",
+                        collection = "$BACKUPS/${uid}/$collection",
+                        documentId = docId,
+                        payload = jsonPayload
+                    )
+                )
+            } catch (qe: Exception) {
+                Log.e(TAG, "Failed to queue pending operation", qe)
+            }
         }
     }
 

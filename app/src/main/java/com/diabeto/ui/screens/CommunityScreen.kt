@@ -62,11 +62,11 @@ fun CommunityScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Surface(
                             shape = CircleShape,
-                            color = Color(0xFF4CAF50).copy(alpha = 0.15f),
+                            color = StatusGreen.copy(alpha = 0.15f),
                             modifier = Modifier.size(36.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
-                                Icon(Icons.Default.Groups, null, tint = Color(0xFF4CAF50), modifier = Modifier.size(20.dp))
+                                Icon(Icons.Default.Groups, null, tint = StatusGreen, modifier = Modifier.size(20.dp))
                             }
                         }
                         Spacer(Modifier.width(10.dp))
@@ -75,7 +75,7 @@ fun CommunityScreen(
                             Text(
                                 "${uiState.membersCount} membres",
                                 fontSize = 11.sp,
-                                color = Color(0xFF4CAF50)
+                                color = StatusGreen
                             )
                         }
                     }

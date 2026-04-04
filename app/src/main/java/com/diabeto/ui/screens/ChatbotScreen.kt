@@ -15,6 +15,8 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.ui.res.stringResource
+import com.diabeto.R
 import com.diabeto.ui.theme.LocalIsDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -68,10 +70,10 @@ fun ChatbotScreen(
 
     val isDarkTheme = LocalIsDarkTheme.current
     // Theme-aware colors: light mode = clean white, dark mode = keep current dark style
-    val chatBg = if (isDarkTheme) Color(0xFF0D0D1A) else Background
+    val chatBg = if (isDarkTheme) DarkBackground else Background
     val chatTopBar = if (isDarkTheme) OnBackground else RollyCardColor
-    val chatChipBg = if (isDarkTheme) Color(0xFF141428) else SurfaceVariant
-    val chatInputBg = if (isDarkTheme) Color(0xFF141428) else Surface
+    val chatChipBg = if (isDarkTheme) DarkSurface else SurfaceVariant
+    val chatInputBg = if (isDarkTheme) DarkSurface else Surface
     val chatInputBorder = if (isDarkTheme) Color.White.copy(alpha = 0.15f) else Outline
     val chatTopBarText = Color.White  // Always white on indigo/dark bars
     val chatSuggestionBg = if (isDarkTheme) Color(0xFF1E1E30) else PrimaryContainer.copy(alpha = 0.5f)
@@ -95,17 +97,17 @@ fun ChatbotScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Retour", tint = chatTopBarText)
+                        Icon(Icons.Default.ArrowBack, stringResource(R.string.chatbot_back), tint = chatTopBarText)
                     }
                     // Hamburger menu for sessions
                     IconButton(onClick = { viewModel.toggleSessionDrawer() }) {
-                        Icon(Icons.Default.Menu, "Discussions", tint = chatTopBarText.copy(alpha = 0.8f))
+                        Icon(Icons.Default.Menu, stringResource(R.string.chatbot_discussions), tint = chatTopBarText.copy(alpha = 0.8f))
                     }
                     RollyIcon(size = 34.dp, showBackground = true)
                     Spacer(modifier = Modifier.width(10.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            "ROLLY",
+                            stringResource(R.string.chatbot_title),
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp,
                             color = chatTopBarText
@@ -119,13 +121,13 @@ fun ChatbotScreen(
                     }
                     // New session button
                     IconButton(onClick = { viewModel.createNewSession() }) {
-                        Icon(Icons.Default.Add, "Nouvelle discussion", tint = if (isDarkTheme) Primary else Color.White)
+                        Icon(Icons.Default.Add, stringResource(R.string.chatbot_new_discussion), tint = if (isDarkTheme) Primary else Color.White)
                     }
                     // Badge quota
                     Surface(
                         shape = RoundedCornerShape(16.dp),
                         color = if (uiState.quotaStatus.remaining <= 2)
-                            Color(0xFFFF5252).copy(alpha = 0.2f)
+                            StatusRed.copy(alpha = 0.2f)
                         else Color.White.copy(alpha = 0.2f)
                     ) {
                         Text(
@@ -134,7 +136,7 @@ fun ChatbotScreen(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = if (uiState.quotaStatus.remaining <= 2)
-                                Color(0xFFFF5252) else chatTopBarText
+                                StatusRed else chatTopBarText
                         )
                     }
                     // Menu options
@@ -148,7 +150,7 @@ fun ChatbotScreen(
                             onDismissRequest = { showMenu = false }
                         ) {
                             DropdownMenuItem(
-                                text = { Text("Effacer tout l'historique") },
+                                text = { Text(stringResource(R.string.chatbot_clear_history)) },
                                 onClick = {
                                     viewModel.effacerHistorique()
                                     showMenu = false
@@ -178,21 +180,21 @@ fun ChatbotScreen(
                 ) {
                     item {
                         RollyAnalyseChip(
-                            label = "📊 Analyser glycémie",
+                            label = "📊 " + stringResource(R.string.chatbot_analyse_glycemie),
                             onClick = viewModel::analyserGlycemie,
                             enabled = !uiState.isLoading
                         )
                     }
                     item {
                         RollyAnalyseChip(
-                            label = "⚠️ Prévision risques",
+                            label = "⚠️ " + stringResource(R.string.chatbot_prevision_risques),
                             onClick = viewModel::previsionRisque,
                             enabled = !uiState.isLoading
                         )
                     }
                     item {
                         RollyAnalyseChip(
-                            label = "🥗 Conseils nutrition",
+                            label = "🥗 " + stringResource(R.string.chatbot_conseils_nutrition),
                             onClick = viewModel::conseilsNutritionnels,
                             enabled = !uiState.isLoading
                         )
@@ -212,7 +214,7 @@ fun ChatbotScreen(
                             Text(
                                 "Analyse ROLLY",
                                 fontWeight = FontWeight.Bold,
-                                color = if (isDarkTheme) Color(0xFFE8E5FF) else TextPrimary
+                                color = if (isDarkTheme) DarkTextPrimary else TextPrimary
                             )
                         }
                     },
@@ -221,7 +223,7 @@ fun ChatbotScreen(
                             item {
                                 RichMarkdownText(
                                     text = uiState.analyseRapide ?: "",
-                                    textColor = if (isDarkTheme) Color(0xFFE8E5FF) else TextPrimary
+                                    textColor = if (isDarkTheme) DarkTextPrimary else TextPrimary
                                 )
                             }
                         }
@@ -251,7 +253,7 @@ fun ChatbotScreen(
                                 Text(
                                     "Validation médicale",
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isDarkTheme) Color(0xFFE8E5FF) else TextPrimary
+                                    color = if (isDarkTheme) DarkTextPrimary else TextPrimary
                                 )
                                 Text(
                                     "Collaboration IA-Médecin",
@@ -429,28 +431,28 @@ fun ChatbotScreen(
             // Avertissement quota
             if (uiState.quotaStatus.isExceeded) {
                 Surface(
-                    color = Color(0xFFFF5252).copy(alpha = 0.12f),
+                    color = StatusRed.copy(alpha = 0.12f),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         "⚠️ Limite de ${uiState.quotaStatus.limit} requêtes/jour atteinte. Revenez demain !",
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         fontSize = 12.sp,
-                        color = Color(0xFFFF5252),
+                        color = StatusRed,
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.Medium
                     )
                 }
             } else if (uiState.quotaStatus.remaining in 1..3) {
                 Surface(
-                    color = Color(0xFFFF9800).copy(alpha = 0.1f),
+                    color = StatusOrange.copy(alpha = 0.1f),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         "Il vous reste ${uiState.quotaStatus.remaining} requête(s) aujourd'hui",
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                         fontSize = 11.sp,
-                        color = Color(0xFFFF9800),
+                        color = StatusOrange,
                         textAlign = TextAlign.Center
                     )
                 }
@@ -499,7 +501,7 @@ fun ChatbotScreen(
                         modifier = Modifier.size(48.dp),
                         shape = CircleShape,
                         containerColor = when {
-                            uiState.quotaStatus.isExceeded -> Color(0xFFFF5252).copy(alpha = 0.4f)
+                            uiState.quotaStatus.isExceeded -> StatusRed.copy(alpha = 0.4f)
                             uiState.inputText.isNotBlank() -> Primary
                             else -> if (isDarkTheme) Color.White.copy(alpha = 0.15f) else SurfaceVariant
                         },
@@ -623,7 +625,7 @@ fun RichMarkdownText(
     val headerColor = Primary
     val boldColor = if (isDark) Color.White else TextPrimary
     val bulletColor = if (isDark) PrimaryContainer else Primary
-    val tableHeaderBg = if (isDark) Color(0xFF1E3A5F) else Color(0xFFE8E5FF)
+    val tableHeaderBg = if (isDark) Color(0xFF1E3A5F) else DarkTextPrimary
     val tableBorderColor = if (isDark) Color.White.copy(alpha = 0.15f) else Color(0xFFD0CDE0)
 
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -728,7 +730,7 @@ fun RichMarkdownText(
                 line.trimStart().let { it.startsWith("⚠") || it.startsWith("❗") || it.startsWith("🔴") || it.uppercase().startsWith("URGENCE") || it.uppercase().startsWith("ALERTE") } -> {
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        color = Color(0xFFFF5252).copy(alpha = 0.12f),
+                        color = StatusRed.copy(alpha = 0.12f),
                         modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp)
                     ) {
                         Text(
@@ -900,9 +902,9 @@ private fun MarkdownTable(
 
     if (parsedRows.isEmpty()) return
 
-    val tableBg = if (isDark) Color(0xFF141428) else Color(0xFFF5F3FF)
+    val tableBg = if (isDark) DarkSurface else Color(0xFFF5F3FF)
     val altRowBg = if (isDark) Color.White.copy(alpha = 0.03f) else Color(0xFFECEAFF).copy(alpha = 0.5f)
-    val headerTextColor = if (isDark) Color(0xFFE8E5FF) else Color.White
+    val headerTextColor = if (isDark) DarkTextPrimary else Color.White
     val cellTextColor = if (isDark) textColor.copy(alpha = 0.85f) else TextPrimary.copy(alpha = 0.85f)
 
     Surface(
@@ -1055,7 +1057,7 @@ private fun SessionDrawer(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        "💬 Discussions",
+                        "💬 " + stringResource(R.string.chatbot_discussions),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         color = Color.White
@@ -1081,7 +1083,7 @@ private fun SessionDrawer(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Icon(Icons.Default.Add, null, tint = Primary, modifier = Modifier.size(18.dp))
-                        Text("Nouvelle discussion", color = Primary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                        Text(stringResource(R.string.chatbot_new_discussion), color = Primary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
                     }
                 }
 
@@ -1200,7 +1202,7 @@ private fun SessionItem(
                 Icon(
                     Icons.Default.Delete,
                     "Supprimer",
-                    tint = Color(0xFFFF5252).copy(alpha = 0.6f),
+                    tint = StatusRed.copy(alpha = 0.6f),
                     modifier = Modifier.size(16.dp)
                 )
             }

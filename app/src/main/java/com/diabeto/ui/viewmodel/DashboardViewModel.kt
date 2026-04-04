@@ -27,6 +27,7 @@ data class DashboardUiState(
     val recentPatients: List<PatientEntity> = emptyList(),
     val isLoading: Boolean = false,
     val isOnline: Boolean = true,
+    val pendingSyncCount: Int = 0,
     val error: String? = null,
     val userRole: UserRole = UserRole.PATIENT,
     val glucoseUnit: com.diabeto.data.repository.GlucoseUnit = com.diabeto.data.repository.GlucoseUnit.MG_DL
@@ -41,7 +42,8 @@ class DashboardViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val connectivityObserver: ConnectivityObserver,
     private val cloudBackupRepository: CloudBackupRepository,
-    private val preferencesRepository: PreferencesRepository
+    private val preferencesRepository: PreferencesRepository,
+    private val pendingOperationDao: com.diabeto.data.dao.PendingOperationDao
 ) : ViewModel() {
 
     companion object {
@@ -57,6 +59,7 @@ class DashboardViewModel @Inject constructor(
         loadDashboardData()
         observeConnectivity()
         observeGlucoseUnit()
+        loadPendingSyncCount()
     }
 
     private fun observeGlucoseUnit() {
@@ -108,6 +111,18 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             connectivityObserver.observe().collect { online ->
                 _uiState.update { it.copy(isOnline = online) }
+                if (online) loadPendingSyncCount()
+            }
+        }
+    }
+
+    private fun loadPendingSyncCount() {
+        viewModelScope.launch {
+            try {
+                val count = pendingOperationDao.pendingCount()
+                _uiState.update { it.copy(pendingSyncCount = count) }
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to load pending sync count", e)
             }
         }
     }
@@ -174,5 +189,17 @@ class DashboardViewModel @Inject constructor(
     
     fun clearError() {
         _uiState.update { it.copy(error = null) }
+    }
+
+    // ── Pending update (DataStore) ──
+
+    val pendingUpdate: StateFlow<PreferencesRepository.PendingUpdate?> =
+        preferencesRepository.pendingUpdate
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    fun clearPendingUpdate() {
+        viewModelScope.launch {
+            preferencesRepository.clearPendingUpdate()
+        }
     }
 }

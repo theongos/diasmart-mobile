@@ -112,6 +112,94 @@ class GlucoseRepository @Inject constructor(
         RISING, FALLING, STABLE
     }
 
+    /**
+     * Calcule les moyennes glycémiques journalières à partir d'une liste de lectures.
+     */
+    fun calculateDailyAverages(lectures: List<LectureGlucoseEntity>): List<DailyGlucoseAverage> {
+        return lectures.groupBy { it.dateHeure.toLocalDate() }
+            .map { (date, dayLectures) ->
+                DailyGlucoseAverage(
+                    date = date,
+                    average = dayLectures.map { it.valeur }.average(),
+                    count = dayLectures.size
+                )
+            }
+            .sortedBy { it.date }
+    }
+
+    /**
+     * Estime l'HbA1c à partir des statistiques.
+     * Retourne null si pas assez de données (< 10 lectures).
+     */
+    fun estimateHbA1c(stats: GlucoseStatistics): Double? {
+        if (stats.totalLectures < 10 || stats.moyenne <= 0) return null
+        val estimated = HbA1cEntity.estimerDepuisGlycemieMoyenne(stats.moyenne)
+        return (estimated * 10).toInt() / 10.0
+    }
+
+    data class DailyGlucoseAverage(
+        val date: LocalDate,
+        val average: Double,
+        val count: Int
+    )
+
+    /**
+     * Classifie le statut glycémique.
+     */
+    fun getGlucoseStatus(valeur: Double): String = when {
+        valeur < 54 -> "Hypoglycémie sévère"
+        valeur < 70 -> "Hypoglycémie"
+        valeur in 70.0..180.0 -> "Dans la cible"
+        valeur in 180.0..250.0 -> "Hyperglycémie"
+        else -> "Hyperglycémie sévère"
+    }
+
+    /**
+     * Génère le rapport CSV d'export.
+     */
+    fun generateExportReport(
+        patient: com.diabeto.data.entity.PatientEntity?,
+        statistics: GlucoseStatistics,
+        hba1cHistorique: List<HbA1cEntity>,
+        lectures: List<LectureGlucoseEntity>
+    ): String {
+        val sb = StringBuilder()
+        val dateFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+
+        sb.appendLine("=== RAPPORT DIASMART ===")
+        patient?.let {
+            sb.appendLine("Patient: ${it.nomComplet}")
+            sb.appendLine("Age: ${it.age} ans | Sexe: ${it.sexe.name}")
+            sb.appendLine("Type: ${it.typeDiabete.name.replace("_", " ")}")
+            it.imc?.let { imc -> sb.appendLine("IMC: ${"%.1f".format(imc)} kg/m² (${it.categorieImc})") }
+            it.tourDeTaille?.let { tdt -> sb.appendLine("Tour de taille: ${tdt}cm (${it.risqueTourDeTaille})") }
+            it.masseGrasse?.let { mg -> sb.appendLine("Masse grasse: ${mg}%") }
+        }
+        sb.appendLine()
+
+        sb.appendLine("=== STATISTIQUES (30 jours) ===")
+        sb.appendLine("Moyenne: ${statistics.moyenne.toInt()} mg/dL")
+        sb.appendLine("Min-Max: ${statistics.minimum.toInt()}-${statistics.maximum.toInt()} mg/dL")
+        sb.appendLine("TIR (70-180): ${statistics.timeInRange.toInt()}%")
+        sb.appendLine("Total lectures: ${statistics.totalLectures}")
+        sb.appendLine()
+
+        sb.appendLine("=== HbA1c ===")
+        hba1cHistorique.forEach { h ->
+            val type = if (h.estEstimation) "estimée" else "labo"
+            sb.appendLine("${h.dateMesure.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}: ${h.valeur}% ($type) - eAG: ${h.getGlycemieMoyenneEstimee().toInt()} mg/dL")
+        }
+        sb.appendLine()
+
+        sb.appendLine("=== LECTURES GLYCEMIE ===")
+        sb.appendLine("Date,Valeur (mg/dL),Contexte")
+        lectures.forEach { l ->
+            sb.appendLine("${l.dateHeure.format(dateFmt)},${l.valeur.toInt()},${l.contexte.getDisplayName()}")
+        }
+
+        return sb.toString()
+    }
+
     // ================================================================
     //  HbA1c (HÉMOGLOBINE GLYQUÉE)
     // ================================================================

@@ -33,6 +33,9 @@ class ChatbotRepository @Inject constructor(
     private var chatSession = geminiModel.startChat()
     private val chatMutex = Mutex()
 
+    // HMAC key derived from app package — prevents cache tampering
+    private val hmacKey: ByteArray = "diasmart-ai-cache-integrity-key".toByteArray(Charsets.UTF_8)
+
     // ─────────────────────────────────────────────────────────────────────────
     // CACHE HELPERS
     // ─────────────────────────────────────────────────────────────────────────
@@ -71,6 +74,11 @@ class ChatbotRepository @Inject constructor(
         val hash = hashQuery(query)
         val cached = aiCacheDao.getCached(hash)
         if (cached != null) {
+            if (!cached.verifyIntegrity(hmacKey)) {
+                Log.w(TAG, "Cache HMAC mismatch — discarding tampered entry: ${query.take(50)}...")
+                aiCacheDao.deleteByHash(hash)
+                return null
+            }
             aiCacheDao.incrementHitCount(hash)
             Log.d(TAG, "Cache HIT for: ${query.take(50)}... (hits: ${cached.hitCount + 1})")
             return cached.response
@@ -80,13 +88,15 @@ class ChatbotRepository @Inject constructor(
 
     private suspend fun cacheResponse(query: String, response: String, category: String = "general") {
         val hash = hashQuery(query)
+        val signature = AiCacheEntity.computeHmac(hash, response, hmacKey)
         aiCacheDao.insert(
             AiCacheEntity(
                 queryHash = hash,
                 query = query.take(200),
                 response = response,
                 category = category,
-                expiresAt = System.currentTimeMillis() + 24 * 60 * 60 * 1000 // 24h
+                expiresAt = System.currentTimeMillis() + 24 * 60 * 60 * 1000, // 24h
+                hmac = signature
             )
         )
         Log.d(TAG, "Cached response for: ${query.take(50)}...")
@@ -250,13 +260,15 @@ class ChatbotRepository @Inject constructor(
             val response = geminiModel.generateContent(prompt)
             val text = response.text ?: throw Exception("Réponse vide de Gemini")
             // Cache this meal analysis (6h TTL for meals)
+            val mealHash = hashQuery(cacheKey)
             aiCacheDao.insert(
                 AiCacheEntity(
-                    queryHash = hashQuery(cacheKey),
+                    queryHash = mealHash,
                     query = cacheKey.take(200),
                     response = text,
                     category = "meal",
-                    expiresAt = System.currentTimeMillis() + 6 * 60 * 60 * 1000
+                    expiresAt = System.currentTimeMillis() + 6 * 60 * 60 * 1000,
+                    hmac = AiCacheEntity.computeHmac(mealHash, text, hmacKey)
                 )
             )
             text

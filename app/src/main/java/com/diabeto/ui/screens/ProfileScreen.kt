@@ -215,14 +215,14 @@ fun ProfileScreen(
     }
 
     val isDark = LocalIsDarkTheme.current
-    val screenBg = if (isDark) Color(0xFF0D0D1A) else Color(0xFFF7F8FC)
+    val screenBg = if (isDark) DarkBackground else Color(0xFFF7F8FC)
     val cardBg = if (isDark) Color(0xFF1A1A2E) else Color.White
     val headerGradient = listOf(
         if (isDark) Color(0xFF2A2B55) else Color(0xFF6771E4),
         if (isDark) Color(0xFF1A1A3E) else Color(0xFF8B93F0)
     )
-    val titleColor = if (isDark) Color(0xFFE8E5FF) else TextPrimary
-    val subtitleColor = if (isDark) Color(0xFFB8B5C8) else TextSecondary
+    val titleColor = if (isDark) DarkTextPrimary else TextPrimary
+    val subtitleColor = if (isDark) DarkTextSecondary else TextSecondary
 
     Scaffold(
         topBar = {
@@ -501,7 +501,7 @@ private fun ProfileField(label: String, value: String, onEdit: (() -> Unit)? = n
             Text(
                 label,
                 fontSize = 12.sp,
-                color = if (isDark) Color(0xFFB8B5C8) else OnSurfaceVariant,
+                color = if (isDark) DarkTextSecondary else OnSurfaceVariant,
                 fontWeight = FontWeight.Medium
             )
             Spacer(Modifier.height(2.dp))
@@ -509,7 +509,7 @@ private fun ProfileField(label: String, value: String, onEdit: (() -> Unit)? = n
                 value,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = if (isDark) Color(0xFFE8E5FF) else TextPrimary
+                color = if (isDark) DarkTextPrimary else TextPrimary
             )
         }
         if (onEdit != null) {
@@ -559,12 +559,12 @@ private fun MorphoCard(
                 value,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (isDark) Color(0xFFE8E5FF) else TextPrimary
+                color = if (isDark) DarkTextPrimary else TextPrimary
             )
             Text(
                 "$label ($unit)",
                 fontSize = 11.sp,
-                color = if (isDark) Color(0xFFB8B5C8) else OnSurfaceVariant
+                color = if (isDark) DarkTextSecondary else OnSurfaceVariant
             )
         }
     }

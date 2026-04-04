@@ -196,7 +196,7 @@ private fun DrawScope.drawRollySymbol(tint: Color) {
 
     drawPath(
         path = arrowPath,
-        color = Color(0xFF4CAF50),
+        color = StatusGreen,
         style = Stroke(
             width = w * 0.025f,
             cap = StrokeCap.Round,
@@ -229,7 +229,7 @@ private fun DrawScope.drawRollySymbol(tint: Color) {
         drawRoundRect(
             color = when (i) {
                 0 -> tint.copy(alpha = 0.6f)
-                1 -> Color(0xFF4CAF50).copy(alpha = 0.6f)
+                1 -> StatusGreen.copy(alpha = 0.6f)
                 else -> tint.copy(alpha = 0.5f)
             },
             topLeft = Offset(barX, barY),

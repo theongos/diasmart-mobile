@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 /**
@@ -22,15 +21,6 @@ import javax.inject.Inject
 enum class GlucoseTab {
     GLYCEMIE, HBA1C, SUIVI
 }
-
-/**
- * Moyenne glycémique journalière pour le diagramme de suivi
- */
-data class DailyGlucoseAverage(
-    val date: LocalDate,
-    val average: Double,
-    val count: Int
-)
 
 data class GlucoseUiState(
     val patient: PatientEntity? = null,
@@ -51,7 +41,7 @@ data class GlucoseUiState(
     val newHbA1cLabo: String = "",
     val showAddHbA1cDialog: Boolean = false,
     // Suivi (diagramme double courbe)
-    val dailyAverages: List<DailyGlucoseAverage> = emptyList(),
+    val dailyAverages: List<GlucoseRepository.DailyGlucoseAverage> = emptyList(),
     // ROLLY auto-analyse
     val rollyAnalysis: String? = null,
     val showRollyAnalysis: Boolean = false,
@@ -85,21 +75,8 @@ class GlucoseViewModel @Inject constructor(
                 val stats = glucoseRepository.getStatistics(patientId, 30)
                 val hba1cList = glucoseRepository.getHbA1cByPatientList(patientId)
                 val latestHbA1c = hba1cList.firstOrNull()
-                val hba1cEstimee = if (stats.totalLectures >= 10 && stats.moyenne > 0) {
-                    val estimated = HbA1cEntity.estimerDepuisGlycemieMoyenne(stats.moyenne)
-                    (estimated * 10).toInt() / 10.0
-                } else null
-
-                // Calculer les moyennes journalières pour le diagramme de suivi
-                val dailyAvg = lectures.groupBy { it.dateHeure.toLocalDate() }
-                    .map { (date, dayLectures) ->
-                        DailyGlucoseAverage(
-                            date = date,
-                            average = dayLectures.map { it.valeur }.average(),
-                            count = dayLectures.size
-                        )
-                    }
-                    .sortedBy { it.date }
+                val hba1cEstimee = glucoseRepository.estimateHbA1c(stats)
+                val dailyAvg = glucoseRepository.calculateDailyAverages(lectures)
 
                 _uiState.update {
                     it.copy(
@@ -200,21 +177,15 @@ class GlucoseViewModel @Inject constructor(
         else -> androidx.compose.ui.graphics.Color(0xFF81C784)
     }
 
-    fun getGlucoseStatus(valeur: Double): String = when {
-        valeur < 54 -> "Hypoglycémie sévère"
-        valeur < 70 -> "Hypoglycémie"
-        valeur in 70.0..180.0 -> "Dans la cible"
-        valeur in 180.0..250.0 -> "Hyperglycémie"
-        else -> "Hyperglycémie sévère"
-    }
+    fun getGlucoseStatus(valeur: Double): String = glucoseRepository.getGlucoseStatus(valeur)
 
     fun getHbA1cColor(valeur: Double): androidx.compose.ui.graphics.Color = when {
-        valeur < 5.7 -> androidx.compose.ui.graphics.Color(0xFF4CAF50)
-        valeur < 6.5 -> androidx.compose.ui.graphics.Color(0xFFFFC107)
-        valeur < 7.0 -> androidx.compose.ui.graphics.Color(0xFF81C784)
-        valeur < 8.0 -> androidx.compose.ui.graphics.Color(0xFFFFB74D)
-        valeur < 9.0 -> androidx.compose.ui.graphics.Color(0xFFE57373)
-        else -> androidx.compose.ui.graphics.Color(0xFFD32F2F)
+        valeur < 5.7 -> com.diabeto.ui.theme.HbA1cNormal
+        valeur < 6.5 -> com.diabeto.ui.theme.HbA1cPreDiabete
+        valeur < 7.0 -> com.diabeto.ui.theme.HbA1cCible
+        valeur < 8.0 -> com.diabeto.ui.theme.HbA1cAuDessus
+        valeur < 9.0 -> com.diabeto.ui.theme.HbA1cRisque
+        else -> com.diabeto.ui.theme.HbA1cDanger
     }
 
     fun clearError() = _uiState.update { it.copy(error = null) }
@@ -244,46 +215,14 @@ class GlucoseViewModel @Inject constructor(
     fun generateExportData() {
         viewModelScope.launch {
             try {
-                val patient = _uiState.value.patient
-                val sb = StringBuilder()
-                val dateFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
-
-                sb.appendLine("=== RAPPORT DIASMART ===")
-                patient?.let {
-                    sb.appendLine("Patient: ${it.nomComplet}")
-                    sb.appendLine("Age: ${it.age} ans | Sexe: ${it.sexe.name}")
-                    sb.appendLine("Type: ${it.typeDiabete.name.replace("_", " ")}")
-                    it.imc?.let { imc -> sb.appendLine("IMC: ${"%.1f".format(imc)} kg/m² (${it.categorieImc})") }
-                    it.tourDeTaille?.let { tdt -> sb.appendLine("Tour de taille: ${tdt}cm (${it.risqueTourDeTaille})") }
-                    it.masseGrasse?.let { mg -> sb.appendLine("Masse grasse: ${mg}%") }
-                }
-                sb.appendLine()
-
-                // Statistiques
-                val stats = _uiState.value.statistics
-                sb.appendLine("=== STATISTIQUES (30 jours) ===")
-                sb.appendLine("Moyenne: ${stats.moyenne.toInt()} mg/dL")
-                sb.appendLine("Min-Max: ${stats.minimum.toInt()}-${stats.maximum.toInt()} mg/dL")
-                sb.appendLine("TIR (70-180): ${stats.timeInRange.toInt()}%")
-                sb.appendLine("Total lectures: ${stats.totalLectures}")
-                sb.appendLine()
-
-                // HbA1c
-                sb.appendLine("=== HbA1c ===")
-                _uiState.value.hba1cHistorique.forEach { h ->
-                    val type = if (h.estEstimation) "estimée" else "labo"
-                    sb.appendLine("${h.dateMesure.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}: ${h.valeur}% ($type) - eAG: ${h.getGlycemieMoyenneEstimee().toInt()} mg/dL")
-                }
-                sb.appendLine()
-
-                // Lectures CSV
-                sb.appendLine("=== LECTURES GLYCEMIE ===")
-                sb.appendLine("Date,Valeur (mg/dL),Contexte")
-                _uiState.value.lectures.forEach { l ->
-                    sb.appendLine("${l.dateHeure.format(dateFmt)},${l.valeur.toInt()},${l.contexte.getDisplayName()}")
-                }
-
-                _uiState.update { it.copy(exportCsvData = sb.toString()) }
+                val state = _uiState.value
+                val report = glucoseRepository.generateExportReport(
+                    patient = state.patient,
+                    statistics = state.statistics,
+                    hba1cHistorique = state.hba1cHistorique,
+                    lectures = state.lectures
+                )
+                _uiState.update { it.copy(exportCsvData = report) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = "Erreur export: ${e.message}") }
             }

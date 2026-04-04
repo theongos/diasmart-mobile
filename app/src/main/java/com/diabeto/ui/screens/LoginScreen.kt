@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -87,7 +88,7 @@ fun LoginScreen(
         uiState.error?.let { snackbarHostState.showSnackbar(it); viewModel.clearError() }
     }
     LaunchedEffect(uiState.resetEmailSent) {
-        if (uiState.resetEmailSent) snackbarHostState.showSnackbar("Email de réinitialisation envoyé !")
+        if (uiState.resetEmailSent) snackbarHostState.showSnackbar(context.getString(R.string.auth_reset_email_sent))
     }
 
     Scaffold(
@@ -167,13 +168,13 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(18.dp))
 
                 Text(
-                    text = if (uiState.showRegister) "Bienvenue !" else "Bonjour !",
+                    text = if (uiState.showRegister) stringResource(R.string.auth_welcome) else stringResource(R.string.auth_hello),
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
                 Text(
-                    text = if (uiState.showRegister) "Créez votre compte DiaSmart" else "Connectez-vous à DiaSmart",
+                    text = if (uiState.showRegister) stringResource(R.string.auth_create_account_subtitle) else stringResource(R.string.auth_login_subtitle),
                     fontSize = 13.sp,
                     color = Color.White.copy(alpha = 0.8f),
                     textAlign = TextAlign.Center
@@ -200,7 +201,7 @@ fun LoginScreen(
                         verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
                         Text(
-                            text = if (uiState.showRegister) "Inscription" else "Connexion",
+                            text = if (uiState.showRegister) stringResource(R.string.auth_inscription) else stringResource(R.string.auth_connexion),
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
@@ -216,8 +217,8 @@ fun LoginScreen(
                                     .padding(3.dp),
                                 horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
-                                LoginModeTab("Email", Icons.Outlined.Email, uiState.loginMode == LoginMode.EMAIL, { viewModel.setLoginMode(LoginMode.EMAIL) }, Modifier.weight(1f))
-                                LoginModeTab("Téléphone", Icons.Outlined.Phone, uiState.loginMode == LoginMode.PHONE, { viewModel.setLoginMode(LoginMode.PHONE) }, Modifier.weight(1f))
+                                LoginModeTab(stringResource(R.string.auth_email), Icons.Outlined.Email, uiState.loginMode == LoginMode.EMAIL, { viewModel.setLoginMode(LoginMode.EMAIL) }, Modifier.weight(1f))
+                                LoginModeTab(stringResource(R.string.auth_phone), Icons.Outlined.Phone, uiState.loginMode == LoginMode.PHONE, { viewModel.setLoginMode(LoginMode.PHONE) }, Modifier.weight(1f))
                             }
                         }
 
@@ -232,7 +233,7 @@ fun LoginScreen(
                                     DiaSmartTextField(uiState.prenom, viewModel::onPrenomChange, "Prénom", Icons.Outlined.Person, Modifier.weight(1f), imeAction = ImeAction.Next)
                                     DiaSmartTextField(uiState.nom, viewModel::onNomChange, "Nom", Icons.Outlined.Badge, Modifier.weight(1f), imeAction = ImeAction.Next)
                                 }
-                                Text("Je suis :", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = TextSecondary)
+                                Text(stringResource(R.string.auth_i_am), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = TextSecondary)
                                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                     UserRole.entries.forEach { role ->
                                         val isSelected = uiState.selectedRole == role
@@ -253,7 +254,7 @@ fun LoginScreen(
                                                 )
                                                 Spacer(Modifier.width(6.dp))
                                                 Text(
-                                                    if (role == UserRole.PATIENT) "Patient" else "Médecin",
+                                                    if (role == UserRole.PATIENT) stringResource(R.string.auth_role_patient) else stringResource(R.string.auth_role_medecin),
                                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                                     color = if (isSelected) Primary else TextSecondary, fontSize = 13.sp
                                                 )
@@ -273,11 +274,11 @@ fun LoginScreen(
                             exit = fadeOut() + shrinkVertically()
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                                DiaSmartTextField(uiState.email, viewModel::onEmailChange, "Email", Icons.Outlined.Email, keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
-                                DiaSmartTextField(uiState.password, viewModel::onPasswordChange, "Mot de passe", Icons.Outlined.Lock, keyboardType = KeyboardType.Password, imeAction = ImeAction.Done, isPassword = true, showPassword = showPassword, onTogglePassword = { showPassword = !showPassword })
+                                DiaSmartTextField(uiState.email, viewModel::onEmailChange, stringResource(R.string.auth_email), Icons.Outlined.Email, keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
+                                DiaSmartTextField(uiState.password, viewModel::onPasswordChange, stringResource(R.string.auth_password), Icons.Outlined.Lock, keyboardType = KeyboardType.Password, imeAction = ImeAction.Done, isPassword = true, showPassword = showPassword, onTogglePassword = { showPassword = !showPassword })
                                 if (!uiState.showRegister) {
                                     TextButton(onClick = viewModel::resetPassword, modifier = Modifier.align(Alignment.End)) {
-                                        Text("Mot de passe oublié ?", fontSize = 12.sp, color = Primary, fontWeight = FontWeight.Medium)
+                                        Text(stringResource(R.string.auth_forgot_password), fontSize = 12.sp, color = Primary, fontWeight = FontWeight.Medium)
                                     }
                                 }
                             }
@@ -293,7 +294,7 @@ fun LoginScreen(
                                 DiaSmartTextField(uiState.phoneNumber, viewModel::onPhoneNumberChange, "Numéro de téléphone", Icons.Outlined.Phone, keyboardType = KeyboardType.Phone, imeAction = ImeAction.Done, placeholder = "0555 12 34 56")
                                 AnimatedVisibility(visible = uiState.isCodeSent, enter = fadeIn() + expandVertically()) {
                                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                        Text("Un code SMS a été envoyé", fontSize = 13.sp, color = Success, fontWeight = FontWeight.Medium, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                                        Text(stringResource(R.string.auth_sms_sent), fontSize = 13.sp, color = Success, fontWeight = FontWeight.Medium, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
                                         DiaSmartTextField(uiState.smsCode, viewModel::onSmsCodeChange, "Code de vérification", Icons.Outlined.Sms, keyboardType = KeyboardType.Number, imeAction = ImeAction.Done, placeholder = "123456")
                                     }
                                 }
@@ -326,7 +327,7 @@ fun LoginScreen(
                                     .background(
                                         Brush.horizontalGradient(
                                             if (uiState.isLoading)
-                                                listOf(Color(0xFFB8B5C8), Color(0xFFB8B5C8))
+                                                listOf(DarkTextSecondary, DarkTextSecondary)
                                             else
                                                 listOf(Color(0xFF7C6AFF), Color(0xFF5B4CFF), Color(0xFF4834D4))
                                         ),
@@ -349,10 +350,10 @@ fun LoginScreen(
                                         Spacer(Modifier.width(10.dp))
                                         Text(
                                             when {
-                                                uiState.showRegister -> "Créer mon compte"
-                                                uiState.loginMode == LoginMode.PHONE && uiState.isCodeSent -> "Vérifier le code"
-                                                uiState.loginMode == LoginMode.PHONE -> "Envoyer le code SMS"
-                                                else -> "Se connecter"
+                                                uiState.showRegister -> stringResource(R.string.auth_create_my_account)
+                                                uiState.loginMode == LoginMode.PHONE && uiState.isCodeSent -> stringResource(R.string.auth_verify_code)
+                                                uiState.loginMode == LoginMode.PHONE -> stringResource(R.string.auth_send_sms)
+                                                else -> stringResource(R.string.auth_sign_in)
                                             }, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White
                                         )
                                     }
@@ -363,7 +364,7 @@ fun LoginScreen(
                         // ── Séparateur ──
                         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             HorizontalDivider(modifier = Modifier.weight(1f), color = Outline)
-                            Text("  ou  ", color = TextTertiary, fontSize = 12.sp)
+                            Text("  ${stringResource(R.string.auth_or)}  ", color = TextTertiary, fontSize = 12.sp)
                             HorizontalDivider(modifier = Modifier.weight(1f), color = Outline)
                         }
 
@@ -384,7 +385,7 @@ fun LoginScreen(
                             ) {
                                 Text("G", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF4285F4))
                                 Spacer(Modifier.width(8.dp))
-                                Text("Google", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextSecondary)
+                                Text(stringResource(R.string.auth_google), fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextSecondary)
                             }
                             Spacer(Modifier.width(12.dp))
                             OutlinedButton(
@@ -399,7 +400,7 @@ fun LoginScreen(
                             ) {
                                 Icon(Icons.Default.Phone, null, tint = Tertiary, modifier = Modifier.size(20.dp))
                                 Spacer(Modifier.width(8.dp))
-                                Text("Téléphone", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextSecondary)
+                                Text(stringResource(R.string.auth_phone), fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextSecondary)
                             }
                         }
 
@@ -422,13 +423,13 @@ fun LoginScreen(
                             )
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                if (uiState.showRegister) "J'ai déjà un compte" else "Créer un compte",
+                                if (uiState.showRegister) stringResource(R.string.auth_already_account) else stringResource(R.string.auth_no_account),
                                 fontWeight = FontWeight.SemiBold, fontSize = 14.sp
                             )
                         }
 
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("DiaSmart — Gestion intelligente du diabète", fontSize = 11.sp, color = TextTertiary, textAlign = TextAlign.Center)
+                        Text(stringResource(R.string.auth_tagline), fontSize = 11.sp, color = TextTertiary, textAlign = TextAlign.Center)
                     }
                 }
 

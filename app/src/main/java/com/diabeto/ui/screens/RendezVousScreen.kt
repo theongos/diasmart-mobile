@@ -182,7 +182,7 @@ private fun EmptyRdvMessage(message: String) {
         ) {
             Icon(
                 Icons.Default.CalendarMonth,
-                contentDescription = null,
+                contentDescription = "Calendrier",
                 modifier = Modifier.size(64.dp),
                 tint = OnSurfaceVariant.copy(alpha = 0.4f)
             )
@@ -222,7 +222,7 @@ private fun PatientRendezVousCard(rdv: RendezVousPatientItem) {
             ) {
                 Icon(
                     Icons.Default.Person,
-                    contentDescription = null,
+                    contentDescription = "Médecin",
                     modifier = Modifier.size(16.dp),
                     tint = Primary
                 )
@@ -248,7 +248,7 @@ private fun PatientRendezVousCard(rdv: RendezVousPatientItem) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     Icons.Default.Schedule,
-                    contentDescription = null,
+                    contentDescription = "Horaire",
                     modifier = Modifier.size(16.dp),
                     tint = if (rdv.estAujourdhui()) Error else OnSurfaceVariant
                 )
@@ -267,7 +267,7 @@ private fun PatientRendezVousCard(rdv: RendezVousPatientItem) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         Icons.Default.LocationOn,
-                        contentDescription = null,
+                        contentDescription = "Lieu",
                         modifier = Modifier.size(16.dp),
                         tint = OnSurfaceVariant
                     )
@@ -389,7 +389,7 @@ private fun MedecinRendezVousCard(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             Icons.Default.Schedule,
-                            contentDescription = null,
+                            contentDescription = "Horaire",
                             modifier = Modifier.size(16.dp),
                             tint = if (rdv.rendezVous.estAujourdhui()) urgencyColor else OnSurfaceVariant
                         )
@@ -407,7 +407,7 @@ private fun MedecinRendezVousCard(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Default.LocationOn,
-                                contentDescription = null,
+                                contentDescription = "Lieu",
                                 modifier = Modifier.size(16.dp),
                                 tint = OnSurfaceVariant
                             )
@@ -627,7 +627,7 @@ fun RendezVousEditScreen(
                     readOnly = true,
                     trailingIcon = {
                         IconButton(onClick = { dateDialogState.show() }) {
-                            Icon(Icons.Default.CalendarToday, contentDescription = null)
+                            Icon(Icons.Default.CalendarToday, contentDescription = "Choisir date")
                         }
                     }
                 )
@@ -640,7 +640,7 @@ fun RendezVousEditScreen(
                     readOnly = true,
                     trailingIcon = {
                         IconButton(onClick = { timeDialogState.show() }) {
-                            Icon(Icons.Default.Schedule, contentDescription = null)
+                            Icon(Icons.Default.Schedule, contentDescription = "Choisir heure")
                         }
                     }
                 )

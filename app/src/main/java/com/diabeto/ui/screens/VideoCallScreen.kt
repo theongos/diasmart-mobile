@@ -111,7 +111,7 @@ fun VideoCallScreen(
                     ) {
                         Surface(
                             shape = CircleShape,
-                            color = Color(0xFFF44336),
+                            color = StatusRedDark,
                             modifier = Modifier.size(36.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
