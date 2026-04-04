@@ -5,7 +5,9 @@
     "ignore": [
       "firebase.json",
       ".firebaserc",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "**/*.apk",
+      "**/*.zip"
     ]
   },
   "firestore": {
