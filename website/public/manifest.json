@@ -1,6 +1,6 @@
 {
-  "name": "DiaSmart - Diabetologie Intelligente",
-  "short_name": "DiaSmart",
+  "name": "DiaSmart.AI - Diabetologie Intelligente",
+  "short_name": "DiaSmart.AI",
   "description": "Application de gestion du diabete avec assistant IA ROLLY",
   "start_url": "/app.html",
   "display": "standalone",

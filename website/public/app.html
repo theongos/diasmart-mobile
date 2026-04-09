@@ -6,10 +6,10 @@
 <meta name="theme-color" content="#001A3C">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="DiaSmart">
+<meta name="apple-mobile-web-app-title" content="DiaSmart.AI">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="diasmart-logo.png">
-<title>DiaSmart</title>
+<title>DiaSmart.AI</title>
 <style>
 /* ══════════ RESET & BASE ══════════ */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -392,8 +392,8 @@ body{display:flex;flex-direction:column}
 <!-- ══════════ SPLASH ══════════ -->
 <div id="splash">
   <div style="display:flex;flex-direction:column;align-items:center">
-    <img src="diasmart-logo.png" alt="DiaSmart" class="logo">
-    <h1 style="transform:translateY(10px)">DiaSmart</h1>
+    <img src="diasmart-logo.png" alt="DiaSmart.AI" class="logo">
+    <h1 style="transform:translateY(10px)">DiaSmart.AI</h1>
     <p style="transform:translateY(10px)">DIABETOLOGIE INTELLIGENTE</p>
     <div class="loader"><div class="loader-bar"></div></div>
   </div>
@@ -450,8 +450,8 @@ body{display:flex;flex-direction:column}
 
 <!-- ══════════ LOGIN ══════════ -->
 <div id="login" class="screen">
-  <img src="diasmart-logo.png" alt="DiaSmart" class="login-logo">
-  <h1>DiaSmart</h1>
+  <img src="diasmart-logo.png" alt="DiaSmart.AI" class="login-logo">
+  <h1>DiaSmart.AI</h1>
   <p class="subtitle">Diabetologie Intelligente</p>
 
   <div class="login-tabs">
@@ -826,7 +826,7 @@ body{display:flex;flex-direction:column}
     </div>
 
     <button class="btn w-full" onclick="doLogout()" style="background:transparent;border:1px solid var(--red);color:var(--red);max-width:100%;margin-top:8px">&#128682; Se deconnecter</button>
-    <p style="text-align:center;color:var(--text3);font-size:11px;margin-top:24px">DiaSmart v1.3.0 PWA<br>Diabetologie Intelligente</p>
+    <p style="text-align:center;color:var(--text3);font-size:11px;margin-top:24px">DiaSmart.AI v1.3.0 PWA<br>Diabetologie Intelligente</p>
   </div>
   <nav class="bottom-nav">
     <button class="nav-item" onclick="navigate('dashboard')"><span class="nav-icon">&#127968;</span>Accueil</button>
@@ -1410,7 +1410,7 @@ window.savePatientToDb=async(name,dob,type)=>{
 window.callGemini=async(prompt,includeHistory=true)=>{
   const GEMINI_KEY='AIzaSyD4eOlk-Agx1rUVurd9o-jwE4MC6z760SI';
   const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
-  const systemPrompt=`Tu es ROLLY, un assistant medical IA specialise en diabetologie pour l'app DiaSmart. Tu es bienveillant, professionnel et tu reponds en francais. Tu donnes des conseils pratiques mais tu rappelles toujours de consulter un medecin pour les decisions medicales importantes. Utilise du markdown pour formater tes reponses (gras, listes, titres). Si un historique de conversations est fourni, utilise-le pour personnaliser tes reponses et assurer la continuite du suivi.`;
+  const systemPrompt=`Tu es ROLLY, un assistant medical IA specialise en diabetologie pour l'app DiaSmart.AI. Tu es bienveillant, professionnel et tu reponds en francais. Tu donnes des conseils pratiques mais tu rappelles toujours de consulter un medecin pour les decisions medicales importantes. Utilise du markdown pour formater tes reponses (gras, listes, titres). Si un historique de conversations est fourni, utilise-le pour personnaliser tes reponses et assurer la continuite du suivi.`;
 
   // Inject history context into the prompt
   let fullPrompt=prompt;
@@ -2102,7 +2102,7 @@ async function linkGoogle(){
     alert('Compte Google lie avec succes !');
   }catch(e){
     if(e.code==='auth/credential-already-in-use'){
-      alert('Ce compte Google est deja utilise par un autre compte DiaSmart');
+      alert('Ce compte Google est deja utilise par un autre compte DiaSmart.AI');
     }else if(e.code==='auth/provider-already-linked'){
       alert('Un compte Google est deja lie');
     }else{
@@ -3403,7 +3403,7 @@ async function exportData(format){
       content+=`${m.nom||''},${m.dosage||''},${m.frequence||''},${m.estActif!==false?'Oui':'Non'}\n`;
     });
   }else{
-    content='=== DiaSmart - Export Donnees ===\n\n';
+    content='=== DiaSmart.AI - Export Donnees ===\n\n';
     content+='GLYCEMIES:\n';
     readings.forEach(r=>{
       content+=`${r.createdAt||''}: ${r.value} mg/dL (${r.context||''}) ${r.note||''}\n`;
