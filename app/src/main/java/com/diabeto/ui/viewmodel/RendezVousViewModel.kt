@@ -6,7 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.diabeto.data.entity.*
 import com.diabeto.data.model.ConsentStatus
+import com.diabeto.data.model.RendezVousRequest
+import com.diabeto.data.model.UserProfile
 import com.diabeto.data.model.UserRole
+import com.diabeto.data.repository.AppointmentRequestRepository
 import com.diabeto.data.repository.AuthRepository
 import com.diabeto.data.repository.DataSharingRepository
 import com.diabeto.data.repository.PatientRepository
@@ -59,11 +62,15 @@ data class RendezVousPatientItem(
 data class RendezVousUiState(
     val rendezVous: List<RendezVousAvecPatient> = emptyList(),
     val patientRendezVous: List<RendezVousPatientItem> = emptyList(),
+    val appointmentRequests: List<RendezVousRequest> = emptyList(),
+    val availableMedecins: List<UserProfile> = emptyList(),
     val filter: RendezVousFilter = RendezVousFilter.A_VENIR,
     val isLoading: Boolean = false,
     val error: String? = null,
     val showAddDialog: Boolean = false,
+    val showBookDialog: Boolean = false,
     val addSuccess: Boolean = false,
+    val bookSuccess: Boolean = false,
     val patientId: Long? = null,
     val isMedecin: Boolean = false,
     val patientOptions: List<PatientOption> = emptyList()
@@ -84,13 +91,29 @@ data class AddRendezVousState(
     val error: String? = null
 )
 
+/**
+ * Etat du formulaire de prise de RDV (cote PATIENT).
+ */
+data class BookAppointmentState(
+    val selectedMedecinUid: String = "",
+    val selectedMedecinNom: String = "",
+    val date: LocalDate = LocalDate.now().plusDays(1),
+    val heure: LocalTime = LocalTime.of(9, 0),
+    val duree: Int = 30,
+    val motif: String = "",
+    val type: String = "CONSULTATION",
+    val error: String? = null,
+    val isSubmitting: Boolean = false
+)
+
 @HiltViewModel
 class RendezVousViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val rendezVousRepository: RendezVousRepository,
     private val patientRepository: PatientRepository,
     private val authRepository: AuthRepository,
-    private val dataSharingRepository: DataSharingRepository
+    private val dataSharingRepository: DataSharingRepository,
+    private val appointmentRequestRepository: AppointmentRequestRepository
 ) : ViewModel() {
 
     companion object {
@@ -105,6 +128,9 @@ class RendezVousViewModel @Inject constructor(
     private val _addState = MutableStateFlow(AddRendezVousState())
     val addState: StateFlow<AddRendezVousState> = _addState.asStateFlow()
 
+    private val _bookState = MutableStateFlow(BookAppointmentState())
+    val bookState: StateFlow<BookAppointmentState> = _bookState.asStateFlow()
+
     private val firestore = FirebaseFirestore.getInstance()
 
     init {
@@ -113,6 +139,15 @@ class RendezVousViewModel @Inject constructor(
         }
         loadData()
         loadPatientOptions()
+        observeAppointmentRequests()
+    }
+
+    private fun observeAppointmentRequests() {
+        viewModelScope.launch {
+            appointmentRequestRepository.getRequestsFlow().collect { requests ->
+                _uiState.update { it.copy(appointmentRequests = requests) }
+            }
+        }
     }
 
     private fun loadPatientOptions() {
@@ -405,5 +440,123 @@ class RendezVousViewModel @Inject constructor(
     
     fun refresh() {
         loadData()
+    }
+
+    // ============================================================
+    // Patient: prise de RDV (booking flow)
+    // ============================================================
+
+    fun loadAvailableMedecins() {
+        viewModelScope.launch {
+            try {
+                val snap = firestore.collection("users")
+                    .whereEqualTo("role", "MEDECIN")
+                    .get().await()
+                val medecins = snap.documents.mapNotNull { doc ->
+                    @Suppress("UNCHECKED_CAST")
+                    doc.data?.let { UserProfile.fromMap(it as Map<String, Any?>) }?.copy(uid = doc.id)
+                }
+                _uiState.update { it.copy(availableMedecins = medecins) }
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to load available medecins", e)
+            }
+        }
+    }
+
+    fun toggleBookDialog(show: Boolean) {
+        _uiState.update { it.copy(showBookDialog = show) }
+        if (show && _uiState.value.availableMedecins.isEmpty()) {
+            loadAvailableMedecins()
+        }
+        if (!show) {
+            _bookState.value = BookAppointmentState()
+        }
+    }
+
+    fun updateBookField(field: String, value: Any?) {
+        _bookState.update { state ->
+            when (field) {
+                "medecin" -> {
+                    val medecin = value as? UserProfile
+                    state.copy(
+                        selectedMedecinUid = medecin?.uid ?: "",
+                        selectedMedecinNom = medecin?.nomComplet ?: ""
+                    )
+                }
+                "date" -> state.copy(date = value as LocalDate)
+                "heure" -> state.copy(heure = value as LocalTime)
+                "duree" -> state.copy(duree = value as Int)
+                "motif" -> state.copy(motif = value as String)
+                "type" -> state.copy(type = value as String)
+                else -> state
+            }
+        }
+    }
+
+    fun submitBookingRequest() {
+        viewModelScope.launch {
+            try {
+                val state = _bookState.value
+                if (state.selectedMedecinUid.isBlank() || state.motif.isBlank()) {
+                    _bookState.update { it.copy(error = "Médecin et motif sont obligatoires") }
+                    return@launch
+                }
+                _bookState.update { it.copy(isSubmitting = true, error = null) }
+
+                val dateTime = LocalDateTime.of(state.date, state.heure)
+                appointmentRequestRepository.createRequest(
+                    medecinUid = state.selectedMedecinUid,
+                    medecinNom = state.selectedMedecinNom,
+                    dateHeureIso = dateTime.toString(),
+                    dureeMinutes = state.duree,
+                    motif = state.motif.trim(),
+                    type = state.type
+                )
+
+                _uiState.update { it.copy(showBookDialog = false, bookSuccess = true) }
+                _bookState.value = BookAppointmentState()
+            } catch (e: Exception) {
+                _bookState.update { it.copy(isSubmitting = false, error = e.message) }
+            }
+        }
+    }
+
+    fun clearBookSuccess() {
+        _uiState.update { it.copy(bookSuccess = false) }
+    }
+
+    // ============================================================
+    // Medecin: gestion des demandes (accept/reject)
+    // ============================================================
+
+    fun acceptAppointmentRequest(requestId: String, reponse: String = "") {
+        viewModelScope.launch {
+            try {
+                appointmentRequestRepository.acceptRequest(requestId, reponse)
+                loadData()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    fun rejectAppointmentRequest(requestId: String, reponse: String = "") {
+        viewModelScope.launch {
+            try {
+                appointmentRequestRepository.rejectRequest(requestId, reponse)
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    fun cancelAppointmentRequest(requestId: String) {
+        viewModelScope.launch {
+            try {
+                appointmentRequestRepository.cancelRequest(requestId)
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
     }
 }

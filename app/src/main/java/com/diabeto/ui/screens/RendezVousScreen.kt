@@ -16,7 +16,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.diabeto.data.entity.RendezVousAvecPatient
 import com.diabeto.data.entity.TypeRendezVous
+import com.diabeto.data.model.AppointmentRequestStatus
+import com.diabeto.data.model.RendezVousRequest
+import com.diabeto.data.model.UserProfile
 import com.diabeto.ui.theme.*
+import com.diabeto.ui.viewmodel.BookAppointmentState
 import com.diabeto.ui.viewmodel.PatientOption
 import com.diabeto.ui.viewmodel.RendezVousFilter
 import com.diabeto.ui.viewmodel.RendezVousPatientItem
@@ -26,6 +30,7 @@ import com.vanpra.composematerialdialogs.datetime.date.datepicker
 import com.vanpra.composematerialdialogs.datetime.time.timepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -38,6 +43,7 @@ fun RendezVousScreen(
     viewModel: RendezVousViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val bookState by viewModel.bookState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(uiState.error) {
@@ -52,6 +58,24 @@ fun RendezVousScreen(
             snackbarHostState.showSnackbar("Rendez-vous ajouté avec succès")
             viewModel.clearAddSuccess()
         }
+    }
+
+    LaunchedEffect(uiState.bookSuccess) {
+        if (uiState.bookSuccess) {
+            snackbarHostState.showSnackbar("Demande de rendez-vous envoyée")
+            viewModel.clearBookSuccess()
+        }
+    }
+
+    // Dialogue de prise de RDV (patient)
+    if (uiState.showBookDialog) {
+        BookAppointmentDialog(
+            state = bookState,
+            availableMedecins = uiState.availableMedecins,
+            onDismiss = { viewModel.toggleBookDialog(false) },
+            onUpdateField = { field, value -> viewModel.updateBookField(field, value) },
+            onSubmit = { viewModel.submitBookingRequest() }
+        )
     }
 
     Scaffold(
@@ -74,14 +98,22 @@ fun RendezVousScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            // Seul le médecin peut ajouter des RDV
             if (uiState.isMedecin) {
+                // Médecin: créer un RDV directement
                 FloatingActionButton(
                     onClick = { onNavigateToAdd(patientId) },
                     containerColor = Primary
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Nouveau")
                 }
+            } else {
+                // Patient: envoyer une demande de RDV
+                ExtendedFloatingActionButton(
+                    onClick = { viewModel.toggleBookDialog(true) },
+                    containerColor = Primary,
+                    icon = { Icon(Icons.Default.EventAvailable, contentDescription = null) },
+                    text = { Text("Prendre RDV") }
+                )
             }
         }
     ) { padding ->
@@ -125,13 +157,66 @@ fun RendezVousScreen(
             } else if (uiState.isMedecin) {
                 // ── VUE MÉDECIN ──────────────────────────────────
                 val filteredRdv = viewModel.getFilteredRendezVous()
-                if (filteredRdv.isEmpty()) {
-                    EmptyRdvMessage("Aucun rendez-vous programmé")
-                } else {
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxSize()
-                    ) {
+                val pendingRequests = uiState.appointmentRequests
+                    .filter { it.status == AppointmentRequestStatus.PENDING }
+
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    // Section : demandes en attente (médecin)
+                    if (pendingRequests.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "Demandes en attente (${pendingRequests.size})",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Warning,
+                                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                            )
+                        }
+                        items(
+                            items = pendingRequests,
+                            key = { "req-${it.id}" }
+                        ) { req ->
+                            MedecinRequestCard(
+                                request = req,
+                                onAccept = { viewModel.acceptAppointmentRequest(req.id) },
+                                onReject = { viewModel.rejectAppointmentRequest(req.id) }
+                            )
+                        }
+                        item {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                color = OnSurfaceVariant.copy(alpha = 0.2f)
+                            )
+                            Text(
+                                text = "Rendez-vous programmés",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = OnSurfaceVariant,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                        }
+                    }
+
+                    // Liste des RDV
+                    if (filteredRdv.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Aucun rendez-vous programmé",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = OnSurfaceVariant
+                                )
+                            }
+                        }
+                    } else {
                         items(
                             items = filteredRdv,
                             key = { it.rendezVous.id }
@@ -143,27 +228,82 @@ fun RendezVousScreen(
                                 onDelete = { viewModel.deleteRendezVous(rdv.rendezVous) }
                             )
                         }
-                        item { Spacer(modifier = Modifier.height(80.dp)) }
                     }
+                    item { Spacer(modifier = Modifier.height(80.dp)) }
                 }
             } else {
                 // ── VUE PATIENT ──────────────────────────────────
                 val filteredRdv = viewModel.getFilteredPatientRendezVous()
-                if (filteredRdv.isEmpty()) {
-                    EmptyRdvMessage("Votre médecin n'a programmé aucun rendez-vous pour le moment")
-                } else {
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxSize()
-                    ) {
+                val myRequests = uiState.appointmentRequests
+
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    // Section : mes demandes envoyées
+                    if (myRequests.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "Mes demandes (${myRequests.size})",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Primary,
+                                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                            )
+                        }
+                        items(
+                            items = myRequests,
+                            key = { "myreq-${it.id}" }
+                        ) { req ->
+                            PatientRequestCard(
+                                request = req,
+                                onCancel = { viewModel.cancelAppointmentRequest(req.id) }
+                            )
+                        }
+                        item {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                color = OnSurfaceVariant.copy(alpha = 0.2f)
+                            )
+                            Text(
+                                text = "Rendez-vous confirmés",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = OnSurfaceVariant,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                        }
+                    }
+
+                    if (filteredRdv.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (myRequests.isEmpty())
+                                        "Aucun rendez-vous. Appuyez sur \"Prendre RDV\" pour en demander un."
+                                    else
+                                        "Aucun rendez-vous confirmé pour le moment",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = OnSurfaceVariant,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(horizontal = 16.dp)
+                                )
+                            }
+                        }
+                    } else {
                         items(
                             items = filteredRdv,
                             key = { it.id }
                         ) { rdv ->
                             PatientRendezVousCard(rdv = rdv)
                         }
-                        item { Spacer(modifier = Modifier.height(16.dp)) }
                     }
+                    item { Spacer(modifier = Modifier.height(80.dp)) }
                 }
             }
         }
@@ -464,6 +604,461 @@ private fun MedecinRendezVousCard(
             }
         }
     }
+}
+
+// ── Carte demande de RDV pour le MÉDECIN (avec accept/reject) ────────
+
+@Composable
+private fun MedecinRequestCard(
+    request: RendezVousRequest,
+    onAccept: () -> Unit,
+    onReject: () -> Unit
+) {
+    val dateTime = try {
+        LocalDateTime.parse(request.dateHeureSouhaitee)
+    } catch (e: Exception) {
+        null
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Warning.copy(alpha = 0.08f)
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.Person,
+                    contentDescription = "Patient",
+                    modifier = Modifier.size(16.dp),
+                    tint = Primary
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = request.patientNom,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Primary,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = request.motif.ifBlank { "Demande de consultation" },
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.Schedule,
+                    contentDescription = "Horaire",
+                    modifier = Modifier.size(16.dp),
+                    tint = OnSurfaceVariant
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = dateTime?.format(
+                        DateTimeFormatter.ofPattern("EEEE dd MMMM à HH:mm")
+                    ) ?: request.dateHeureSouhaitee,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = OnSurface
+                )
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = Primary.copy(alpha = 0.1f)
+                ) {
+                    Text(
+                        text = request.type.replace("_", " "),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Primary,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "${request.dureeMinutes} min",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = OnSurfaceVariant
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onReject,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Error)
+                ) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Refuser")
+                }
+                Button(
+                    onClick = onAccept,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = Success)
+                ) {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Accepter")
+                }
+            }
+        }
+    }
+}
+
+// ── Carte demande de RDV pour le PATIENT (avec annulation) ──────────
+
+@Composable
+private fun PatientRequestCard(
+    request: RendezVousRequest,
+    onCancel: () -> Unit
+) {
+    val dateTime = try {
+        LocalDateTime.parse(request.dateHeureSouhaitee)
+    } catch (e: Exception) {
+        null
+    }
+    val (statusText, statusColor) = when (request.status) {
+        AppointmentRequestStatus.PENDING -> "En attente" to Warning
+        AppointmentRequestStatus.ACCEPTED -> "Acceptée" to Success
+        AppointmentRequestStatus.REJECTED -> "Refusée" to Error
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = statusColor.copy(alpha = 0.08f)
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.LocalHospital,
+                        contentDescription = "Médecin",
+                        modifier = Modifier.size(16.dp),
+                        tint = Primary
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Dr. ${request.medecinNom}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Primary,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = statusColor.copy(alpha = 0.15f)
+                ) {
+                    Text(
+                        text = statusText,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = statusColor,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = request.motif.ifBlank { "Consultation" },
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.Schedule,
+                    contentDescription = "Horaire",
+                    modifier = Modifier.size(16.dp),
+                    tint = OnSurfaceVariant
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = dateTime?.format(
+                        DateTimeFormatter.ofPattern("EEEE dd MMMM à HH:mm")
+                    ) ?: request.dateHeureSouhaitee,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = OnSurface
+                )
+            }
+
+            if (request.medecinReponse.isNotBlank()) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Réponse : ${request.medecinReponse}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = OnSurfaceVariant
+                )
+            }
+
+            if (request.status == AppointmentRequestStatus.PENDING) {
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedButton(
+                    onClick = onCancel,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Error)
+                ) {
+                    Icon(
+                        Icons.Default.Cancel,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Annuler la demande")
+                }
+            }
+        }
+    }
+}
+
+// ── Dialogue de prise de RDV (PATIENT) ────────────────────────────────
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BookAppointmentDialog(
+    state: BookAppointmentState,
+    availableMedecins: List<UserProfile>,
+    onDismiss: () -> Unit,
+    onUpdateField: (String, Any?) -> Unit,
+    onSubmit: () -> Unit
+) {
+    val dateDialogState = rememberMaterialDialogState()
+    val timeDialogState = rememberMaterialDialogState()
+
+    MaterialDialog(
+        dialogState = dateDialogState,
+        buttons = {
+            positiveButton("OK")
+            negativeButton("Annuler")
+        }
+    ) {
+        datepicker(
+            initialDate = state.date,
+            title = "Date souhaitée",
+            allowedDateValidator = { it.isAfter(LocalDate.now().minusDays(1)) }
+        ) { date ->
+            onUpdateField("date", date)
+        }
+    }
+
+    MaterialDialog(
+        dialogState = timeDialogState,
+        buttons = {
+            positiveButton("OK")
+            negativeButton("Annuler")
+        }
+    ) {
+        timepicker(
+            initialTime = state.heure,
+            title = "Heure souhaitée"
+        ) { time ->
+            onUpdateField("heure", time)
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Demander un rendez-vous") },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Sélection du médecin
+                var medecinExpanded by remember { mutableStateOf(false) }
+                ExposedDropdownMenuBox(
+                    expanded = medecinExpanded,
+                    onExpandedChange = { medecinExpanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = state.selectedMedecinNom.ifBlank { "" },
+                        onValueChange = { },
+                        label = { Text("Médecin *") },
+                        placeholder = {
+                            Text(
+                                if (availableMedecins.isEmpty())
+                                    "Aucun médecin disponible"
+                                else
+                                    "Choisir un médecin"
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(medecinExpanded) }
+                    )
+                    ExposedDropdownMenu(
+                        expanded = medecinExpanded,
+                        onDismissRequest = { medecinExpanded = false }
+                    ) {
+                        availableMedecins.forEach { medecin ->
+                            DropdownMenuItem(
+                                text = {
+                                    Column {
+                                        Text("Dr. ${medecin.nomComplet}")
+                                        if (medecin.specialite.isNotBlank()) {
+                                            Text(
+                                                medecin.specialite,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = OnSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                },
+                                onClick = {
+                                    onUpdateField("medecin", medecin)
+                                    medecinExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Date + heure
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = state.date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                        onValueChange = { },
+                        label = { Text("Date *") },
+                        modifier = Modifier.weight(1f),
+                        readOnly = true,
+                        trailingIcon = {
+                            IconButton(onClick = { dateDialogState.show() }) {
+                                Icon(Icons.Default.CalendarToday, contentDescription = null)
+                            }
+                        }
+                    )
+                    OutlinedTextField(
+                        value = state.heure.format(DateTimeFormatter.ofPattern("HH:mm")),
+                        onValueChange = { },
+                        label = { Text("Heure *") },
+                        modifier = Modifier.weight(1f),
+                        readOnly = true,
+                        trailingIcon = {
+                            IconButton(onClick = { timeDialogState.show() }) {
+                                Icon(Icons.Default.Schedule, contentDescription = null)
+                            }
+                        }
+                    )
+                }
+
+                // Type
+                var typeExpanded by remember { mutableStateOf(false) }
+                ExposedDropdownMenuBox(
+                    expanded = typeExpanded,
+                    onExpandedChange = { typeExpanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = state.type.replace("_", " "),
+                        onValueChange = { },
+                        label = { Text("Type") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(typeExpanded) }
+                    )
+                    ExposedDropdownMenu(
+                        expanded = typeExpanded,
+                        onDismissRequest = { typeExpanded = false }
+                    ) {
+                        listOf(
+                            "CONSULTATION",
+                            "TELECONSULTATION",
+                            "SUIVI",
+                            "URGENCE"
+                        ).forEach { type ->
+                            DropdownMenuItem(
+                                text = { Text(type.replace("_", " ")) },
+                                onClick = {
+                                    onUpdateField("type", type)
+                                    typeExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Motif
+                OutlinedTextField(
+                    value = state.motif,
+                    onValueChange = { onUpdateField("motif", it) },
+                    label = { Text("Motif *") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2,
+                    maxLines = 4
+                )
+
+                if (state.error != null) {
+                    Text(
+                        text = state.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Error
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onSubmit,
+                enabled = !state.isSubmitting &&
+                          state.selectedMedecinUid.isNotBlank() &&
+                          state.motif.isNotBlank()
+            ) {
+                if (state.isSubmitting) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text("Envoyer")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Annuler")
+            }
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

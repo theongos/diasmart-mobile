@@ -6,7 +6,6 @@ import com.diabeto.data.model.UserRole
 import com.diabeto.data.model.ValidationStatus
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -48,7 +47,13 @@ class ValidationRepository @Inject constructor(
     }
 
     /**
-     * Flow des validations pour l'utilisateur courant
+     * Flow des validations pour l'utilisateur courant.
+     *
+     * IMPORTANT : on n'utilise PAS .orderBy("createdAt") au niveau Firestore pour
+     * eviter de dependre d'un index composite (medecinUid/patientUid + createdAt).
+     * Le tri est fait cote client. En cas d'erreur Firestore (permissions,
+     * reseau...), on emet une liste vide au lieu de fermer le flow avec
+     * exception, ce qui faisait crasher l'ecran cote medecin.
      */
     fun getValidationsFlow(): Flow<List<RollyValidation>> = callbackFlow {
         val uid = authRepository.currentUserId ?: run {
@@ -56,21 +61,29 @@ class ValidationRepository @Inject constructor(
             close()
             return@callbackFlow
         }
-        val profile = authRepository.getCurrentUserProfile()
+        val profile = try {
+            authRepository.getCurrentUserProfile()
+        } catch (e: Exception) {
+            null
+        }
         val field = if (profile?.role == UserRole.MEDECIN) "medecinUid" else "patientUid"
 
         val listener = firestore.collection(COL_VALIDATIONS)
             .whereEqualTo(field, uid)
-            .orderBy("createdAt", Query.Direction.DESCENDING)
             .addSnapshotListener { snap, error ->
                 if (error != null) {
-                    close(error)
+                    // Ne pas fermer le flow : emettre une liste vide pour eviter le crash UI
+                    trySend(emptyList())
                     return@addSnapshotListener
                 }
                 val validations = snap?.documents?.mapNotNull { doc ->
-                    @Suppress("UNCHECKED_CAST")
-                    doc.data?.let { RollyValidation.fromMap(doc.id, it as Map<String, Any?>) }
-                } ?: emptyList()
+                    try {
+                        @Suppress("UNCHECKED_CAST")
+                        doc.data?.let { RollyValidation.fromMap(doc.id, it as Map<String, Any?>) }
+                    } catch (e: Exception) {
+                        null
+                    }
+                }?.sortedByDescending { it.createdAt.seconds } ?: emptyList()
                 trySend(validations)
             }
         awaitClose { listener.remove() }

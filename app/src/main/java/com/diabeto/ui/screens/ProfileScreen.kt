@@ -66,6 +66,15 @@ fun ProfileScreen(
     var poids by remember { mutableStateOf("") }
     var tourTaille by remember { mutableStateOf("") }
     var masseGrasse by remember { mutableStateOf("") }
+    // Champs medecin
+    var specialite by remember { mutableStateOf("") }
+    var numeroOrdre by remember { mutableStateOf("") }
+    var structureSante by remember { mutableStateOf("") }
+    var anneesExperience by remember { mutableStateOf("") }
+    var modeConsultation by remember { mutableStateOf("") }
+    var disponibilite by remember { mutableStateOf("") }
+    var joursGarde by remember { mutableStateOf("") }
+    var languesParlees by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(true) }
     var showEditDialog by remember { mutableStateOf(false) }
     var editField by remember { mutableStateOf("") }
@@ -78,13 +87,22 @@ fun ProfileScreen(
         try {
             val doc = db.collection("users").document(user.uid).get().await()
             if (doc.exists()) {
-                name = doc.getString("name") ?: user.displayName ?: ""
-                phone = doc.getString("phone") ?: ""
-                role = doc.getString("role") ?: "patient"
+                name = doc.getString("name") ?: doc.getString("nom") ?: user.displayName ?: ""
+                phone = doc.getString("phone") ?: doc.getString("telephone") ?: ""
+                role = (doc.getString("role") ?: "patient").lowercase()
                 taille = doc.getDouble("taille")?.let { if (it > 0) it.toInt().toString() else "" } ?: ""
                 poids = doc.getDouble("poids")?.let { if (it > 0) String.format("%.1f", it) else "" } ?: ""
                 tourTaille = doc.getDouble("tourTaille")?.let { if (it > 0) it.toInt().toString() else "" } ?: ""
                 masseGrasse = doc.getDouble("masseGrasse")?.let { if (it > 0) String.format("%.1f", it) else "" } ?: ""
+                // Champs medecin
+                specialite = doc.getString("specialite") ?: ""
+                numeroOrdre = doc.getString("numeroOrdre") ?: ""
+                structureSante = doc.getString("structureSante") ?: ""
+                anneesExperience = doc.getLong("anneesExperience")?.toString() ?: ""
+                modeConsultation = doc.getString("modeConsultation") ?: ""
+                disponibilite = doc.getString("disponibilite") ?: ""
+                joursGarde = doc.getString("joursGarde") ?: ""
+                languesParlees = doc.getString("languesParlees") ?: ""
                 // Priorité : Firestore base64, sinon Firebase Auth URL (Google/etc.)
                 val firestorePhoto = doc.getString("photoURL")
                 if (!firestorePhoto.isNullOrBlank()) {
@@ -194,6 +212,39 @@ fun ProfileScreen(
                         val v = value.toDoubleOrNull() ?: return@launch
                         db.collection("users").document(uid).set(mapOf("masseGrasse" to v), SetOptions.merge()).await()
                         masseGrasse = value
+                    }
+                    "specialite" -> {
+                        db.collection("users").document(uid).set(mapOf("specialite" to value), SetOptions.merge()).await()
+                        specialite = value
+                    }
+                    "numeroOrdre" -> {
+                        db.collection("users").document(uid).set(mapOf("numeroOrdre" to value), SetOptions.merge()).await()
+                        numeroOrdre = value
+                    }
+                    "structureSante" -> {
+                        db.collection("users").document(uid).set(mapOf("structureSante" to value), SetOptions.merge()).await()
+                        structureSante = value
+                    }
+                    "anneesExperience" -> {
+                        val v = value.toIntOrNull() ?: return@launch
+                        db.collection("users").document(uid).set(mapOf("anneesExperience" to v), SetOptions.merge()).await()
+                        anneesExperience = value
+                    }
+                    "modeConsultation" -> {
+                        db.collection("users").document(uid).set(mapOf("modeConsultation" to value), SetOptions.merge()).await()
+                        modeConsultation = value
+                    }
+                    "disponibilite" -> {
+                        db.collection("users").document(uid).set(mapOf("disponibilite" to value), SetOptions.merge()).await()
+                        disponibilite = value
+                    }
+                    "joursGarde" -> {
+                        db.collection("users").document(uid).set(mapOf("joursGarde" to value), SetOptions.merge()).await()
+                        joursGarde = value
+                    }
+                    "languesParlees" -> {
+                        db.collection("users").document(uid).set(mapOf("languesParlees" to value), SetOptions.merge()).await()
+                        languesParlees = value
                     }
                 }
                 // Synchroniser les données morphométriques vers Room DB (Patient)
@@ -330,10 +381,12 @@ fun ProfileScreen(
             }
 
             Spacer(Modifier.height(8.dp))
-            Text(name.ifBlank { "Utilisateur" }, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            val isMedecin = role.equals("medecin", ignoreCase = true)
+            val displayName = if (isMedecin && name.isNotBlank()) "Dr. $name" else name.ifBlank { "Utilisateur" }
+            Text(displayName, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             Text(email.ifBlank { phone }, fontSize = 13.sp, color = OnSurfaceVariant)
             Text(
-                if (role == "medecin") "Médecin" else "Patient",
+                if (isMedecin) specialite.ifBlank { "Médecin" } else "Patient",
                 fontSize = 12.sp,
                 color = Primary,
                 fontWeight = FontWeight.Medium
@@ -358,34 +411,86 @@ fun ProfileScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            // ── Données morphométriques ──
-            ProfileSection("Données morphométriques", Icons.Default.FitnessCenter) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    MorphoCard("📏", "Taille", taille.ifBlank { "--" }, "cm", Modifier.weight(1f)) {
-                        editField = "taille"; editTitle = "Taille (cm)"; editValue = taille; showEditDialog = true
+            if (isMedecin) {
+                // ── Informations professionnelles ──
+                ProfileSection("Informations professionnelles", Icons.Default.LocalHospital) {
+                    ProfileField("Spécialité", specialite.ifBlank { "Non renseignée" }) {
+                        editField = "specialite"; editTitle = "Spécialité"; editValue = specialite; showEditDialog = true
                     }
-                    MorphoCard("⚖️", "Poids", poids.ifBlank { "--" }, "kg", Modifier.weight(1f)) {
-                        editField = "poids"; editTitle = "Poids (kg)"; editValue = poids; showEditDialog = true
+                    ProfileField("Numéro d'Ordre (ONMC)", numeroOrdre.ifBlank { "Non renseigné" }) {
+                        editField = "numeroOrdre"; editTitle = "Numéro d'inscription à l'Ordre"; editValue = numeroOrdre; showEditDialog = true
                     }
-                }
-                Spacer(Modifier.height(10.dp))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    MorphoCard("⭕", "Tour taille", tourTaille.ifBlank { "--" }, "cm", Modifier.weight(1f)) {
-                        editField = "tourTaille"; editTitle = "Tour de taille (cm)"; editValue = tourTaille; showEditDialog = true
+                    ProfileField("Structure de santé", structureSante.ifBlank { "Non renseignée" }) {
+                        editField = "structureSante"; editTitle = "Hôpital / Clinique"; editValue = structureSante; showEditDialog = true
                     }
-                    MorphoCard("📉", "Masse grasse", masseGrasse.ifBlank { "--" }, "%", Modifier.weight(1f)) {
-                        editField = "masseGrasse"; editTitle = "Masse grasse (%)"; editValue = masseGrasse; showEditDialog = true
+                    ProfileField("Années d'expérience", anneesExperience.ifBlank { "--" }.let { if (it != "--") "$it ans" else it }) {
+                        editField = "anneesExperience"; editTitle = "Années d'expérience"; editValue = anneesExperience; showEditDialog = true
                     }
                 }
-                if (imc != null) {
-                    Spacer(Modifier.height(12.dp))
-                    Text(
-                        "IMC : $imc",
-                        fontSize = 14.sp,
-                        color = OnSurfaceVariant,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
+
+                Spacer(Modifier.height(12.dp))
+
+                // ── Paramètres de consultation ──
+                ProfileSection("Paramètres de consultation", Icons.Default.MedicalServices) {
+                    ProfileField(
+                        "Mode de consultation",
+                        when (modeConsultation) {
+                            "TELECONSULTATION" -> "Téléconsultation"
+                            "CABINET" -> "En cabinet"
+                            "LES_DEUX" -> "Les deux"
+                            else -> "Non défini"
+                        }
+                    ) {
+                        editField = "modeConsultation"; editTitle = "Mode (TELECONSULTATION / CABINET / LES_DEUX)"; editValue = modeConsultation; showEditDialog = true
+                    }
+                    ProfileField(
+                        "Disponibilité",
+                        when (disponibilite) {
+                            "EN_LIGNE" -> "En ligne"
+                            "INDISPONIBLE" -> "Indisponible"
+                            "SUR_RDV" -> "Sur rendez-vous"
+                            else -> "Non défini"
+                        }
+                    ) {
+                        editField = "disponibilite"; editTitle = "Statut (EN_LIGNE / INDISPONIBLE / SUR_RDV)"; editValue = disponibilite; showEditDialog = true
+                    }
+                    ProfileField("Jours et heures de garde", joursGarde.ifBlank { "Non renseigné" }) {
+                        editField = "joursGarde"; editTitle = "Jours/heures (ex: Lun-Ven 8h-18h)"; editValue = joursGarde; showEditDialog = true
+                    }
+                    ProfileField("Langues parlées", languesParlees.ifBlank { "Non renseigné" }) {
+                        editField = "languesParlees"; editTitle = "Langues (ex: Français, Anglais)"; editValue = languesParlees; showEditDialog = true
+                    }
+                }
+            } else {
+                // ── Données morphométriques (PATIENT uniquement) ──
+                ProfileSection("Données morphométriques", Icons.Default.FitnessCenter) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        MorphoCard("📏", "Taille", taille.ifBlank { "--" }, "cm", Modifier.weight(1f)) {
+                            editField = "taille"; editTitle = "Taille (cm)"; editValue = taille; showEditDialog = true
+                        }
+                        MorphoCard("⚖️", "Poids", poids.ifBlank { "--" }, "kg", Modifier.weight(1f)) {
+                            editField = "poids"; editTitle = "Poids (kg)"; editValue = poids; showEditDialog = true
+                        }
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        MorphoCard("⭕", "Tour taille", tourTaille.ifBlank { "--" }, "cm", Modifier.weight(1f)) {
+                            editField = "tourTaille"; editTitle = "Tour de taille (cm)"; editValue = tourTaille; showEditDialog = true
+                        }
+                        MorphoCard("📉", "Masse grasse", masseGrasse.ifBlank { "--" }, "%", Modifier.weight(1f)) {
+                            editField = "masseGrasse"; editTitle = "Masse grasse (%)"; editValue = masseGrasse; showEditDialog = true
+                        }
+                    }
+                    if (imc != null) {
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            "IMC : $imc",
+                            fontSize = 14.sp,
+                            color = OnSurfaceVariant,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
 
@@ -424,8 +529,11 @@ fun ProfileScreen(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = if (editField in listOf("taille", "poids", "tourTaille", "masseGrasse"))
-                            KeyboardType.Decimal else KeyboardType.Text
+                        keyboardType = when (editField) {
+                            in listOf("taille", "poids", "tourTaille", "masseGrasse") -> KeyboardType.Decimal
+                            "anneesExperience" -> KeyboardType.Number
+                            else -> KeyboardType.Text
+                        }
                     )
                 )
             },

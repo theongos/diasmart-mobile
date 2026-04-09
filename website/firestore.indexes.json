@@ -1,0 +1,53 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "conversations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "patientId", "order": "ASCENDING" },
+        { "fieldPath": "dernierMessageAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "conversations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "medecinId", "order": "ASCENDING" },
+        { "fieldPath": "dernierMessageAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "validations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "medecinUid", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "validations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "patientUid", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "rendezvous",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "medecinUid", "order": "ASCENDING" },
+        { "fieldPath": "dateHeure", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "rendezvous",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "patientUid", "order": "ASCENDING" },
+        { "fieldPath": "dateHeure", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
