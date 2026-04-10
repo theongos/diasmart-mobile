@@ -256,25 +256,39 @@ class ChatbotRepository @Inject constructor(
             - alternatives_saines : 1-2 substitutions à IG plus bas
         """.trimIndent()
 
-        return try {
-            val response = geminiModel.generateContent(prompt)
-            val text = response.text ?: throw Exception("Réponse vide de Gemini")
-            // Cache this meal analysis (6h TTL for meals)
-            val mealHash = hashQuery(cacheKey)
-            aiCacheDao.insert(
-                AiCacheEntity(
-                    queryHash = mealHash,
-                    query = cacheKey.take(200),
-                    response = text,
-                    category = "meal",
-                    expiresAt = System.currentTimeMillis() + 6 * 60 * 60 * 1000,
-                    hmac = AiCacheEntity.computeHmac(mealHash, text, hmacKey)
+        val maxRetries = 2
+        var lastException: Exception? = null
+
+        repeat(maxRetries + 1) { attempt ->
+            try {
+                val response = geminiModel.generateContent(prompt)
+                val text = response.text ?: throw Exception("Réponse vide de Gemini")
+                // Cache this meal analysis (6h TTL for meals)
+                val mealHash = hashQuery(cacheKey)
+                aiCacheDao.insert(
+                    AiCacheEntity(
+                        queryHash = mealHash,
+                        query = cacheKey.take(200),
+                        response = text,
+                        category = "meal",
+                        expiresAt = System.currentTimeMillis() + 6 * 60 * 60 * 1000,
+                        hmac = AiCacheEntity.computeHmac(mealHash, text, hmacKey)
+                    )
                 )
-            )
-            text
-        } catch (e: Exception) {
-            throw Exception("Erreur ROLLY lors de l'analyse du repas : ${e.message}")
+                return text
+            } catch (e: Exception) {
+                Log.e(TAG, "Erreur analyse repas (tentative ${attempt + 1})", e)
+                lastException = e
+                val msg = e.message.orEmpty()
+                if (attempt < maxRetries && (msg.contains("503") || msg.contains("UNAVAILABLE") || msg.contains("high demand") || msg.contains("overloaded"))) {
+                    kotlinx.coroutines.delay(2000L * (attempt + 1))
+                } else {
+                    // Non-retryable or last attempt
+                }
+            }
         }
+
+        throw cleanGeminiException(lastException)
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -566,17 +580,30 @@ class ChatbotRepository @Inject constructor(
             - score_diabete : 0 = très défavorable, 100 = excellent pour un diabétique
         """.trimIndent()
 
-        return try {
-            val inputContent = content {
-                image(bitmap)
-                text(prompt)
+        val maxRetries = 2
+        var lastException: Exception? = null
+
+        repeat(maxRetries + 1) { attempt ->
+            try {
+                val inputContent = content {
+                    image(bitmap)
+                    text(prompt)
+                }
+                val response = geminiModel.generateContent(inputContent)
+                return response.text ?: throw Exception("Réponse vide de Gemini Vision")
+            } catch (e: Exception) {
+                Log.e(TAG, "Erreur Vision repas (tentative ${attempt + 1})", e)
+                lastException = e
+                val msg = e.message.orEmpty()
+                if (attempt < maxRetries && (msg.contains("503") || msg.contains("UNAVAILABLE") || msg.contains("high demand") || msg.contains("overloaded"))) {
+                    kotlinx.coroutines.delay(2000L * (attempt + 1))
+                } else {
+                    // Non-retryable or last attempt
+                }
             }
-            val response = geminiModel.generateContent(inputContent)
-            response.text ?: throw Exception("Réponse vide de Gemini Vision")
-        } catch (e: Exception) {
-            Log.e(TAG, "Erreur Vision repas", e)
-            throw Exception("Erreur ROLLY Vision : ${e.message}")
         }
+
+        throw cleanGeminiException(lastException)
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -709,5 +736,26 @@ class ChatbotRepository @Inject constructor(
         }
 
         return sb.toString().trim()
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // HELPER — Clean Gemini API exceptions into user-friendly messages
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private fun cleanGeminiException(e: Exception?): Exception {
+        val msg = e?.message.orEmpty()
+        return when {
+            msg.contains("503") || msg.contains("UNAVAILABLE") || msg.contains("high demand") || msg.contains("overloaded") ->
+                Exception("Le service IA est temporairement surchargé. Veuillez réessayer dans quelques instants.")
+            msg.contains("429") || msg.contains("RESOURCE_EXHAUSTED") ->
+                Exception("Trop de requêtes envoyées. Veuillez patienter un moment avant de réessayer.")
+            msg.contains("400") || msg.contains("INVALID_ARGUMENT") ->
+                Exception("L'image n'a pas pu être analysée. Essayez avec une photo plus nette.")
+            msg.contains("403") || msg.contains("PERMISSION_DENIED") ->
+                Exception("Accès au service IA refusé. Vérifiez la configuration de l'application.")
+            msg.contains("network") || msg.contains("timeout") || msg.contains("connect") ->
+                Exception("Erreur de connexion. Vérifiez votre accès Internet et réessayez.")
+            else -> Exception("Erreur d'analyse IA. Veuillez réessayer.")
+        }
     }
 }

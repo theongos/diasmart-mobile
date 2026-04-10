@@ -188,7 +188,7 @@ class RepasViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isAnalysing = false,
-                        error = "Erreur Vision IA : ${e.message}\nVeuillez reessayer avec une photo plus claire."
+                        error = e.message ?: "Erreur inattendue lors de l'analyse."
                     )
                 }
             }
@@ -239,7 +239,7 @@ class RepasViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isAnalysing = false,
-                        error = "Erreur reseau ou IA : ${e.message}\nVeuillez verifier votre connexion et reessayer."
+                        error = e.message ?: "Erreur inattendue lors de l'analyse."
                     )
                 }
             }
