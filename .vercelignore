@@ -1,0 +1,9 @@
+app/
+gradle/
+build/
+.gradle/
+*.apk
+*.aab
+*.zip
+.firebase/
+.idea/
