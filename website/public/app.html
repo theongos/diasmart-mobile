@@ -857,6 +857,12 @@ body{display:flex;flex-direction:column}
     <h2>Rendez-vous</h2>
   </div>
   <div class="screen-content">
+    <!-- Section demandes RDV (medecin uniquement) -->
+    <div id="rdvRequestsSection" style="display:none;margin-bottom:20px">
+      <h3 style="font-size:15px;color:var(--cyan);margin-bottom:12px">&#128229; Demandes en attente</h3>
+      <div id="rdvRequestsList"></div>
+      <p id="rdvRequestsEmpty" style="text-align:center;color:var(--text3);padding:16px;font-size:13px;display:none">Aucune demande en attente</p>
+    </div>
     <div class="rdv-filters">
       <button class="rdv-chip active" onclick="filterRdv('all',this)">Tous</button>
       <button class="rdv-chip" onclick="filterRdv('upcoming',this)">A venir</button>
@@ -1334,6 +1340,13 @@ onAuthStateChanged(auth,async user=>{
       if(role==='medecin'){
         const vc=document.getElementById('validationsCard');
         if(vc)vc.style.display='';
+        // Masquer partage/export pour les medecins
+        const dsCard=document.querySelector('[onclick*="datasharing"]');
+        if(dsCard)dsCard.style.display='none';
+        // Afficher section demandes RDV medecin
+        const rdvReqSection=document.getElementById('rdvRequestsSection');
+        if(rdvReqSection)rdvReqSection.style.display='';
+        loadRdvRequests();
       }
     }
   }
@@ -1406,29 +1419,52 @@ window.savePatientToDb=async(name,dob,type)=>{
   }catch(e){console.error('Save patient error:',e);alert('Erreur sauvegarde: '+e.message)}
 };
 
-// ── Gemini AI for ROLLY ──
+// ── Gemini AI for ROLLY (with fallback) ──
 window.callGemini=async(prompt,includeHistory=true)=>{
   const GEMINI_KEY='AIzaSyD4eOlk-Agx1rUVurd9o-jwE4MC6z760SI';
-  const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+  const models=['gemini-2.0-flash','gemini-1.5-flash'];
   const systemPrompt=`Tu es ROLLY, un assistant medical IA specialise en diabetologie pour l'app DiaSmart.AI. Tu es bienveillant, professionnel et tu reponds en francais. Tu donnes des conseils pratiques mais tu rappelles toujours de consulter un medecin pour les decisions medicales importantes. Utilise du markdown pour formater tes reponses (gras, listes, titres). Si un historique de conversations est fourni, utilise-le pour personnaliser tes reponses et assurer la continuite du suivi.`;
 
-  // Inject history context into the prompt
   let fullPrompt=prompt;
   if(includeHistory && _chatHistoryContext){
     fullPrompt=_chatHistoryContext+'\n\nQuestion actuelle : '+prompt;
   }
 
-  const res=await fetch(url,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      system_instruction:{parts:[{text:systemPrompt}]},
-      contents:[{parts:[{text:fullPrompt}]}],
-      generationConfig:{temperature:0.7,maxOutputTokens:1024}
-    })
-  });
-  const data=await res.json();
-  return data?.candidates?.[0]?.content?.parts?.[0]?.text||"Desole, je n'ai pas pu generer de reponse.";
+  for(let i=0;i<models.length;i++){
+    const url=`https://generativelanguage.googleapis.com/v1beta/models/${models[i]}:generateContent?key=${GEMINI_KEY}`;
+    try{
+      const res=await fetch(url,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          system_instruction:{parts:[{text:systemPrompt}]},
+          contents:[{parts:[{text:fullPrompt}]}],
+          generationConfig:{temperature:0.7,maxOutputTokens:1024}
+        })
+      });
+      const data=await res.json();
+      if(data?.error){
+        const code=data.error.code||0;
+        const msg=data.error.message||'';
+        if((code===503||code===429||msg.includes('UNAVAILABLE')||msg.includes('high demand'))&&i<models.length-1){
+          console.warn('Gemini '+models[i]+' surcharge, basculement vers '+models[i+1]);
+          await new Promise(r=>setTimeout(r,1000));
+          continue;
+        }
+        if(code===503||code===429)throw new Error('Le service IA est temporairement surcharge. Reessayez dans quelques instants.');
+        throw new Error(msg||'Erreur API Gemini');
+      }
+      return data?.candidates?.[0]?.content?.parts?.[0]?.text||"Desole, je n'ai pas pu generer de reponse.";
+    }catch(e){
+      if(i<models.length-1&&(e.message.includes('503')||e.message.includes('fetch'))){
+        console.warn('Erreur '+models[i]+', tentative '+models[i+1]);
+        await new Promise(r=>setTimeout(r,1000));
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw new Error('Le service IA est temporairement indisponible. Reessayez plus tard.');
 };
 
 // ── Medicaments data ──
@@ -2924,6 +2960,57 @@ async function saveRdv(){
 }
 window.saveRdv=saveRdv;
 
+// ══════════ RDV REQUESTS (MEDECIN) ══════════
+async function loadRdvRequests(){
+  if(!auth.currentUser||window._userRole!=='medecin')return;
+  try{
+    const q=query(collection(db,'rendezvous_requests'),where('medecinId','==',auth.currentUser.uid),where('statut','==','en_attente'));
+    const snap=await getDocs(q);
+    const list=document.getElementById('rdvRequestsList');
+    const empty=document.getElementById('rdvRequestsEmpty');
+    if(snap.empty){list.innerHTML='';empty.style.display='';return}
+    empty.style.display='none';
+    let html='';
+    snap.forEach(d=>{
+      const r=d.data();
+      const date=r.dateHeure?new Date(r.dateHeure).toLocaleString('fr-FR',{dateStyle:'medium',timeStyle:'short'}):'';
+      html+=`<div style="background:var(--surface);border-radius:12px;padding:14px;margin-bottom:10px;border-left:3px solid var(--cyan)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong style="color:var(--white);font-size:14px">${r.patientNom||'Patient'}</strong>
+          <span style="font-size:12px;color:var(--text3)">${date}</span>
+        </div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:10px">${r.motif||r.titre||'Consultation'}</p>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-cyan" style="flex:1;padding:8px;font-size:13px" onclick="handleRdvRequest('${d.id}','accepte')">&#10004; Accepter</button>
+          <button class="btn btn-outline" style="flex:1;padding:8px;font-size:13px;border-color:var(--red);color:var(--red)" onclick="handleRdvRequest('${d.id}','refuse')">&#10006; Refuser</button>
+        </div>
+      </div>`;
+    });
+    list.innerHTML=html;
+  }catch(e){console.error('loadRdvRequests:',e)}
+}
+window.loadRdvRequests=loadRdvRequests;
+
+async function handleRdvRequest(requestId,decision){
+  try{
+    const ref=doc(db,'rendezvous_requests',requestId);
+    await updateDoc(ref,{statut:decision,updatedAt:new Date().toISOString()});
+    if(decision==='accepte'){
+      const snap=await getDoc(ref);
+      const r=snap.data();
+      await addDoc(collection(db,'rendezvous'),{
+        userId:r.patientId,medecinId:r.medecinId,
+        titre:r.motif||r.titre||'Consultation',dateHeure:r.dateHeure,
+        type:'Consultation',estConfirme:true,
+        createdAt:new Date().toISOString()
+      });
+    }
+    alert(decision==='accepte'?'Rendez-vous accepte !':'Demande refusee.');
+    loadRdvRequests();
+  }catch(e){console.error('handleRdvRequest:',e);alert('Erreur: '+e.message)}
+}
+window.handleRdvRequest=handleRdvRequest;
+
 // ══════════ JOURNAL ══════════
 let journalSelections={mood:null,stress:null,sleep:null};
 
@@ -3321,7 +3408,10 @@ Reponds en JSON strict avec ces champs: {"nomRepas":"nom court","glucides":nombr
         <button class="btn btn-cyan mt-16" style="max-width:100%" onclick="saveRepasAnalysis()">&#128190; Sauvegarder</button>
       </div>`;
   }catch(e){
-    resultEl.innerHTML='<p style="color:var(--red);text-align:center;padding:16px">Erreur d\'analyse: '+e.message+'</p>';
+    let msg=e.message||'Erreur inattendue';
+    if(msg.includes('503')||msg.includes('surcharge')||msg.includes('UNAVAILABLE'))msg='Le service IA est temporairement surcharge. Reessayez dans quelques instants.';
+    else if(msg.includes('fetch')||msg.includes('network'))msg='Erreur de connexion. Verifiez votre acces Internet.';
+    resultEl.innerHTML='<div style="text-align:center;padding:20px"><p style="color:var(--orange);font-size:14px;margin-bottom:12px">'+msg+'</p><button class="btn btn-outline" style="border-color:var(--cyan);color:var(--cyan)" onclick="analyzeRepas()">&#128260; Reessayer</button></div>';
   }
 }
 window.analyzeRepas=analyzeRepas;
