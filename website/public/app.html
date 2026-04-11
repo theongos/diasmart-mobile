@@ -1055,8 +1055,26 @@ body{display:flex;flex-direction:column}
   </div>
   <div class="screen-content">
     <div id="repasAnalyseView">
+      <!-- Image capture/upload -->
+      <div class="repas-input" style="margin-bottom:12px">
+        <h4 style="font-size:14px;color:var(--cyan);margin-bottom:8px">&#128247; Photo du repas</h4>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <button class="btn btn-cyan" style="flex:1;padding:12px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px" onclick="document.getElementById('repasCameraInput').click()">&#128248; Camera</button>
+          <button class="btn btn-outline" style="flex:1;padding:12px;font-size:13px;border-color:var(--purple);color:var(--purple);display:flex;align-items:center;justify-content:center;gap:6px" onclick="document.getElementById('repasGalleryInput').click()">&#128444;&#65039; Galerie</button>
+        </div>
+        <input type="file" id="repasCameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleRepasImage(this)">
+        <input type="file" id="repasGalleryInput" accept="image/*" style="display:none" onchange="handleRepasImage(this)">
+        <!-- Image preview -->
+        <div id="repasImagePreview" class="hidden" style="position:relative;margin-bottom:12px">
+          <img id="repasPreviewImg" style="width:100%;max-height:250px;object-fit:cover;border-radius:12px;border:1px solid rgba(0,210,255,.3)">
+          <button onclick="clearRepasImage()" style="position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.6);border:none;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">&#10005;</button>
+        </div>
+        <button id="repasAnalyzeImageBtn" class="btn btn-purple hidden" style="max-width:100%;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px" onclick="analyzeRepasImage()">&#128065; Analyser la photo avec ROLLY Vision</button>
+      </div>
+
+      <!-- Text description -->
       <div class="repas-input">
-        <h4 style="font-size:14px;color:var(--cyan);margin-bottom:8px">&#127869; Decrivez votre repas</h4>
+        <h4 style="font-size:14px;color:var(--cyan);margin-bottom:8px">&#127869; Ou decrivez votre repas</h4>
         <textarea id="repasDesc" placeholder="Ex: Un sandwich au poulet avec salade, une pomme et un verre de jus d'orange"></textarea>
         <button class="btn btn-purple mt-16" style="max-width:100%;display:flex;align-items:center;justify-content:center;gap:8px" onclick="analyzeRepas()"><span class="rolly-nav-icon"></span> Analyser avec ROLLY</button>
       </div>
@@ -1465,6 +1483,49 @@ window.callGemini=async(prompt,includeHistory=true)=>{
     }
   }
   throw new Error('Le service IA est temporairement indisponible. Reessayez plus tard.');
+};
+
+// ── Gemini Vision (image analysis) ──
+window.callGeminiVision=async(base64Image,mimeType,prompt)=>{
+  const GEMINI_KEY='AIzaSyD4eOlk-Agx1rUVurd9o-jwE4MC6z760SI';
+  const models=['gemini-2.0-flash','gemini-1.5-flash'];
+
+  for(let i=0;i<models.length;i++){
+    const url=`https://generativelanguage.googleapis.com/v1beta/models/${models[i]}:generateContent?key=${GEMINI_KEY}`;
+    try{
+      const res=await fetch(url,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          contents:[{parts:[
+            {inlineData:{mimeType:mimeType,data:base64Image}},
+            {text:prompt}
+          ]}],
+          generationConfig:{temperature:0.4,maxOutputTokens:2048}
+        })
+      });
+      const data=await res.json();
+      if(data?.error){
+        const code=data.error.code||0;
+        const msg=data.error.message||'';
+        if((code===503||code===429||msg.includes('UNAVAILABLE'))&&i<models.length-1){
+          console.warn('Vision '+models[i]+' surcharge, basculement vers '+models[i+1]);
+          await new Promise(r=>setTimeout(r,1000));
+          continue;
+        }
+        if(code===503||code===429)throw new Error('Le service IA est temporairement surcharge. Reessayez dans quelques instants.');
+        throw new Error(msg||'Erreur API Gemini Vision');
+      }
+      return data?.candidates?.[0]?.content?.parts?.[0]?.text||"Desole, je n'ai pas pu analyser l'image.";
+    }catch(e){
+      if(i<models.length-1&&(e.message.includes('503')||e.message.includes('fetch'))){
+        await new Promise(r=>setTimeout(r,1000));
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw new Error('Le service IA Vision est temporairement indisponible.');
 };
 
 // ── Medicaments data ──
@@ -3350,7 +3411,86 @@ async function createConversation(){
 window.createConversation=createConversation;
 
 // ══════════ REPAS ANALYSE ══════════
+let _repasImageBase64=null;
+let _repasImageMime=null;
 let repasViewMode='analyse';
+
+function handleRepasImage(input){
+  const file=input.files&&input.files[0];
+  if(!file)return;
+  _repasImageMime=file.type||'image/jpeg';
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const img=document.getElementById('repasPreviewImg');
+    img.src=e.target.result;
+    document.getElementById('repasImagePreview').classList.remove('hidden');
+    document.getElementById('repasAnalyzeImageBtn').classList.remove('hidden');
+    // Extract base64 data (remove data:image/...;base64, prefix)
+    _repasImageBase64=e.target.result.split(',')[1];
+  };
+  reader.readAsDataURL(file);
+  input.value=''; // reset so same file can be selected again
+}
+window.handleRepasImage=handleRepasImage;
+
+function clearRepasImage(){
+  _repasImageBase64=null;
+  _repasImageMime=null;
+  document.getElementById('repasImagePreview').classList.add('hidden');
+  document.getElementById('repasAnalyzeImageBtn').classList.add('hidden');
+  document.getElementById('repasPreviewImg').src='';
+}
+window.clearRepasImage=clearRepasImage;
+
+async function analyzeRepasImage(){
+  if(!_repasImageBase64){alert('Prenez ou importez une photo d\'abord');return}
+  const resultEl=document.getElementById('repasResult');
+  resultEl.classList.remove('hidden');
+  resultEl.innerHTML='<div style="text-align:center;padding:20px"><div class="chat-typing" style="display:inline-flex"><span></span><span></span><span></span></div><p style="color:var(--text3);margin-top:8px;font-size:13px">ROLLY Vision analyse votre repas...</p></div>';
+
+  const prompt=`Tu es un nutritionniste specialise en diabetologie. Analyse cette image de repas.
+Reponds en JSON strict avec ces champs: {"nomRepas":"nom court du plat","glucides":nombre en grammes,"proteines":nombre en grammes,"lipides":nombre en grammes,"calories":nombre en kcal,"indexGlycemique":nombre de 0 a 100,"categorieIG":"bas|moyen|eleve","fibres":nombre en grammes,"scoreDiabete":nombre de 0 a 100 (100=ideal pour diabetique),"impactGlycemique":"description courte de l'impact","recommandations":["conseil1","conseil2"],"alternatives":["alternative plus saine 1","alternative 2"]}.
+JSON uniquement, pas de markdown, pas de commentaires.`;
+
+  try{
+    const raw=await window.callGeminiVision(_repasImageBase64,_repasImageMime,prompt);
+    let json;
+    try{
+      const match=raw.match(/\{[\s\S]*\}/);
+      json=JSON.parse(match?match[0]:raw);
+    }catch{
+      resultEl.innerHTML='<div class="repas-result"><p style="color:var(--text2)">'+formatMarkdown(raw)+'</p></div>';
+      return;
+    }
+    window._lastRepasAnalysis=json;
+    const scoreColor=json.scoreDiabete>=70?'var(--green)':json.scoreDiabete>=40?'var(--orange)':'var(--red)';
+    const igColor=json.categorieIG==='bas'?'var(--green)':json.categorieIG==='moyen'?'var(--orange)':'var(--red)';
+    resultEl.innerHTML=`
+      <div class="repas-result">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h4 style="font-size:16px">${json.nomRepas||'Repas'}</h4>
+          <span class="repas-score" style="background:${scoreColor}20;color:${scoreColor}">${json.scoreDiabete||0}/100</span>
+        </div>
+        <div class="repas-nutrients">
+          <div class="repas-nutrient"><div class="rn-val">${json.glucides||0}g</div><div class="rn-label">Glucides</div></div>
+          <div class="repas-nutrient"><div class="rn-val">${json.proteines||0}g</div><div class="rn-label">Proteines</div></div>
+          <div class="repas-nutrient"><div class="rn-val">${json.lipides||0}g</div><div class="rn-label">Lipides</div></div>
+          <div class="repas-nutrient"><div class="rn-val">${json.calories||0}</div><div class="rn-label">kcal</div></div>
+          <div class="repas-nutrient" style="border:1px solid ${igColor}30"><div class="rn-val" style="color:${igColor}">${json.indexGlycemique||0}</div><div class="rn-label">IG (${json.categorieIG||'?'})</div></div>
+          <div class="repas-nutrient"><div class="rn-val">${json.fibres||0}g</div><div class="rn-label">Fibres</div></div>
+        </div>
+        ${json.impactGlycemique?'<div style="margin-top:12px;padding:10px;background:var(--bg);border-radius:10px;font-size:13px;color:var(--text2)">&#128200; '+json.impactGlycemique+'</div>':''}
+        ${json.recommandations?'<div style="margin-top:12px"><h5 style="font-size:13px;color:var(--cyan);margin-bottom:6px">Recommandations</h5>'+json.recommandations.map(r=>'<div style="font-size:13px;color:var(--text2);margin-bottom:4px">&#8226; '+r+'</div>').join('')+'</div>':''}
+        <button class="btn btn-cyan mt-16" style="max-width:100%" onclick="saveRepasAnalysis()">&#128190; Sauvegarder</button>
+      </div>`;
+  }catch(e){
+    let msg=e.message||'Erreur inattendue';
+    if(msg.includes('503')||msg.includes('surcharge')||msg.includes('UNAVAILABLE'))msg='Le service IA est temporairement surcharge. Reessayez dans quelques instants.';
+    else if(msg.includes('fetch')||msg.includes('network'))msg='Erreur de connexion. Verifiez votre acces Internet.';
+    resultEl.innerHTML='<div style="text-align:center;padding:20px"><p style="color:var(--orange);font-size:14px;margin-bottom:12px">'+msg+'</p><button class="btn btn-outline" style="border-color:var(--cyan);color:var(--cyan)" onclick="analyzeRepasImage()">&#128260; Reessayer</button></div>';
+  }
+}
+window.analyzeRepasImage=analyzeRepasImage;
 
 function toggleRepasView(){
   if(repasViewMode==='analyse'){

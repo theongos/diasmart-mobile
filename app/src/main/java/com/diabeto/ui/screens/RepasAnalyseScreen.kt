@@ -47,6 +47,10 @@ import com.diabeto.ui.theme.*
 import com.diabeto.ui.viewmodel.RepasViewModel
 import java.text.SimpleDateFormat
 import java.util.*
+import android.Manifest
+import android.content.pm.PackageManager
+import android.widget.Toast
+import androidx.core.content.ContextCompat
 
 // ── Theme colors ─────────────────────────────────────────────────────────
 private val DarkBg = DarkBackground
@@ -808,6 +812,8 @@ private fun DarkSaisieRepasCard(
     dividerColor: Color = Color.White.copy(alpha = 0.15f)
 ) {
     val context = LocalContext.current
+
+    // ── Gallery picker ──
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -824,19 +830,38 @@ private fun DarkSaisieRepasCard(
                     } else bitmap
                     onImageCaptured(resized)
                 }
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                Toast.makeText(context, "Erreur lors du chargement de l'image", Toast.LENGTH_SHORT).show()
+            }
         }
     }
+
+    // ── Camera launcher ──
     val cameraLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicturePreview()
     ) { bitmap ->
-        bitmap?.let {
-            val maxDim = 1024
-            val scale = minOf(maxDim.toFloat() / it.width, maxDim.toFloat() / it.height, 1f)
-            val resized = if (scale < 1f) {
-                android.graphics.Bitmap.createScaledBitmap(it, (it.width * scale).toInt(), (it.height * scale).toInt(), true)
-            } else it
-            onImageCaptured(resized)
+        if (bitmap != null) {
+            try {
+                val maxDim = 1024
+                val scale = minOf(maxDim.toFloat() / bitmap.width, maxDim.toFloat() / bitmap.height, 1f)
+                val resized = if (scale < 1f) {
+                    android.graphics.Bitmap.createScaledBitmap(bitmap, (bitmap.width * scale).toInt(), (bitmap.height * scale).toInt(), true)
+                } else bitmap
+                onImageCaptured(resized)
+            } catch (e: Exception) {
+                Toast.makeText(context, "Erreur lors de la capture photo", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    // ── Camera permission launcher ──
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            cameraLauncher.launch(null)
+        } else {
+            Toast.makeText(context, "Permission camera requise pour prendre une photo", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -858,7 +883,16 @@ private fun DarkSaisieRepasCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedButton(
-                    onClick = { cameraLauncher.launch(null) },
+                    onClick = {
+                        val hasPerm = ContextCompat.checkSelfPermission(
+                            context, Manifest.permission.CAMERA
+                        ) == PackageManager.PERMISSION_GRANTED
+                        if (hasPerm) {
+                            cameraLauncher.launch(null)
+                        } else {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        }
+                    },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentCyan),
