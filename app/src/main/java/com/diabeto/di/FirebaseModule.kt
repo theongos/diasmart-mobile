@@ -11,6 +11,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Named
 import javax.inject.Singleton
 
 /**
@@ -36,6 +37,7 @@ object FirebaseModule {
 
     @Provides
     @Singleton
+    @Named("primary")
     fun provideGeminiModel(): GenerativeModel = GenerativeModel(
         modelName = "gemini-2.5-flash",
         apiKey = BuildConfig.GEMINI_API_KEY,
@@ -175,6 +177,19 @@ object FirebaseModule {
                 - Toujours terminer par : "Avis informatif — consultez votre médecin."
                 """.trimIndent()
             )
+        }
+    )
+
+    @Provides
+    @Singleton
+    @Named("fallback")
+    fun provideGeminiFallbackModel(): GenerativeModel = GenerativeModel(
+        modelName = "gemini-2.0-flash",
+        apiKey = BuildConfig.GEMINI_API_KEY,
+        generationConfig = generationConfig {
+            temperature = 0.4f
+            maxOutputTokens = 8192
+            topP = 0.85f
         }
     )
 }

@@ -16,6 +16,7 @@ import kotlinx.coroutines.sync.withLock
 import java.security.MessageDigest
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+import javax.inject.Named
 import javax.inject.Singleton
 
 private const val TAG = "ChatbotRepository"
@@ -27,7 +28,8 @@ private const val TAG = "ChatbotRepository"
  */
 @Singleton
 class ChatbotRepository @Inject constructor(
-    private val geminiModel: GenerativeModel,
+    @Named("primary") private val geminiModel: GenerativeModel,
+    @Named("fallback") private val fallbackModel: GenerativeModel,
     private val aiCacheDao: AiCacheDao
 ) {
     private var chatSession = geminiModel.startChat()
@@ -256,12 +258,13 @@ class ChatbotRepository @Inject constructor(
             - alternatives_saines : 1-2 substitutions à IG plus bas
         """.trimIndent()
 
-        val maxRetries = 2
+        // Try primary model (gemini-2.5-flash), then fallback (gemini-2.0-flash)
+        val models = listOf(geminiModel, fallbackModel)
         var lastException: Exception? = null
 
-        repeat(maxRetries + 1) { attempt ->
+        for ((index, model) in models.withIndex()) {
             try {
-                val response = geminiModel.generateContent(prompt)
+                val response = model.generateContent(prompt)
                 val text = response.text ?: throw Exception("Réponse vide de Gemini")
                 // Cache this meal analysis (6h TTL for meals)
                 val mealHash = hashQuery(cacheKey)
@@ -277,13 +280,17 @@ class ChatbotRepository @Inject constructor(
                 )
                 return text
             } catch (e: Exception) {
-                Log.e(TAG, "Erreur analyse repas (tentative ${attempt + 1})", e)
+                Log.e(TAG, "Erreur analyse repas (modèle ${index + 1})", e)
                 lastException = e
                 val msg = e.message.orEmpty()
-                if (attempt < maxRetries && (msg.contains("503") || msg.contains("UNAVAILABLE") || msg.contains("high demand") || msg.contains("overloaded"))) {
-                    kotlinx.coroutines.delay(2000L * (attempt + 1))
-                } else {
-                    // Non-retryable or last attempt
+                val isTransient = msg.contains("503") || msg.contains("UNAVAILABLE") ||
+                        msg.contains("high demand") || msg.contains("overloaded") ||
+                        msg.contains("details")
+                if (isTransient && index < models.lastIndex) {
+                    Log.w(TAG, "Basculement vers le modèle de secours...")
+                    kotlinx.coroutines.delay(1000)
+                } else if (!isTransient) {
+                    break
                 }
             }
         }
@@ -580,25 +587,30 @@ class ChatbotRepository @Inject constructor(
             - score_diabete : 0 = très défavorable, 100 = excellent pour un diabétique
         """.trimIndent()
 
-        val maxRetries = 2
+        // Try primary model (gemini-2.5-flash), then fallback (gemini-2.0-flash)
+        val models = listOf(geminiModel, fallbackModel)
         var lastException: Exception? = null
 
-        repeat(maxRetries + 1) { attempt ->
+        for ((index, model) in models.withIndex()) {
             try {
                 val inputContent = content {
                     image(bitmap)
                     text(prompt)
                 }
-                val response = geminiModel.generateContent(inputContent)
+                val response = model.generateContent(inputContent)
                 return response.text ?: throw Exception("Réponse vide de Gemini Vision")
             } catch (e: Exception) {
-                Log.e(TAG, "Erreur Vision repas (tentative ${attempt + 1})", e)
+                Log.e(TAG, "Erreur Vision repas (modèle ${index + 1})", e)
                 lastException = e
                 val msg = e.message.orEmpty()
-                if (attempt < maxRetries && (msg.contains("503") || msg.contains("UNAVAILABLE") || msg.contains("high demand") || msg.contains("overloaded"))) {
-                    kotlinx.coroutines.delay(2000L * (attempt + 1))
-                } else {
-                    // Non-retryable or last attempt
+                val isTransient = msg.contains("503") || msg.contains("UNAVAILABLE") ||
+                        msg.contains("high demand") || msg.contains("overloaded") ||
+                        msg.contains("details")
+                if (isTransient && index < models.lastIndex) {
+                    Log.w(TAG, "Basculement vers le modèle de secours...")
+                    kotlinx.coroutines.delay(1000)
+                } else if (!isTransient) {
+                    break
                 }
             }
         }
