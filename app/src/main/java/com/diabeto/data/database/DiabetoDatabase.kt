@@ -189,7 +189,21 @@ abstract class DiabetoDatabase : RoomDatabase() {
 
         fun getInstance(context: Context): DiabetoDatabase {
             return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: buildDatabase(context).also { INSTANCE = it }
+                INSTANCE ?: try {
+                    val db = buildDatabase(context)
+                    // Validate database is accessible (detects key mismatch / corruption)
+                    db.openHelper.readableDatabase
+                    db
+                } catch (e: Exception) {
+                    Log.e(TAG, "Base de données corrompue ou clé invalide, recréation...", e)
+                    // Delete corrupted database file
+                    context.deleteDatabase(DATABASE_NAME)
+                    // Clear stored passphrase to generate a new one
+                    context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                        .edit().clear().apply()
+                    // Rebuild with fresh encryption key
+                    buildDatabase(context)
+                }.also { INSTANCE = it }
             }
         }
 

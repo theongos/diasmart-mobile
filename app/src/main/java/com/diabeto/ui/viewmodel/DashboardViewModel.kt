@@ -173,10 +173,18 @@ class DashboardViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
+                val msg = e.message.orEmpty()
+                val cleanMsg = when {
+                    msg.contains("file is not a database") || msg.contains("sqlite_master") ->
+                        "Base de données réinitialisée. Veuillez relancer l'application."
+                    msg.contains("network") || msg.contains("connect") ->
+                        "Erreur de connexion. Vérifiez votre accès Internet."
+                    else -> "Erreur lors du chargement. Veuillez réessayer."
+                }
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        error = "Erreur lors du chargement: ${e.message}"
+                        error = cleanMsg
                     )
                 }
             }
