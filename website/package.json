@@ -1,0 +1,15 @@
+{
+  "name": "diasmart-website",
+  "version": "1.0.0",
+  "description": "DiaSmart - Diabétologie Intelligente Website",
+  "private": true,
+  "scripts": {
+    "build": "echo 'Static HTML website - no build required'",
+    "lint": "echo 'No linter configured for static HTML'"
+  },
+  "author": "NGOS THEODORE",
+  "license": "PROPRIETARY",
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
+  }
+}
