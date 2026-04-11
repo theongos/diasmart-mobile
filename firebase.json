@@ -11,6 +11,20 @@
   },
   "hosting": {
     "public": "website/public",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "**/*.apk", "**/*.zip"]
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "**/*.apk", "**/*.zip"],
+    "headers": [
+      {
+        "source": "**/*.jpg",
+        "headers": [
+          { "key": "Cache-Control", "value": "public, max-age=3600" }
+        ]
+      },
+      {
+        "source": "**/*.html",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache" }
+        ]
+      }
+    ]
   }
 }
