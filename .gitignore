@@ -54,6 +54,8 @@ vcs.xml
 # Firebase service accounts / secrets
 firebase-service-account.json
 auth_test.json
+auth-users.json
+website/auth-users.json
 
 # Claude Code local
 .claude/
