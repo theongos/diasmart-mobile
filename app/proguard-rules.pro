@@ -67,6 +67,15 @@
 -keep class net.sqlcipher.** { *; }
 -dontwarn net.sqlcipher.**
 
+# MediaPipe LLM Inference (on-device Gemma)
+-keep class com.google.mediapipe.** { *; }
+-dontwarn com.google.mediapipe.**
+-dontwarn com.google.protobuf.Internal$ProtoMethodMayReturnNull
+-dontwarn com.google.protobuf.Internal$ProtoNonnullApi
+-dontwarn com.google.protobuf.ProtoField
+-dontwarn com.google.protobuf.ProtoPresenceBits
+-dontwarn com.google.protobuf.ProtoPresenceCheckedField
+
 # General
 -keepattributes Signature
 -keepattributes Exceptions

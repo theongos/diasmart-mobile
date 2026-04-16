@@ -26,8 +26,8 @@ android {
         applicationId = "com.diabeto"
         minSdk = 26
         targetSdk = 34
-        versionCode = 12
-        versionName = "1.9.3"
+        versionCode = 13
+        versionName = "2.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -201,6 +201,12 @@ dependencies {
     // Google Gemini AI (client direct — gardé pour compatibilité)
     // ============================================================
     implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+
+    // ============================================================
+    // MediaPipe LLM Inference — Gemma on-device (mode hors-ligne)
+    // Permet d'exécuter Gemma 3 1B localement sur l'appareil
+    // ============================================================
+    implementation("com.google.mediapipe:tasks-genai:0.10.24")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

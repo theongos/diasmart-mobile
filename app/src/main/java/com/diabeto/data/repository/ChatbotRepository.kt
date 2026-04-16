@@ -23,17 +23,29 @@ private const val TAG = "ChatbotRepository"
 
 /**
  * Repository pour les interactions avec Gemini AI (ROLLY)
- * - Streaming : réponses mot-à-mot via sendMessageStream / generateContentStream
+ * Architecture hybride :
+ * - En ligne  → Gemini 2.5 Flash (cloud, puissant, streaming)
+ * - Hors ligne → Gemma 3 1B (on-device via MediaPipe, basique)
  * - Cache local Room : évite les appels redondants pour questions génériques
  */
 @Singleton
 class ChatbotRepository @Inject constructor(
     @Named("primary") private val geminiModel: GenerativeModel,
     @Named("fallback") private val fallbackModel: GenerativeModel,
-    private val aiCacheDao: AiCacheDao
+    private val aiCacheDao: AiCacheDao,
+    val localAI: LocalAIManager
 ) {
     private var chatSession = geminiModel.startChat()
     private val chatMutex = Mutex()
+
+    /** Vérifie la connectivité réseau */
+    fun isOnline(): Boolean = localAI.isOnline()
+
+    /** Vérifie si le modèle local est prêt */
+    fun isLocalModelReady(): Boolean = localAI.getStatus() == LocalAIStatus.READY
+
+    /** Statut du modèle local */
+    fun getLocalAIStatus(): LocalAIStatus = localAI.getStatus()
 
     // HMAC key derived from app package — prevents cache tampering
     private val hmacKey: ByteArray = "diasmart-ai-cache-integrity-key".toByteArray(Charsets.UTF_8)
@@ -116,9 +128,24 @@ class ChatbotRepository @Inject constructor(
     /**
      * Envoie un message et stream la réponse chunk par chunk.
      * Chaque emit contient le texte ACCUMULÉ (pas juste le delta).
+     *
+     * ROUTAGE HYBRIDE :
+     * - En ligne  → Gemini cloud (streaming natif)
+     * - Hors ligne → Gemma local (streaming simulé)
      */
     fun envoyerMessage(message: String): Flow<String> = flow {
         try {
+            if (!isOnline()) {
+                // ── MODE HORS-LIGNE : Gemma local ──
+                Log.d(TAG, "envoyerMessage (OFFLINE/local): $message")
+                emit("📴 *Mode hors-ligne — ROLLY Local*\n\n")
+                localAI.generateResponseStream(message).collect { chunk ->
+                    emit("📴 *Mode hors-ligne — ROLLY Local*\n\n$chunk")
+                }
+                return@flow
+            }
+
+            // ── MODE EN LIGNE : Gemini cloud ──
             Log.d(TAG, "envoyerMessage (stream): $message")
             val accumulated = StringBuilder()
             chatMutex.withLock {
@@ -134,7 +161,18 @@ class ChatbotRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e(TAG, "Erreur envoyerMessage", e)
-            emit("❌ Erreur IA : ${e.message}")
+            // Tentative de fallback local en cas d'erreur réseau
+            if (!isOnline() || e.message?.contains("Unable to resolve host") == true) {
+                Log.d(TAG, "Falling back to local model after network error")
+                try {
+                    val localResponse = localAI.generateResponse(message)
+                    emit("📴 *Mode hors-ligne (fallback)*\n\n$localResponse")
+                } catch (localEx: Exception) {
+                    emit("❌ Erreur IA : ${e.message}")
+                }
+            } else {
+                emit("❌ Erreur IA : ${cleanGeminiException(e)}")
+            }
         }
     }
 
@@ -142,6 +180,10 @@ class ChatbotRepository @Inject constructor(
      * Envoie un message avec contexte patient.
      * - Vérifie le cache local d'abord pour les questions génériques
      * - Stream la réponse en temps réel sinon
+     *
+     * ROUTAGE HYBRIDE :
+     * - En ligne  → Gemini cloud (streaming natif + contexte complet)
+     * - Hors ligne → Gemma local (contexte réduit, réponse basique)
      */
     fun envoyerMessageAvecContexte(
         message: String,
@@ -162,6 +204,20 @@ class ChatbotRepository @Inject constructor(
             }
 
             val contexte = buildContexte(patient, lecturesRecentes, latestHbA1c, hba1cEstimee)
+
+            if (!isOnline()) {
+                // ── MODE HORS-LIGNE : Gemma local avec contexte réduit ──
+                Log.d(TAG, "envoyerMessageAvecContexte (OFFLINE/local): ${message.take(100)}")
+                val localResponse = localAI.generateResponseWithContext(
+                    message = message,
+                    patientContext = contexte,
+                    historiqueChat = historiqueChat
+                )
+                emit("📴 *Mode hors-ligne — ROLLY Local*\n\n$localResponse")
+                return@flow
+            }
+
+            // ── MODE EN LIGNE : Gemini cloud ──
             val sb = StringBuilder()
             if (historiqueChat.isNotBlank()) {
                 sb.appendLine(historiqueChat)
@@ -197,7 +253,17 @@ class ChatbotRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e(TAG, "Erreur envoyerMessageAvecContexte", e)
-            emit("❌ Erreur IA : ${e.message}")
+            // Fallback local si erreur réseau
+            if (!isOnline() || e.message?.contains("Unable to resolve host") == true) {
+                try {
+                    val localResponse = localAI.generateResponseWithContext(message, patientContext = "")
+                    emit("📴 *Mode hors-ligne (fallback)*\n\n$localResponse")
+                } catch (localEx: Exception) {
+                    emit("❌ Erreur IA : ${cleanGeminiException(e)}")
+                }
+            } else {
+                emit("❌ Erreur IA : ${cleanGeminiException(e)}")
+            }
         }
     }
 
