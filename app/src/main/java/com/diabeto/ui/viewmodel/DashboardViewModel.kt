@@ -173,11 +173,20 @@ class DashboardViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
-                val msg = e.message.orEmpty()
+                // Collect full exception chain to detect SQLite/SQLCipher errors
+                val fullMsg = buildString {
+                    var t: Throwable? = e
+                    while (t != null) { append(t.message ?: ""); t = t.cause }
+                }
                 val cleanMsg = when {
-                    msg.contains("file is not a database") || msg.contains("sqlite_master") ->
+                    fullMsg.contains("file is not a database", ignoreCase = true)
+                            || fullMsg.contains("sqlite_master", ignoreCase = true)
+                            || fullMsg.contains("SQLiteDatabaseCorruptException", ignoreCase = true)
+                            || e.javaClass.name.contains("SQLite") ->
                         "Base de données réinitialisée. Veuillez relancer l'application."
-                    msg.contains("network") || msg.contains("connect") ->
+                    fullMsg.contains("network", ignoreCase = true)
+                            || fullMsg.contains("connect", ignoreCase = true)
+                            || fullMsg.contains("UNAVAILABLE", ignoreCase = true) ->
                         "Erreur de connexion. Vérifiez votre accès Internet."
                     else -> "Erreur lors du chargement. Veuillez réessayer."
                 }
