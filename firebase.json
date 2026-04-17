@@ -11,7 +11,7 @@
   },
   "hosting": {
     "public": "website/public",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "**/*.apk", "**/*.zip"],
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "**/*.apk"],
     "headers": [
       {
         "source": "**/*.jpg",

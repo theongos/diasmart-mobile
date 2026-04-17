@@ -7,11 +7,13 @@ import android.util.Log
 import com.google.firebase.storage.FirebaseStorage
 import com.google.mediapipe.tasks.genai.llminference.LlmInference
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.tasks.await
@@ -42,15 +44,9 @@ class LocalAIManager @Inject constructor(
     private var isInitialized = false
     private var initError: String? = null
 
-    // Prompt systeme simplifie pour le modele local (1B = capacite limitee)
-    private val systemPrompt = """Tu es ROLLY, assistant sante pour diabetiques au Cameroun.
-Regles strictes :
-- Reponds en francais, phrases courtes et simples
-- Ne donne JAMAIS de diagnostic medical
-- Conseille toujours de consulter un medecin pour les cas graves
-- Domaine : diabete uniquement (type 1, type 2, gestationnel)
-- Si la question est hors sujet, refuse poliment
-- Signale les urgences : glycemie < 0.70 g/L ou > 3.0 g/L"""
+    // Prompt systeme ULTRA-COMPACT pour vitesse maximale (Gemma 3 1B)
+    // Chaque token dans le prompt = latence en plus. On reste minimal.
+    private val systemPrompt = """Tu es ROLLY, assistant diabete Cameroun. Reponds en francais, court. Pas de diagnostic. Urgence si glycemie<0.70 ou >3.0 g/L."""
 
     // ─────────────────────────────────────────────────────────────────
     // CONNECTIVITE
@@ -117,9 +113,13 @@ Regles strictes :
 
         try {
             Log.d(TAG, "Initializing local Gemma model...")
+            // OPTIMISATIONS VITESSE :
+            // - setMaxTokens(256) : divise par 2 le temps de generation max
+            //   (Gemma genere sequentiellement, moins de tokens = reponse plus rapide)
+            // - Reponses plus courtes mais amplement suffisantes pour ROLLY
             val options = LlmInference.LlmInferenceOptions.builder()
                 .setModelPath(getModelPath())
-                .setMaxTokens(512)
+                .setMaxTokens(256)
                 .build()
 
             llmInference = LlmInference.createFromOptions(context, options)
@@ -259,7 +259,8 @@ Regles strictes :
         }
 
         try {
-            val fullPrompt = "$systemPrompt\n\nPatient: $prompt\n\nROLLY:"
+            // Format ultra-compact : moins de tokens en entree
+            val fullPrompt = "$systemPrompt\nQ: $prompt\nROLLY:"
             val response = llmInference?.generateResponse(fullPrompt)
             response?.takeIf { it.isNotBlank() }
                 ?: "Je n'ai pas pu generer de reponse en mode hors-ligne."
@@ -284,23 +285,23 @@ Regles strictes :
         }
 
         try {
+            // OPTIMISATIONS VITESSE : moins de tokens en entree = prefill plus rapide
             val sb = StringBuilder()
             sb.appendLine(systemPrompt)
             sb.appendLine()
             if (patientContext.isNotBlank()) {
-                sb.appendLine("Donnees patient :")
-                sb.appendLine(patientContext.take(300)) // Limiter le contexte pour le petit modele
+                sb.appendLine("Patient:")
+                sb.appendLine(patientContext.take(150)) // Reduit de 300 -> 150 chars
                 sb.appendLine()
             }
             if (historiqueChat.isNotBlank()) {
-                // Garder seulement les 3 derniers echanges pour le modele local
-                val recentHistory = historiqueChat.lines().takeLast(6).joinToString("\n")
-                sb.appendLine("Historique recent :")
+                // Reduit de 6 -> 4 lignes pour accelerer le prefill
+                val recentHistory = historiqueChat.lines().takeLast(4).joinToString("\n")
+                sb.appendLine("Hist:")
                 sb.appendLine(recentHistory)
                 sb.appendLine()
             }
-            sb.appendLine("Patient: $message")
-            sb.appendLine()
+            sb.appendLine("Q: $message")
             sb.appendLine("ROLLY:")
 
             val response = llmInference?.generateResponse(sb.toString())
@@ -313,40 +314,45 @@ Regles strictes :
     }
 
     /**
-     * Genere une reponse locale en streaming (Flow).
+     * Genere une reponse locale en VRAI streaming (MediaPipe generateResponseAsync).
+     *
+     * OPTIMISATION VITESSE PERCUE :
+     * Avant : on attendait la reponse complete, puis on simulait le streaming.
+     *         -> l'utilisateur voyait "..." pendant 5-15s
+     * Apres : chaque token est affiche des qu'il est genere par le modele.
+     *         -> l'utilisateur voit les mots apparaitre immediatement (UX x10)
      */
-    fun generateResponseStream(prompt: String): Flow<String> = flow {
+    fun generateResponseStream(prompt: String): Flow<String> = channelFlow {
         if (!isInitialized || llmInference == null) {
             if (!initializeModel()) {
-                emit("Mode hors-ligne indisponible. Connectez-vous a internet.")
-                return@flow
+                send("Mode hors-ligne indisponible. Connectez-vous a internet.")
+                return@channelFlow
             }
         }
 
         try {
-            val fullPrompt = "$systemPrompt\n\nPatient: $prompt\n\nROLLY:"
-
-            // MediaPipe LLM supporte le streaming via callback
-            // On simule le streaming en emettant la reponse complete
-            // puis on decoupera en chunks pour l'UX
-            val response = llmInference?.generateResponse(fullPrompt) ?: ""
-
-            if (response.isBlank()) {
-                emit("Je n'ai pas pu generer de reponse en mode hors-ligne.")
-                return@flow
-            }
-
-            // Simuler le streaming pour une UX coherente avec le mode en ligne
-            val words = response.split(" ")
+            val fullPrompt = "$systemPrompt\nQ: $prompt\nROLLY:"
             val accumulated = StringBuilder()
-            for (word in words) {
-                if (accumulated.isNotEmpty()) accumulated.append(" ")
-                accumulated.append(word)
-                emit(accumulated.toString())
+            val completed = CompletableDeferred<Unit>()
+
+            // MediaPipe streaming natif : callback appele avec chaque token
+            llmInference?.generateResponseAsync(fullPrompt) { partialResult, done ->
+                if (partialResult != null) {
+                    accumulated.append(partialResult)
+                    trySend(accumulated.toString())
+                }
+                if (done) {
+                    if (accumulated.isEmpty()) {
+                        trySend("Je n'ai pas pu generer de reponse en mode hors-ligne.")
+                    }
+                    completed.complete(Unit)
+                }
             }
+
+            completed.await() // Attend la fin de la generation
         } catch (e: Exception) {
             Log.e(TAG, "Error in local stream", e)
-            emit("Erreur du modele local : ${e.message}")
+            send("Erreur du modele local : ${e.message}")
         }
     }.flowOn(Dispatchers.IO)
 

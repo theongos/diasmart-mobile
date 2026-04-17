@@ -7,6 +7,7 @@ import com.diabeto.data.entity.AiCacheEntity
 import com.diabeto.data.entity.HbA1cEntity
 import com.diabeto.data.entity.LectureGlucoseEntity
 import com.diabeto.data.entity.PatientEntity
+import com.diabeto.util.UrgencyDetector
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
 import kotlinx.coroutines.flow.Flow
@@ -135,12 +136,27 @@ class ChatbotRepository @Inject constructor(
      */
     fun envoyerMessage(message: String): Flow<String> = flow {
         try {
+            // ── DETECTION D'URGENCE (latence 0 ms) ──
+            // Analyse locale AVANT l'appel LLM. Si symptomes d'urgence detectes,
+            // on affiche immediatement les numeros SAMU/Police/Pompiers + conseils.
+            // Le patient n'attend pas que le modele (Gemini ou Gemma) repondent.
+            val urgencyPrefix = when {
+                UrgencyDetector.detectUrgency(message) -> UrgencyDetector.getEmergencyResponse()
+                UrgencyDetector.detectWarning(message) -> UrgencyDetector.getWarningResponse()
+                else -> ""
+            }
+            if (urgencyPrefix.isNotEmpty()) {
+                Log.d(TAG, "Urgency detected in message, showing emergency info first")
+                emit(urgencyPrefix)
+            }
+
             if (!isOnline()) {
                 // ── MODE HORS-LIGNE : Gemma local ──
                 Log.d(TAG, "envoyerMessage (OFFLINE/local): $message")
-                emit("📴 *Mode hors-ligne — ROLLY Local*\n\n")
+                val header = "$urgencyPrefix📴 *Mode hors-ligne — ROLLY Local*\n\n"
+                emit(header)
                 localAI.generateResponseStream(message).collect { chunk ->
-                    emit("📴 *Mode hors-ligne — ROLLY Local*\n\n$chunk")
+                    emit("$header$chunk")
                 }
                 return@flow
             }
@@ -152,12 +168,12 @@ class ChatbotRepository @Inject constructor(
                 chatSession.sendMessageStream(message).collect { chunk ->
                     chunk.text?.let {
                         accumulated.append(it)
-                        emit(accumulated.toString())
+                        emit("$urgencyPrefix${accumulated}")
                     }
                 }
             }
             if (accumulated.isEmpty()) {
-                emit("Je n'ai pas pu générer de réponse.")
+                emit("${urgencyPrefix}Je n'ai pas pu générer de réponse.")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Erreur envoyerMessage", e)
@@ -194,11 +210,23 @@ class ChatbotRepository @Inject constructor(
         historiqueChat: String = ""
     ): Flow<String> = flow {
         try {
+            // ── DETECTION D'URGENCE (latence 0 ms) ──
+            // Affichee IMMEDIATEMENT avant toute autre logique (cache, LLM)
+            val urgencyPrefix = when {
+                UrgencyDetector.detectUrgency(message) -> UrgencyDetector.getEmergencyResponse()
+                UrgencyDetector.detectWarning(message) -> UrgencyDetector.getWarningResponse()
+                else -> ""
+            }
+            if (urgencyPrefix.isNotEmpty()) {
+                Log.d(TAG, "Urgency detected with context, showing emergency info first")
+                emit(urgencyPrefix)
+            }
+
             // Check cache for generic questions (no patient-specific data needed)
             if (isCacheableQuestion(message) && patient == null && lecturesRecentes.isEmpty()) {
                 val cached = getCachedResponse(message)
                 if (cached != null) {
-                    emit(cached)
+                    emit("$urgencyPrefix$cached")
                     return@flow
                 }
             }
@@ -213,7 +241,7 @@ class ChatbotRepository @Inject constructor(
                     patientContext = contexte,
                     historiqueChat = historiqueChat
                 )
-                emit("📴 *Mode hors-ligne — ROLLY Local*\n\n$localResponse")
+                emit("$urgencyPrefix📴 *Mode hors-ligne — ROLLY Local*\n\n$localResponse")
                 return@flow
             }
 
@@ -237,16 +265,16 @@ class ChatbotRepository @Inject constructor(
                 chatSession.sendMessageStream(messageComplet).collect { chunk ->
                     chunk.text?.let {
                         accumulated.append(it)
-                        emit(accumulated.toString())
+                        emit("$urgencyPrefix${accumulated}")
                     }
                 }
             }
 
             val finalResponse = accumulated.toString()
             if (finalResponse.isBlank()) {
-                emit("Je n'ai pas pu générer de réponse.")
+                emit("${urgencyPrefix}Je n'ai pas pu générer de réponse.")
             } else {
-                // Cache generic responses for future use
+                // Cache generic responses for future use (sans prefix urgence)
                 if (isCacheableQuestion(message)) {
                     cacheResponse(message, finalResponse)
                 }

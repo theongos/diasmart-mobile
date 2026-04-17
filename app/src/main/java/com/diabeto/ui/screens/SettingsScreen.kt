@@ -520,7 +520,7 @@ fun SettingsScreen(
                         icon = Icons.Default.Info,
                         iconBg = Color(0xFF6771E4),
                         title = "Version",
-                        subtitle = "2.0.0",
+                        subtitle = "2.0.2",
                         titleColor = titleColor,
                         subtitleColor = subtitleColor
                     )
