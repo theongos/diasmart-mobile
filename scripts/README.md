@@ -1,61 +1,56 @@
 # Scripts utilitaires DiaSmart
 
-## upload-gemma.js — Upload du modele Gemma 3 1B vers Firebase Storage
+## download-gemma.py — Telecharger le modele Gemma 3 1B en local
 
-### Etape 1 : Activer Firebase Storage
+Telecharge `gemma3-1b-it-int4.task` (529 Mo) depuis HuggingFace vers la racine
+du projet. Utile pour :
+- Publier le modele sur une nouvelle release GitHub
+- Tester le chargement MediaPipe en local
 
-Ouvre :
-```
-https://console.firebase.google.com/project/project-d-r1997t/storage
-```
-Clique **Get Started** → **Start in production mode** → region `europe-west1` ou `us-central1` → **Done**.
+### Prerequis
 
-### Etape 2 : Telecharger la cle de service
+1. Compte HuggingFace (gratuit) : https://huggingface.co/join
+2. Accepter la licence Gemma : https://huggingface.co/google/gemma-3-1b-it
+3. Token Read : https://huggingface.co/settings/tokens
 
-Ouvre :
-```
-https://console.firebase.google.com/project/project-d-r1997t/settings/serviceaccounts/adminsdk
-```
-Clique **Generate new private key** → sauvegarde le fichier comme :
-```
-scripts/serviceAccountKey.json
-```
-**ATTENTION** : ce fichier ne doit JAMAIS etre commit dans git. Il est deja dans `.gitignore`.
-
-### Etape 3 : Telecharger Gemma 3 1B
-
-Depuis HuggingFace (accepter la licence Gemma avant) :
-```
-https://huggingface.co/litert-community/Gemma3-1B-IT/resolve/main/gemma3-1b-it-int4.task
-```
-Sauvegarde le fichier a la racine du projet :
-```
-C:\Users\PC\Desktop\diabetomobile\gemma3-1b-it-int4.task
-```
-
-### Etape 4 : Deployer les regles Storage
+### Usage
 
 ```bash
-firebase deploy --only storage
+cd C:\Users\PC\Desktop\diabetomobile
+python scripts/download-gemma.py
 ```
 
-### Etape 5 : Lancer l'upload
+Le script demandera le token HuggingFace interactivement, ou peut le lire via
+la variable d'environnement `HF_TOKEN` :
 
-Depuis la racine du projet :
 ```bash
-cd functions && npm install firebase-admin  # (deja installe normalement)
-cd ..
-node scripts/upload-gemma.js
+HF_TOKEN=hf_xxxxxx python scripts/download-gemma.py
 ```
 
-L'upload prend ~5-15 minutes selon la connexion (~550 MB).
+## Architecture d'hebergement du modele
 
-### Verification
-
-Dans la console Firebase Storage tu devrais voir :
+Le modele est herberge en tant qu'asset d'une **GitHub Release** :
 ```
-/models/gemma3-1b-it-int4.task  (~550 MB)
+https://github.com/theongos/diasmart-mobile/releases/download/v2.1.1/gemma3-1b-it-int4.task
 ```
 
-Dans l'app, le telechargement fonctionnera automatiquement depuis l'ecran
-"Mode hors-ligne" des que l'utilisateur clique "Telecharger le modele IA".
+**Pourquoi pas Firebase Storage ?**
+Firebase Storage necessite le plan Blaze (payant) depuis 2024. GitHub Release
+est gratuit, bande passante illimitee, CDN Fastly mondial.
+
+### Publier le modele sur une nouvelle release
+
+```bash
+# 1. Telecharger Gemma (si pas deja fait)
+python scripts/download-gemma.py
+
+# 2. Creer la release avec l'asset Gemma
+gh release create vX.Y.Z \
+  DiaSmart-vX.Y.Z.apk \
+  gemma3-1b-it-int4.task \
+  --title "DiaSmart vX.Y.Z" \
+  --notes "Release notes..."
+
+# 3. Mettre a jour MODEL_URL dans app/src/main/java/com/diabeto/data/repository/LocalAIManager.kt
+#    pour pointer vers le nouveau tag
+```

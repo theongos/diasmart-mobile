@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.util.Log
-import com.google.firebase.storage.FirebaseStorage
 import com.google.mediapipe.tasks.genai.llminference.LlmInference
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CompletableDeferred
@@ -16,15 +15,23 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileOutputStream
+import java.net.HttpURLConnection
+import java.net.URL
 import javax.inject.Inject
 import javax.inject.Singleton
 
 private const val TAG = "LocalAIManager"
 private const val MODEL_FILENAME = "gemma3-1b-it-int4.task"
 private const val MODEL_SIZE_MB = 550 // Taille approximative du modele
+
+// URL publique HTTPS (hebergement GitHub Release - gratuit, bande passante illimitee)
+// Ce asset est publie avec chaque release. Pour changer de version du modele,
+// mettre a jour cette URL pour pointer vers le nouveau release.
+private const val MODEL_URL =
+    "https://github.com/theongos/diasmart-mobile/releases/download/v2.1.1/gemma3-1b-it-int4.task"
 
 /**
  * Gestionnaire d'IA locale (on-device) pour DiaSmart.AI
@@ -136,7 +143,7 @@ class LocalAIManager @Inject constructor(
     }
 
     // ─────────────────────────────────────────────────────────────────
-    // TELECHARGEMENT DU MODELE DEPUIS FIREBASE STORAGE
+    // TELECHARGEMENT DU MODELE DEPUIS GITHUB RELEASE (HTTPS public)
     // ─────────────────────────────────────────────────────────────────
 
     private val _downloadProgress = MutableStateFlow(0f)
@@ -149,9 +156,17 @@ class LocalAIManager @Inject constructor(
     val downloadError: StateFlow<String?> = _downloadError.asStateFlow()
 
     /**
-     * Telecharge le modele Gemma depuis Firebase Storage.
-     * Chemin Firebase : models/gemma3-1b-it-int4.task
+     * Telecharge le modele Gemma depuis GitHub Release (HTTPS public).
+     *
+     * Pourquoi GitHub Release plutot que Firebase Storage ?
+     * - Firebase Storage necessite le plan Blaze (payant) depuis 2024
+     * - GitHub Release = gratuit, bande passante illimitee, CDN Fastly
+     * - Limite 2 Go par asset (Gemma fait 550 Mo, OK)
+     *
+     * URL : $MODEL_URL
      * Destination : context.filesDir/gemma3-1b-it-int4.task
+     *
+     * Gere les redirections (GitHub -> CDN) via instanceFollowRedirects.
      */
     suspend fun downloadModel(): Boolean = withContext(Dispatchers.IO) {
         if (isModelDownloaded()) {
@@ -167,52 +182,85 @@ class LocalAIManager @Inject constructor(
         _downloadProgress.value = 0f
         _downloadError.value = null
 
+        val destFile = File(context.filesDir, MODEL_FILENAME)
+        val tempFile = File(context.filesDir, "${MODEL_FILENAME}.tmp")
+
         try {
-            val storage = FirebaseStorage.getInstance()
-            val modelRef = storage.reference.child("models/$MODEL_FILENAME")
-            val destFile = File(context.filesDir, MODEL_FILENAME)
-            val tempFile = File(context.filesDir, "${MODEL_FILENAME}.tmp")
+            Log.d(TAG, "Starting model download from $MODEL_URL")
 
-            Log.d(TAG, "Starting model download from Firebase Storage...")
+            val url = URL(MODEL_URL)
+            val connection = (url.openConnection() as HttpURLConnection).apply {
+                instanceFollowRedirects = true // GitHub redirige vers CDN Fastly
+                connectTimeout = 30_000
+                readTimeout = 60_000
+                setRequestProperty("User-Agent", "DiaSmart-Android")
+                setRequestProperty("Accept", "application/octet-stream")
+            }
 
-            // Verifier que le fichier existe sur Firebase
-            val metadata = modelRef.metadata.await()
-            val totalBytes = metadata.sizeBytes
+            connection.connect()
+
+            val responseCode = connection.responseCode
+            if (responseCode !in 200..299) {
+                throw Exception("HTTP $responseCode : ${connection.responseMessage}")
+            }
+
+            val totalBytes = connection.contentLengthLong.takeIf { it > 0 }
+                ?: (MODEL_SIZE_MB * 1024L * 1024L)
             Log.d(TAG, "Model size on server: ${totalBytes / 1024 / 1024} MB")
 
-            // Telecharger vers fichier temporaire
-            val downloadTask = modelRef.getFile(tempFile)
+            connection.inputStream.use { input ->
+                FileOutputStream(tempFile).use { output ->
+                    val buffer = ByteArray(64 * 1024) // 64 Ko par chunk
+                    var totalRead = 0L
+                    var bytesRead: Int
+                    var lastLoggedMB = 0L
 
-            // Observer la progression
-            downloadTask.addOnProgressListener { snapshot ->
-                val progress = if (snapshot.totalByteCount > 0) {
-                    snapshot.bytesTransferred.toFloat() / snapshot.totalByteCount.toFloat()
-                } else 0f
-                _downloadProgress.value = progress
-                if (snapshot.bytesTransferred % (10 * 1024 * 1024) < 1024 * 1024) {
-                    Log.d(TAG, "Download progress: ${(progress * 100).toInt()}%")
+                    while (input.read(buffer).also { bytesRead = it } != -1) {
+                        output.write(buffer, 0, bytesRead)
+                        totalRead += bytesRead
+                        _downloadProgress.value =
+                            (totalRead.toFloat() / totalBytes.toFloat()).coerceIn(0f, 1f)
+
+                        // Log toutes les 25 Mo pour ne pas spammer
+                        val currentMB = totalRead / (25 * 1024 * 1024)
+                        if (currentMB > lastLoggedMB) {
+                            Log.d(
+                                TAG,
+                                "Download: ${(_downloadProgress.value * 100).toInt()}% (${totalRead / 1024 / 1024} MB)"
+                            )
+                            lastLoggedMB = currentMB
+                        }
+                    }
                 }
             }
 
-            downloadTask.await()
+            connection.disconnect()
 
-            // Renommer le fichier temporaire
-            if (tempFile.exists()) {
-                tempFile.renameTo(destFile)
+            // Verifier taille (un 404 HTML ferait ~1-5 Ko -> a rejeter)
+            val downloadedSize = tempFile.length()
+            if (downloadedSize < 100 * 1024 * 1024) { // < 100 Mo
+                tempFile.delete()
+                throw Exception(
+                    "Fichier telecharge trop petit (${downloadedSize / 1024} Ko). " +
+                            "Le serveur a peut-etre retourne une erreur HTML."
+                )
+            }
+
+            // Renommer temp -> destination
+            if (tempFile.renameTo(destFile)) {
                 Log.d(TAG, "Model downloaded successfully: ${destFile.length() / 1024 / 1024} MB")
                 _downloadProgress.value = 1f
                 _isDownloading.value = false
                 true
             } else {
-                throw Exception("Download completed but temp file not found")
+                throw Exception("Renommage du fichier temporaire echoue")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to download model", e)
             _downloadError.value = e.message ?: "Erreur de telechargement"
             _isDownloading.value = false
             _downloadProgress.value = 0f
-            // Nettoyer le fichier temporaire
-            File(context.filesDir, "${MODEL_FILENAME}.tmp").delete()
+            tempFile.delete()
             false
         }
     }
