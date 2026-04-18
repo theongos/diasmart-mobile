@@ -833,7 +833,8 @@ private fun FeatureCard(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (isRolly) {
                 RollyIcon(
@@ -854,21 +855,26 @@ private fun FeatureCard(
                     Icon(icon, null, tint = if (isDarkCard || isSystemDark) Color.White else iconTint, modifier = Modifier.size(20.dp))
                 }
             }
-            Column {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Text(
                     title,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
                     color = textColor,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center
                 )
                 Text(
                     if (!isOnline && (isRolly || icon == Icons.Outlined.Forum || icon == Icons.Outlined.Restaurant)) "Hors-ligne" else subtitle,
                     fontSize = 11.sp,
                     color = subColor,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center
                 )
             }
         }

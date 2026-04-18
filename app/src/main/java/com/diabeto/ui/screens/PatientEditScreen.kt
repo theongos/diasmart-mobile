@@ -19,6 +19,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.diabeto.data.entity.Sexe
 import com.diabeto.data.entity.TypeDiabete
+import com.diabeto.ui.components.RequiredFieldLabel
+import com.diabeto.ui.components.diaSmartTextFieldColors
 import com.diabeto.ui.theme.*
 import com.diabeto.ui.viewmodel.PatientEditViewModel
 import com.vanpra.composematerialdialogs.MaterialDialog
@@ -113,40 +115,43 @@ fun PatientEditScreen(
             OutlinedTextField(
                 value = uiState.nom,
                 onValueChange = { viewModel.updateField("nom", it) },
-                label = { Text("Nom *") },
+                label = { RequiredFieldLabel("Nom", required = true) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                colors = diaSmartTextFieldColors()
             )
-            
+
             OutlinedTextField(
                 value = uiState.prenom,
                 onValueChange = { viewModel.updateField("prenom", it) },
-                label = { Text("Prénom *") },
+                label = { RequiredFieldLabel("Prenom", required = true) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                colors = diaSmartTextFieldColors()
             )
-            
+
             // Date de naissance
             OutlinedTextField(
                 value = uiState.dateNaissance.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
                 onValueChange = { },
-                label = { Text("Date de naissance *") },
+                label = { RequiredFieldLabel("Date de naissance", required = true) },
                 modifier = Modifier.fillMaxWidth(),
                 readOnly = true,
                 trailingIcon = {
                     IconButton(onClick = { dateNaissanceDialogState.show() }) {
                         Icon(Icons.Default.CalendarToday, contentDescription = "Choisir date")
                     }
-                }
+                },
+                colors = diaSmartTextFieldColors()
             )
-            
+
             // Sexe
-            Text(
-                text = "Sexe *",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 8.dp)
+            RequiredFieldLabel(
+                text = "Sexe",
+                required = true,
+                color = MaterialTheme.colorScheme.onSurface
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -176,41 +181,44 @@ fun PatientEditScreen(
             OutlinedTextField(
                 value = uiState.telephone,
                 onValueChange = { viewModel.updateField("telephone", it) },
-                label = { Text("Téléphone") },
+                label = { RequiredFieldLabel("Telephone") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Phone,
                     imeAction = ImeAction.Next
-                )
+                ),
+                colors = diaSmartTextFieldColors()
             )
-            
+
             OutlinedTextField(
                 value = uiState.email,
                 onValueChange = { viewModel.updateField("email", it) },
-                label = { Text("Email") },
+                label = { RequiredFieldLabel("Email") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
                     imeAction = ImeAction.Next
-                )
+                ),
+                colors = diaSmartTextFieldColors()
             )
-            
+
             OutlinedTextField(
                 value = uiState.adresse,
                 onValueChange = { viewModel.updateField("adresse", it) },
-                label = { Text("Adresse") },
+                label = { RequiredFieldLabel("Adresse") },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 2,
-                maxLines = 3
+                maxLines = 3,
+                colors = diaSmartTextFieldColors()
             )
-            
+
             // Type de diabète
-            Text(
-                text = "Type de diabète *",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 8.dp)
+            RequiredFieldLabel(
+                text = "Type de diabete",
+                required = true,
+                color = MaterialTheme.colorScheme.onSurface
             )
             TypeDiabete.entries.forEach { type ->
                 Row(
@@ -237,7 +245,7 @@ fun PatientEditScreen(
             OutlinedTextField(
                 value = uiState.dateDiagnostic?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: "",
                 onValueChange = { },
-                label = { Text("Date de diagnostic") },
+                label = { RequiredFieldLabel("Date de diagnostic") },
                 modifier = Modifier.fillMaxWidth(),
                 readOnly = true,
                 trailingIcon = {
@@ -251,7 +259,8 @@ fun PatientEditScreen(
                             Icon(Icons.Default.CalendarToday, contentDescription = "Choisir date")
                         }
                     }
-                }
+                },
+                colors = diaSmartTextFieldColors()
             )
             
             // ── Données corporelles ──
@@ -269,24 +278,26 @@ fun PatientEditScreen(
                 OutlinedTextField(
                     value = uiState.poids,
                     onValueChange = { viewModel.updateField("poids", it) },
-                    label = { Text("Poids (kg)") },
+                    label = { RequiredFieldLabel("Poids (kg)") },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Decimal,
                         imeAction = ImeAction.Next
-                    )
+                    ),
+                    colors = diaSmartTextFieldColors()
                 )
                 OutlinedTextField(
                     value = uiState.taille,
                     onValueChange = { viewModel.updateField("taille", it) },
-                    label = { Text("Taille (cm)") },
+                    label = { RequiredFieldLabel("Taille (cm)") },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Decimal,
                         imeAction = ImeAction.Next
-                    )
+                    ),
+                    colors = diaSmartTextFieldColors()
                 )
             }
 
@@ -318,24 +329,26 @@ fun PatientEditScreen(
                 OutlinedTextField(
                     value = uiState.tourDeTaille,
                     onValueChange = { viewModel.updateField("tourDeTaille", it) },
-                    label = { Text("Tour de taille (cm)") },
+                    label = { RequiredFieldLabel("Tour de taille (cm)") },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Decimal,
                         imeAction = ImeAction.Next
-                    )
+                    ),
+                    colors = diaSmartTextFieldColors()
                 )
                 OutlinedTextField(
                     value = uiState.masseGrasse,
                     onValueChange = { viewModel.updateField("masseGrasse", it) },
-                    label = { Text("Masse grasse (%)") },
+                    label = { RequiredFieldLabel("Masse grasse (%)") },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Decimal,
                         imeAction = ImeAction.Next
-                    )
+                    ),
+                    colors = diaSmartTextFieldColors()
                 )
             }
 
@@ -345,10 +358,11 @@ fun PatientEditScreen(
             OutlinedTextField(
                 value = uiState.notes,
                 onValueChange = { viewModel.updateField("notes", it) },
-                label = { Text("Notes") },
+                label = { RequiredFieldLabel("Notes") },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3,
-                maxLines = 5
+                maxLines = 5,
+                colors = diaSmartTextFieldColors()
             )
             
             Spacer(modifier = Modifier.height(16.dp))

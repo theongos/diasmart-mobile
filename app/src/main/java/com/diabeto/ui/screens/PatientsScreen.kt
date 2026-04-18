@@ -97,16 +97,24 @@ fun PatientsListScreen(
                 // ═══ VUE MÉDECIN ═══
                 // Tabs : Tous les patients | Mes patients
                 var selectedTab by remember { mutableIntStateOf(0) }
-                TabRow(selectedTabIndex = selectedTab) {
+                TabRow(
+                    selectedTabIndex = selectedTab,
+                    containerColor = Background,
+                    contentColor = Primary
+                ) {
                     Tab(
                         selected = selectedTab == 0,
                         onClick = { selectedTab = 0 },
+                        selectedContentColor = Primary,
+                        unselectedContentColor = TextPrimary,
                         text = { Text("Tous les patients") },
                         icon = { Icon(Icons.Default.People, null, Modifier.size(18.dp)) }
                     )
                     Tab(
                         selected = selectedTab == 1,
                         onClick = { selectedTab = 1 },
+                        selectedContentColor = Primary,
+                        unselectedContentColor = TextPrimary,
                         text = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("Mes patients")

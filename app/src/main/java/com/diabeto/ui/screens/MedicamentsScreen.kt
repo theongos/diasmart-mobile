@@ -15,6 +15,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.diabeto.data.entity.FrequencePrise
 import com.diabeto.data.entity.MedicamentEntity
+import com.diabeto.ui.components.RequiredFieldLabel
+import com.diabeto.ui.components.diaSmartTextFieldColors
 import com.diabeto.ui.theme.*
 import com.diabeto.ui.viewmodel.MedicamentViewModel
 import com.vanpra.composematerialdialogs.MaterialDialog
@@ -131,17 +133,19 @@ fun MedicamentsScreen(
                     OutlinedTextField(
                         value = addState.nom,
                         onValueChange = { viewModel.updateAddField("nom", it) },
-                        label = { Text("Nom *") },
+                        label = { RequiredFieldLabel("Nom", required = true) },
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        singleLine = true,
+                        colors = diaSmartTextFieldColors()
                     )
-                    
+
                     OutlinedTextField(
                         value = addState.dosage,
                         onValueChange = { viewModel.updateAddField("dosage", it) },
-                        label = { Text("Dosage * (ex: 500mg)") },
+                        label = { RequiredFieldLabel("Dosage (ex: 500mg)", required = true) },
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        singleLine = true,
+                        colors = diaSmartTextFieldColors()
                     )
                     
                     // Fréquence
@@ -153,12 +157,13 @@ fun MedicamentsScreen(
                         OutlinedTextField(
                             value = addState.frequence.getDisplayName(),
                             onValueChange = { },
-                            label = { Text("Fréquence") },
+                            label = { RequiredFieldLabel("Frequence") },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .menuAnchor(),
                             readOnly = true,
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) }
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+                            colors = diaSmartTextFieldColors()
                         )
                         ExposedDropdownMenu(
                             expanded = expanded,
@@ -180,14 +185,15 @@ fun MedicamentsScreen(
                     OutlinedTextField(
                         value = addState.heurePrise.format(DateTimeFormatter.ofPattern("HH:mm")),
                         onValueChange = { },
-                        label = { Text("Heure de prise *") },
+                        label = { RequiredFieldLabel("Heure de prise", required = true) },
                         modifier = Modifier.fillMaxWidth(),
                         readOnly = true,
                         trailingIcon = {
                             IconButton(onClick = { timeDialogState.show() }) {
                                 Icon(Icons.Default.Schedule, contentDescription = "Choisir heure")
                             }
-                        }
+                        },
+                        colors = diaSmartTextFieldColors()
                     )
                     
                     // Rappel
@@ -205,9 +211,10 @@ fun MedicamentsScreen(
                     OutlinedTextField(
                         value = addState.notes,
                         onValueChange = { viewModel.updateAddField("notes", it) },
-                        label = { Text("Notes") },
+                        label = { RequiredFieldLabel("Notes") },
                         modifier = Modifier.fillMaxWidth(),
-                        minLines = 2
+                        minLines = 2,
+                        colors = diaSmartTextFieldColors()
                     )
                 }
             },

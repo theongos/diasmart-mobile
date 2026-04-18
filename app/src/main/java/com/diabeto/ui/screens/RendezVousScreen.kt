@@ -19,6 +19,8 @@ import com.diabeto.data.entity.TypeRendezVous
 import com.diabeto.data.model.AppointmentRequestStatus
 import com.diabeto.data.model.RendezVousRequest
 import com.diabeto.data.model.UserProfile
+import com.diabeto.ui.components.RequiredFieldLabel
+import com.diabeto.ui.components.diaSmartTextFieldColors
 import com.diabeto.ui.theme.*
 import com.diabeto.ui.viewmodel.BookAppointmentState
 import com.diabeto.ui.viewmodel.PatientOption
@@ -906,7 +908,7 @@ private fun BookAppointmentDialog(
                     OutlinedTextField(
                         value = state.selectedMedecinNom.ifBlank { "" },
                         onValueChange = { },
-                        label = { Text("Médecin *") },
+                        label = { RequiredFieldLabel("Medecin", required = true) },
                         placeholder = {
                             Text(
                                 if (availableMedecins.isEmpty())
@@ -919,7 +921,8 @@ private fun BookAppointmentDialog(
                             .fillMaxWidth()
                             .menuAnchor(),
                         readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(medecinExpanded) }
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(medecinExpanded) },
+                        colors = diaSmartTextFieldColors()
                     )
                     ExposedDropdownMenu(
                         expanded = medecinExpanded,
@@ -956,26 +959,28 @@ private fun BookAppointmentDialog(
                     OutlinedTextField(
                         value = state.date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
                         onValueChange = { },
-                        label = { Text("Date *") },
+                        label = { RequiredFieldLabel("Date", required = true) },
                         modifier = Modifier.weight(1f),
                         readOnly = true,
                         trailingIcon = {
                             IconButton(onClick = { dateDialogState.show() }) {
                                 Icon(Icons.Default.CalendarToday, contentDescription = null)
                             }
-                        }
+                        },
+                        colors = diaSmartTextFieldColors()
                     )
                     OutlinedTextField(
                         value = state.heure.format(DateTimeFormatter.ofPattern("HH:mm")),
                         onValueChange = { },
-                        label = { Text("Heure *") },
+                        label = { RequiredFieldLabel("Heure", required = true) },
                         modifier = Modifier.weight(1f),
                         readOnly = true,
                         trailingIcon = {
                             IconButton(onClick = { timeDialogState.show() }) {
                                 Icon(Icons.Default.Schedule, contentDescription = null)
                             }
-                        }
+                        },
+                        colors = diaSmartTextFieldColors()
                     )
                 }
 
@@ -988,12 +993,13 @@ private fun BookAppointmentDialog(
                     OutlinedTextField(
                         value = state.type.replace("_", " "),
                         onValueChange = { },
-                        label = { Text("Type") },
+                        label = { RequiredFieldLabel("Type") },
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor(),
                         readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(typeExpanded) }
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(typeExpanded) },
+                        colors = diaSmartTextFieldColors()
                     )
                     ExposedDropdownMenu(
                         expanded = typeExpanded,
@@ -1020,10 +1026,11 @@ private fun BookAppointmentDialog(
                 OutlinedTextField(
                     value = state.motif,
                     onValueChange = { onUpdateField("motif", it) },
-                    label = { Text("Motif *") },
+                    label = { RequiredFieldLabel("Motif", required = true) },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2,
-                    maxLines = 4
+                    maxLines = 4,
+                    colors = diaSmartTextFieldColors()
                 )
 
                 if (state.error != null) {
@@ -1158,7 +1165,7 @@ fun RendezVousEditScreen(
                     OutlinedTextField(
                         value = selectedOption?.nom ?: "",
                         onValueChange = { },
-                        label = { Text("Patient *") },
+                        label = { RequiredFieldLabel("Patient", required = true) },
                         placeholder = {
                             Text(
                                 if (uiState.patientOptions.isEmpty())
@@ -1171,7 +1178,8 @@ fun RendezVousEditScreen(
                             .fillMaxWidth()
                             .menuAnchor(),
                         readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) }
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+                        colors = diaSmartTextFieldColors()
                     )
                     ExposedDropdownMenu(
                         expanded = expanded,
@@ -1205,9 +1213,10 @@ fun RendezVousEditScreen(
             OutlinedTextField(
                 value = addState.titre,
                 onValueChange = { viewModel.updateAddField("titre", it) },
-                label = { Text("Titre *") },
+                label = { RequiredFieldLabel("Titre", required = true) },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                colors = diaSmartTextFieldColors()
             )
 
             Row(
@@ -1217,27 +1226,29 @@ fun RendezVousEditScreen(
                 OutlinedTextField(
                     value = addState.date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
                     onValueChange = { },
-                    label = { Text("Date *") },
+                    label = { RequiredFieldLabel("Date", required = true) },
                     modifier = Modifier.weight(1f),
                     readOnly = true,
                     trailingIcon = {
                         IconButton(onClick = { dateDialogState.show() }) {
                             Icon(Icons.Default.CalendarToday, contentDescription = "Choisir date")
                         }
-                    }
+                    },
+                    colors = diaSmartTextFieldColors()
                 )
 
                 OutlinedTextField(
                     value = addState.heure.format(DateTimeFormatter.ofPattern("HH:mm")),
                     onValueChange = { },
-                    label = { Text("Heure *") },
+                    label = { RequiredFieldLabel("Heure", required = true) },
                     modifier = Modifier.weight(1f),
                     readOnly = true,
                     trailingIcon = {
                         IconButton(onClick = { timeDialogState.show() }) {
                             Icon(Icons.Default.Schedule, contentDescription = "Choisir heure")
                         }
-                    }
+                    },
+                    colors = diaSmartTextFieldColors()
                 )
             }
 
@@ -1250,12 +1261,13 @@ fun RendezVousEditScreen(
                 OutlinedTextField(
                     value = addState.type.getDisplayName(),
                     onValueChange = { },
-                    label = { Text("Type") },
+                    label = { RequiredFieldLabel("Type") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .menuAnchor(),
                     readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(typeExpanded) }
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(typeExpanded) },
+                    colors = diaSmartTextFieldColors()
                 )
                 ExposedDropdownMenu(
                     expanded = typeExpanded,
@@ -1276,25 +1288,28 @@ fun RendezVousEditScreen(
             OutlinedTextField(
                 value = addState.duree.toString(),
                 onValueChange = { viewModel.updateAddField("duree", it.toIntOrNull() ?: 30) },
-                label = { Text("Durée (minutes)") },
+                label = { RequiredFieldLabel("Durée (minutes)") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                colors = diaSmartTextFieldColors()
             )
 
             OutlinedTextField(
                 value = addState.lieu,
                 onValueChange = { viewModel.updateAddField("lieu", it) },
-                label = { Text("Lieu") },
+                label = { RequiredFieldLabel("Lieu") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                colors = diaSmartTextFieldColors()
             )
 
             OutlinedTextField(
                 value = addState.notes,
                 onValueChange = { viewModel.updateAddField("notes", it) },
-                label = { Text("Notes") },
+                label = { RequiredFieldLabel("Notes") },
                 modifier = Modifier.fillMaxWidth(),
-                minLines = 3
+                minLines = 3,
+                colors = diaSmartTextFieldColors()
             )
 
             Spacer(modifier = Modifier.weight(1f))

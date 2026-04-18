@@ -33,8 +33,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.diabeto.data.entity.ContexteGlucose
 import com.diabeto.data.entity.HbA1cEntity
 import com.diabeto.data.entity.LectureGlucoseEntity
+import com.diabeto.ui.components.RequiredFieldLabel
 import com.diabeto.ui.components.RollyIcon
 import com.diabeto.ui.components.RollyIconInline
+import com.diabeto.ui.components.diaSmartTextFieldColors
 import com.diabeto.ui.theme.*
 import com.diabeto.data.repository.GlucoseRepository.DailyGlucoseAverage
 import com.diabeto.ui.viewmodel.GlucoseTab
@@ -120,18 +122,24 @@ fun GlucoseTrackingScreen(
                 Tab(
                     selected = uiState.activeTab == GlucoseTab.GLYCEMIE,
                     onClick = { viewModel.setActiveTab(GlucoseTab.GLYCEMIE) },
+                    selectedContentColor = Primary,
+                    unselectedContentColor = TextPrimary,
                     text = { Text("Glycémie", fontSize = 12.sp) },
                     icon = { Icon(Icons.Outlined.Bloodtype, null, Modifier.size(18.dp)) }
                 )
                 Tab(
                     selected = uiState.activeTab == GlucoseTab.HBA1C,
                     onClick = { viewModel.setActiveTab(GlucoseTab.HBA1C) },
+                    selectedContentColor = Primary,
+                    unselectedContentColor = TextPrimary,
                     text = { Text("HbA1c", fontSize = 12.sp) },
                     icon = { Icon(Icons.Outlined.Science, null, Modifier.size(18.dp)) }
                 )
                 Tab(
                     selected = uiState.activeTab == GlucoseTab.SUIVI,
                     onClick = { viewModel.setActiveTab(GlucoseTab.SUIVI) },
+                    selectedContentColor = Primary,
+                    unselectedContentColor = TextPrimary,
                     text = { Text("Suivi", fontSize = 12.sp) },
                     icon = { Icon(Icons.Outlined.Timeline, null, Modifier.size(18.dp)) }
                 )
@@ -160,10 +168,12 @@ fun GlucoseTrackingScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(value = uiState.newHbA1cValeur, onValueChange = viewModel::onHbA1cValeurChange,
-                        label = { Text("HbA1c (%)") }, placeholder = { Text("Ex: 6.8") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true, modifier = Modifier.fillMaxWidth())
+                        label = { RequiredFieldLabel("HbA1c (%)", required = true) }, placeholder = { Text("Ex: 6.8") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true, modifier = Modifier.fillMaxWidth(),
+                        colors = diaSmartTextFieldColors())
                     OutlinedTextField(value = uiState.newHbA1cLabo, onValueChange = viewModel::onHbA1cLaboChange,
-                        label = { Text("Laboratoire (optionnel)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                        label = { RequiredFieldLabel("Laboratoire (optionnel)") }, singleLine = true, modifier = Modifier.fillMaxWidth(),
+                        colors = diaSmartTextFieldColors())
                     Text("L'HbA1c reflète la glycémie moyenne des 2-3 derniers mois.\nCible : < 7% pour la plupart des diabétiques.",
                         style = MaterialTheme.typography.bodySmall, color = OnSurfaceVariant)
                 }
