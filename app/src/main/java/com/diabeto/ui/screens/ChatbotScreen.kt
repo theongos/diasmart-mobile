@@ -39,8 +39,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.diabeto.data.model.ChatbotMessage
 import com.diabeto.data.model.UserProfile
 import com.diabeto.data.repository.ChatSession
+import com.diabeto.ui.components.EmergencyCallButton
 import com.diabeto.ui.components.RollyIcon
 import com.diabeto.ui.components.RollyIconInline
+import com.diabeto.ui.components.VoiceInputButton
 import com.diabeto.ui.theme.*
 import com.diabeto.ui.viewmodel.ChatbotViewModel
 
@@ -139,6 +141,10 @@ fun ChatbotScreen(
                                 StatusRed else chatTopBarText
                         )
                     }
+                    // Bouton d'appel d'urgence (SOS 119 Cameroun)
+                    EmergencyCallButton(
+                        tint = StatusRed
+                    )
                     // Menu options
                     Box {
                         var showMenu by remember { mutableStateOf(false) }
@@ -495,6 +501,18 @@ fun ChatbotScreen(
                             unfocusedTextColor = if (isDarkTheme) Color.White else TextPrimary,
                             cursorColor = Primary
                         )
+                    )
+                    // Bouton saisie vocale (Speech API Android, aucune permission requise)
+                    VoiceInputButton(
+                        onTextRecognized = { recognizedText ->
+                            // Concatène au texte déjà présent ou remplace s'il est vide
+                            val existing = uiState.inputText.trim()
+                            val newText = if (existing.isEmpty()) recognizedText
+                                          else "$existing $recognizedText"
+                            viewModel.onInputChange(newText)
+                        },
+                        tint = if (isDarkTheme) Primary else Primary,
+                        prompt = "Parle à ROLLY..."
                     )
                     FloatingActionButton(
                         onClick = viewModel::envoyerMessage,

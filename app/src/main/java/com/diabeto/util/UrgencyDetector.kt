@@ -15,8 +15,18 @@ object UrgencyDetector {
     /**
      * Mots-cles suggerant une urgence medicale pour un diabetique.
      * Tous en minuscules, sans accents (on normalise le message avant matching).
+     *
+     * Couvre :
+     * - Francais (langue officielle)
+     * - Pidgin English (Regions Sud-Ouest et Nord-Ouest)
+     * - Ewondo / Beti (Region du Centre, Sud)
+     * - Duala (Region du Littoral)
+     * - Bamileke / Ghomala (Region de l'Ouest)
+     * - Bassa (Region du Littoral/Centre)
+     * - Fulfulde / Fulani (Regions du Nord)
      */
     private val urgencyKeywords = listOf(
+        // ═════════════ FRANCAIS ═════════════
         // Hypoglycemie severe (glycemie trop basse)
         "malaise", "evanoui", "je vais tomber", "tres faible", "perte de force",
         "tremble", "tremblement", "sueurs froides", "sueur froide", "transpir",
@@ -44,7 +54,61 @@ object UrgencyDetector {
         // Appel explicite au secours
         "urgence", "au secours", "aidez moi", "aidez-moi",
         "danger", "grave", "tres mal", "ca va mal",
-        "appelez", "appelle"
+        "appelez", "appelle", "je meurs", "je vais mourir",
+
+        // ═════════════ PIDGIN ENGLISH CAMEROUN ═════════════
+        // Largement parle dans les regions anglophones (NW, SW) et urbain
+        "help me", "helep me", "helep", "i di sick", "i de sick",
+        "i no well", "i no fit", "i weak bad", "i weak",
+        "something di pain me", "something de pain me",
+        "ma belly di pain", "ma head di turn", "ma eye di turn",
+        "i wan die", "i go die", "i di die",
+        "call doctor", "call ambulance", "call sosa",
+        "ma pikin sick", "pikin sick bad",
+
+        // ═════════════ EWONDO / BETI (Centre, Sud) ═════════════
+        // Langue parlee par 1M+ personnes, region de Yaounde
+        "ma wu", "ma wou",              // je meurs / je suis mal
+        "ma kon", "ma kone",            // je suis malade
+        "evu", "evou",                  // maladie
+        "mvon",                         // douleur
+        "kelan", "kelen", "bata",       // aide-moi
+        "ma ya'a", "ma ya",             // je vais mal
+        "nnem",                         // coeur (douleur thoracique)
+
+        // ═════════════ DUALA (Littoral, Douala) ═════════════
+        // Langue vehiculaire cotiere, 300k+ locuteurs
+        "na si malamba", "na malamba",  // je ne suis pas bien
+        "musima", "musoma",             // douleur / souffrance
+        "lambo", "lambwa",              // aide
+        "na maha",                      // je suis fatigue/faible
+        "kwedi",                        // mort
+        "na bwele",                     // je suis malade
+        "na wusu",                      // je ne suis pas bien
+
+        // ═════════════ BAMILEKE / GHOMALA (Ouest) ═════════════
+        // Groupe de langues de l'Ouest, 2M+ locuteurs
+        "ma ko", "ma kô",               // je meurs
+        "ngwa", "ngwà",                 // maladie
+        "nkap",                         // douleur
+        "pa' me",                       // aide-moi
+
+        // ═════════════ BASSA (Littoral, Centre) ═════════════
+        // Langue bantoue, 300k+ locuteurs
+        "mut",                          // mort
+        "ngen",                         // douleur
+        "bika be", "bika bè",           // malade
+        "nlema",                        // je suis faible
+        "hola",                         // aide
+
+        // ═════════════ FULFULDE / FULANI (Nord) ═════════════
+        // Langue des regions du Nord (Adamaoua, Nord, Extreme-Nord)
+        "mi yahi",                      // je vais mal
+        "wallu mi", "walla mi",         // aide-moi
+        "mi ronki",                     // je suis fatigue
+        "nyawnde",                      // maladie
+        "naawki",                       // douleur
+        "mi maayan"                     // je meurs
     )
 
     /**
