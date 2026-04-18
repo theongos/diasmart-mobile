@@ -53,7 +53,10 @@ class LocalAIManager @Inject constructor(
 
     // Prompt systeme ULTRA-COMPACT pour vitesse maximale (Gemma 3 1B)
     // Chaque token dans le prompt = latence en plus. On reste minimal.
-    private val systemPrompt = """Tu es ROLLY, assistant diabete Cameroun. Reponds en francais, court. Pas de diagnostic. Urgence si glycemie<0.70 ou >3.0 g/L."""
+    // Multilingue Cameroun : FR par defaut, mais reponds dans la langue du patient
+    // (FR, EN, Pidgin, Ewondo, Duala, Bassa, Bamileke, Fulfulde). Si langue peu maitrisee,
+    // repond en francais + quelques mots cles dans la langue du patient.
+    private val systemPrompt = """Tu es ROLLY, assistant diabete Cameroun. Detecte la langue du patient (FR, EN, Pidgin, Ewondo, Duala, Bassa, Bamileke, Fulfulde) et reponds dans la meme langue. Si langue peu maitrisee, reponds en francais simple. Termes medicaux (insuline, HbA1c, glycemie) restent en francais. Court. Pas de diagnostic. Urgence si glycemie<0.70 ou >3.0 g/L."""
 
     // ─────────────────────────────────────────────────────────────────
     // CONNECTIVITE
