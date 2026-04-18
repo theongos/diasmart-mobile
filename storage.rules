@@ -11,6 +11,13 @@ service firebase.storage {
                    && request.resource.contentType.matches('image/.*');
     }
 
+    // Modeles IA (Gemma .task) — lecture publique pour tous les utilisateurs connectes
+    // Ecriture interdite cote client (upload via console Firebase / gcloud CLI uniquement)
+    match /models/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
     // Fallback — bloquer tout le reste
     match /{allPaths=**} {
       allow read, write: if false;

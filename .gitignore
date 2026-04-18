@@ -53,6 +53,12 @@ vcs.xml
 
 # Firebase service accounts / secrets
 firebase-service-account.json
+scripts/serviceAccountKey.json
+*-service-account*.json
+
+# Gemma model (too large for git, hosted on Firebase Storage)
+*.task
+gemma*.task
 auth_test.json
 auth-users.json
 website/auth-users.json
