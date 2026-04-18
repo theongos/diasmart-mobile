@@ -3,6 +3,7 @@ package com.diabeto.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -488,6 +489,100 @@ private fun MedecinRendezVousCard(
         2 -> Warning
         else -> Success
     }
+    // Dialog elegant de validation/annulation du RDV cote medecin
+    var showConfirmDialog by remember { mutableStateOf(false) }
+    if (showConfirmDialog) {
+        val currentlyConfirmed = rdv.rendezVous.estConfirme
+        AlertDialog(
+            onDismissRequest = { showConfirmDialog = false },
+            shape = RoundedCornerShape(24.dp),
+            icon = {
+                Icon(
+                    imageVector = if (currentlyConfirmed) Icons.Default.EventBusy else Icons.Default.EventAvailable,
+                    contentDescription = null,
+                    tint = if (currentlyConfirmed) Warning else Success,
+                    modifier = Modifier.size(40.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = if (currentlyConfirmed) "Annuler la validation ?" else "Valider ce rendez-vous ?",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center
+                )
+            },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Primary.copy(alpha = 0.08f),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = rdv.patient.nomComplet,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Primary
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = rdv.rendezVous.titre,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Default.Schedule,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = OnSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = rdv.rendezVous.dateHeure.format(
+                                        DateTimeFormatter.ofPattern("EEEE dd MMMM, HH:mm")
+                                    ),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = OnSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                    Text(
+                        text = if (currentlyConfirmed)
+                            "Le patient sera notifie que la validation a ete retiree."
+                        else
+                            "Le patient sera notifie que le rendez-vous est confirme.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = OnSurfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onToggleConfirm()
+                        showConfirmDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (currentlyConfirmed) Warning else Success
+                    )
+                ) {
+                    Text(if (currentlyConfirmed) "Retirer la validation" else "Valider le RDV")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmDialog = false }) {
+                    Text("Annuler")
+                }
+            }
+        )
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -586,7 +681,7 @@ private fun MedecinRendezVousCard(
                 // Actions médecin: confirmer + supprimer
                 if (!isPast) {
                     Row {
-                        IconButton(onClick = onToggleConfirm) {
+                        IconButton(onClick = { showConfirmDialog = true }) {
                             Icon(
                                 imageVector = if (rdv.rendezVous.estConfirme)
                                     Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,

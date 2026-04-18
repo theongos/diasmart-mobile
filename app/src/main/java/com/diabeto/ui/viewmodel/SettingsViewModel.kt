@@ -5,7 +5,9 @@ import android.content.Context
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.diabeto.data.model.UserRole
 import com.diabeto.data.repository.AppLanguage
+import com.diabeto.data.repository.AuthRepository
 import com.diabeto.data.repository.CloudBackupRepository
 import com.diabeto.data.repository.GlucoseRepository
 import com.diabeto.data.repository.GlucoseUnit
@@ -40,7 +42,9 @@ data class SettingsUiState(
     val modelDownloadProgress: Float = 0f,
     val isDownloadingModel: Boolean = false,
     val downloadError: String? = null,
-    val modelSizeMB: Int = 550
+    val modelSizeMB: Int = 550,
+    // Role utilisateur — gate les sections specifiques
+    val isMedecin: Boolean = false
 )
 
 @HiltViewModel
@@ -49,13 +53,19 @@ class SettingsViewModel @Inject constructor(
     private val cloudBackupRepository: CloudBackupRepository,
     private val patientRepository: PatientRepository,
     private val glucoseRepository: GlucoseRepository,
-    private val localAIManager: LocalAIManager
+    private val localAIManager: LocalAIManager,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     init {
+        // Charger le role utilisateur pour gater les sections specifiques
+        viewModelScope.launch {
+            val profile = authRepository.getCurrentUserProfile()
+            _uiState.update { it.copy(isMedecin = profile?.role == UserRole.MEDECIN) }
+        }
         // Observer le statut du modele local
         _uiState.update {
             it.copy(

@@ -5,24 +5,24 @@
     android:viewportWidth="120"
     android:viewportHeight="120">
 
-    <!-- Dark navy background circle -->
+    <!-- Deep purple background circle (harmonise avec la charte violette) -->
     <path
-        android:fillColor="#0B1F4D"
+        android:fillColor="#1A0B4D"
         android:pathData="M60,4 A56,56 0 1,1 60,116 A56,56 0 1,1 60,4 Z"/>
 
-    <!-- Blue filled circle (left-center) -->
+    <!-- Lavender/violet circle (left) - harmonise avec Primary #6771E4 -->
     <path
-        android:fillColor="#2962FF"
+        android:fillColor="#6771E4"
         android:pathData="M46,30 A30,30 0 1,1 46,90 A30,30 0 1,1 46,30 Z"/>
 
-    <!-- White filled circle (right-center) -->
+    <!-- White filled circle (right) -->
     <path
         android:fillColor="#FFFFFF"
         android:pathData="M74,30 A30,30 0 1,1 74,90 A30,30 0 1,1 74,30 Z"/>
 
-    <!-- Dark navy center circle (creates interlocking D-shape appearance) -->
+    <!-- Deep purple center circle (interlocking D-shape) -->
     <path
-        android:fillColor="#0B1F4D"
+        android:fillColor="#1A0B4D"
         android:pathData="M60,42 A18,18 0 1,1 60,78 A18,18 0 1,1 60,42 Z"/>
 
     <!-- Red blood drop (teardrop shape in center) -->

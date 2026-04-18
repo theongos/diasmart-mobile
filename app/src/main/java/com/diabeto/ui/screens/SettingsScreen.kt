@@ -3,6 +3,8 @@ package com.diabeto.ui.screens
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -64,6 +66,23 @@ fun SettingsScreen(
     var showExportDialog by remember { mutableStateOf(false) }
     var showTargetDialog by remember { mutableStateOf(false) }
     var isBackingUp by remember { mutableStateOf(false) }
+
+    // Launcher pour selectionner un document (PDF, image) a partager avec un patient
+    val shareDocumentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            val mimeType = context.contentResolver.getType(uri) ?: "application/octet-stream"
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = mimeType
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_SUBJECT, "Document medical DiaSmart")
+                putExtra(Intent.EXTRA_TEXT, "Bonjour,\n\nVeuillez trouver ci-joint un document (diagnostic, resultats, ordonnance) transmis par votre medecin via DiaSmart.\n\nCordialement")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(Intent.createChooser(shareIntent, "Envoyer au patient"))
+        }
+    }
 
     // DayLife-inspired colors
     val screenBg = if (isDark) DarkBackground else Color(0xFFF7F8FC)
@@ -272,16 +291,19 @@ fun SettingsScreen(
             }
             item {
                 DayLifeSettingsCard(cardBg = cardBg) {
-                    DayLifeSettingsItem(
-                        icon = Icons.Default.FileDownload,
-                        iconBg = Color(0xFF10B981),
-                        title = "Exporter mes données",
-                        subtitle = "CSV, PDF — Glycémie, repas, médicaments",
-                        titleColor = titleColor,
-                        subtitleColor = subtitleColor,
-                        onClick = { showExportDialog = true }
-                    )
-                    DayLifeDivider(dividerColor)
+                    // Cote patient uniquement : export personnel + partage avec mon medecin
+                    if (!uiState.isMedecin) {
+                        DayLifeSettingsItem(
+                            icon = Icons.Default.FileDownload,
+                            iconBg = Color(0xFF10B981),
+                            title = "Exporter mes données",
+                            subtitle = "CSV, PDF — Glycémie, repas, médicaments",
+                            titleColor = titleColor,
+                            subtitleColor = subtitleColor,
+                            onClick = { showExportDialog = true }
+                        )
+                        DayLifeDivider(dividerColor)
+                    }
                     DayLifeSettingsItem(
                         icon = Icons.Default.CloudSync,
                         iconBg = Color(0xFF3B82F6),
@@ -305,27 +327,80 @@ fun SettingsScreen(
                             }
                         }
                     )
-                    DayLifeDivider(dividerColor)
-                    DayLifeSettingsItem(
-                        icon = Icons.Default.Share,
-                        iconBg = Color(0xFF8B5CF6),
-                        title = "Partager avec mon médecin",
-                        subtitle = "Envoyer un rapport par email",
-                        titleColor = titleColor,
-                        subtitleColor = subtitleColor,
-                        onClick = {
-                            val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
-                                data = Uri.parse("mailto:")
-                                putExtra(Intent.EXTRA_SUBJECT, "Rapport DiaSmart - Données patient")
-                                putExtra(Intent.EXTRA_TEXT, "Bonjour,\n\nVeuillez trouver ci-joint mon rapport DiaSmart.\n\nCordialement")
+                    if (!uiState.isMedecin) {
+                        DayLifeDivider(dividerColor)
+                        DayLifeSettingsItem(
+                            icon = Icons.Default.Share,
+                            iconBg = Color(0xFF8B5CF6),
+                            title = "Partager avec mon médecin",
+                            subtitle = "Envoyer un rapport par email",
+                            titleColor = titleColor,
+                            subtitleColor = subtitleColor,
+                            onClick = {
+                                val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
+                                    data = Uri.parse("mailto:")
+                                    putExtra(Intent.EXTRA_SUBJECT, "Rapport DiaSmart - Données patient")
+                                    putExtra(Intent.EXTRA_TEXT, "Bonjour,\n\nVeuillez trouver ci-joint mon rapport DiaSmart.\n\nCordialement")
+                                }
+                                context.startActivity(Intent.createChooser(emailIntent, "Envoyer par email"))
                             }
-                            context.startActivity(Intent.createChooser(emailIntent, "Envoyer par email"))
-                        }
-                    )
+                        )
+                    }
                 }
             }
 
-            // ── IA hors-ligne ────────────────────────────────
+            // ── Partage medecin -> patient (medecin uniquement) ─
+            if (uiState.isMedecin) {
+                item {
+                    DayLifeSectionHeader(
+                        title = "Partage avec un patient",
+                        color = sectionTextColor,
+                        isDark = isDark
+                    )
+                }
+                item {
+                    DayLifeSettingsCard(cardBg = cardBg) {
+                        DayLifeSettingsItem(
+                            icon = Icons.Default.PictureAsPdf,
+                            iconBg = Color(0xFFEF4444),
+                            title = "Envoyer un PDF au patient",
+                            subtitle = "Diagnostic, examens, ordonnance",
+                            titleColor = titleColor,
+                            subtitleColor = subtitleColor,
+                            onClick = {
+                                shareDocumentLauncher.launch(arrayOf("application/pdf"))
+                            }
+                        )
+                        DayLifeDivider(dividerColor)
+                        DayLifeSettingsItem(
+                            icon = Icons.Default.Image,
+                            iconBg = Color(0xFF8B5CF6),
+                            title = "Envoyer une image au patient",
+                            subtitle = "Resultats d'examens, radiographie",
+                            titleColor = titleColor,
+                            subtitleColor = subtitleColor,
+                            onClick = {
+                                shareDocumentLauncher.launch(arrayOf("image/*"))
+                            }
+                        )
+                        DayLifeDivider(dividerColor)
+                        DayLifeSettingsItem(
+                            icon = Icons.Default.AttachFile,
+                            iconBg = Color(0xFF3B82F6),
+                            title = "Envoyer un autre document",
+                            subtitle = "Tout type de fichier",
+                            titleColor = titleColor,
+                            subtitleColor = subtitleColor,
+                            onClick = {
+                                shareDocumentLauncher.launch(arrayOf("*/*"))
+                            }
+                        )
+                    }
+                }
+            }
+
+            // ── IA hors-ligne (patient uniquement) ───────────
+            if (!uiState.isMedecin) {
             item {
                 DayLifeSectionHeader(
                     title = "IA hors-ligne",
@@ -505,6 +580,7 @@ fun SettingsScreen(
                     }
                 }
             }
+            } // fin if (!uiState.isMedecin) - IA hors-ligne gatee pour patient uniquement
 
             // ── À propos ─────────────────────────────────────
             item {
@@ -520,7 +596,7 @@ fun SettingsScreen(
                         icon = Icons.Default.Info,
                         iconBg = Color(0xFF6771E4),
                         title = "Version",
-                        subtitle = "2.1.2",
+                        subtitle = "2.1.4",
                         titleColor = titleColor,
                         subtitleColor = subtitleColor
                     )
